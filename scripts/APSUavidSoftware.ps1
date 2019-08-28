@@ -22,7 +22,7 @@ function Get-APSUNexisClientVersion($ComputerName,[System.Management.Automation.
 }
 
 
-function Install-APSUNexisClient($ComputerName,[System.Management.Automation.PSCredential] $Credential, $PathToInstaller){
+function Install-APSUNexisClient($ComputerName, [System.Management.Automation.PSCredential] $Credential, $PathToInstaller, [switch]$RebootAfterInstallation){
 <#
 .SYNOPSIS
    Silently installs AvidNEXIS Client on remote hosts.
@@ -33,19 +33,24 @@ function Install-APSUNexisClient($ComputerName,[System.Management.Automation.PSC
    3) Unblock the copied installer file (so no "Do you want to run this file?" pop-out appears resulting in instalation hang in the next step)
    4) Run the installer on remote hosts
    5) Remove folder C:\NexisTempDir from remote hosts
-   6) Reboot the remote hosts
+   6) [OPTIONAL] Reboot the remote hosts
 .PARAMETER ComputerName
    Specifies the computer name.
 .PARAMETER Credentials
    Specifies the credentials used to login.
 .PARAMETER PathToInstaller
    Specifies the LOCAL path to the installer.
+.PARAMETER RebootAfterInstallation
+   Specifies if remote hosts shuld be rebooted after the installation.
 .EXAMPLE
-   Install-APSUNexisClient -ComputerName $all_hosts -Credential $Cred -PathToInstaller 'C:\AvidInstallers\AvidNEXISClient_Win64_18.11.0.9.msi'
+   Install-APSUNexisClient -ComputerName $all_hosts -Credential $Cred -PathToInstaller 'C:\AvidInstallers\AvidNEXISClient_Win64_18.11.0.9.msi' -RebootAfterInstallation
 #>
 
-Write-Host -BackgroundColor White -ForegroundColor Red "`n WARNING: All the remote hosts will be automatically rebooted after the installation. Press Enter to continue or Ctrl+C to quit. "
-[void](Read-Host)
+if ($RebootAfterInstallation)
+    {
+        Write-Host -BackgroundColor White -ForegroundColor Red "`n WARNING: All the remote hosts will be automatically rebooted after the installation. Press Enter to continue or Ctrl+C to quit. "
+        [void](Read-Host)
+    }
 
 $InstallerFileName = Split-Path $PathToInstaller -leaf
 $PathToInstallerRemote = 'C:\NexisTempDir\' + $InstallerFileName
@@ -73,14 +78,63 @@ Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Installation in 
 Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Start-Process -FilePath $using:PathToInstallerRemote -ArgumentList '/quiet /norestart' -Wait}
 
 #5. Remove folder C:\NexisTempDir from remote hosts
-Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Installation DONE. Cleaning up..."
-Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Remove-Item �path "C:\NexisTempDir\" �recurse}
+Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Installation of AvidNEXIS Client on all remote hosts DONE. Cleaning up..."
+Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Remove-Item -Path "C:\NexisTempDir\" -Recurse}
 
-#6. Reboot remote hosts
-Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Installation on all remote hosts DONE. Rebooting... "
-Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Restart-Computer -Force}
+#6. Reboot remote hosts if $RebootAfterInstallation switch present
+if ($RebootAfterInstallation) 
+    {
+        Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Restart-Computer -Force}
+        Write-Host -BackgroundColor White -ForegroundColor Red "`n Reboot triggered for all remote hosts. "
+    }
+else
+    {
+        Write-Host -BackgroundColor White -ForegroundColor Red "`n Remote hosts were NOT REBOOTED after the installation of AvidNEXIS Client. "
+        Write-Host -BackgroundColor White -ForegroundColor Red " Please REBOOT manually later as this is required for AvidNEXIS Client to work properly. "
+    }
 }
 
+function Uninstall-APSUNexisClient($ComputerName,[System.Management.Automation.PSCredential] $Credential,[switch]$RebootAfterUninstallation){
+<#
+.SYNOPSIS
+   Silently uninstalls AvidNEXIS Client on remote hosts.
+.DESCRIPTION
+   The Uninstall-APSUNexisClient
+.PARAMETER ComputerName
+   Specifies the computer name.
+.PARAMETER Credentials
+   Specifies the credentials used to login.
+.EXAMPLE
+   Uninstall-APSUNexisClient -ComputerName $all_hosts -Credential $Cred -RebootAfterUninstallation
+#>
+
+if ($RebootAfterUninstallation)
+    {
+        Write-Host -BackgroundColor White -ForegroundColor Red "`n WARNING: All the remote hosts will be automatically rebooted after the installation. Press Enter to continue or Ctrl+C to quit. "
+        [void](Read-Host)
+    }
+
+#1. Uninstall AvidNEXIS Client on remote hosts
+Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Uninstallation in progress. This can take a while. Please wait... "
+Invoke-Command -ComputerName $ComputerName -Credential $Cred -ScriptBlock
+    {
+        $app = Get-WmiObject -Class Win32_Product | Where-Object {$_.Name -match "Avid NEXIS Client"}
+        $app.Uninstall()
+    }
+Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Uninstallation of AvidNEXIS Client on all remote hosts DONE. "
+
+#2. Reboot remote hosts if $reboot switch present
+if ($RebootAfterUninstallation) 
+    {
+        Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Restart-Computer -Force}
+        Write-Host -BackgroundColor White -ForegroundColor Red "`n Reboot triggered for all remote hosts. "
+    }
+else
+    {
+        Write-Host -BackgroundColor White -ForegroundColor Red "`n Remote hosts were NOT REBOOTED after uninstallation of AvidNEXISClient. "
+    }
+
+}
 
 ###############################
 ##### AVID SOFTWARE CHECK #####
