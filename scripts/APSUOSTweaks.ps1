@@ -95,10 +95,12 @@ function Get-APSUServerManagerAtLogonStatus($ComputerName,[System.Management.Aut
    TODO
 #>
     Write-Host -BackgroundColor White -ForegroundColor DarkBlue " `n Server Manager Start At Logon Status"
-    $HiddenFilesAndFoldersStatus = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Get-ScheduledTask -TaskName ServerManager}
+    Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Get-ScheduledTask -TaskName ServerManager}
+    #To disable use
+    #Get-ScheduledTask -TaskName ServerManager | Disable-ScheduledTask -Verbose
     
 }
 
 
-Get-ScheduledTask -TaskName ServerManager | Disable-ScheduledTask -Verbose
+
 
