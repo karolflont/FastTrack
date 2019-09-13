@@ -77,3 +77,28 @@ function Set-APSUHiddenFilesAndFolders($ComputerName,[System.Management.Automati
 
     Get-APSUHiddenFilesAndFoldersStatus $ComputerName $Credential
 }
+
+#############################################
+### DISABLE SERVER MANAGER START AT LOGON ###
+#############################################
+function Get-APSUServerManagerAtLogonStatus($ComputerName,[System.Management.Automation.PSCredential] $Credential){
+<#
+.SYNOPSIS
+   TODO
+.DESCRIPTION
+   TODO
+.PARAMETER ComputerName
+   Specifies the computer name.
+.PARAMETER Credentials
+   Specifies the credentials used to login.
+.EXAMPLE
+   TODO
+#>
+    Write-Host -BackgroundColor White -ForegroundColor DarkBlue " `n Server Manager Start At Logon Status"
+    $HiddenFilesAndFoldersStatus = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Get-ScheduledTask -TaskName ServerManager}
+    
+}
+
+
+Get-ScheduledTask -TaskName ServerManager | Disable-ScheduledTask -Verbose
+

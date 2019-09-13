@@ -2,6 +2,8 @@
 ##### NEXIS #####
 #################
 
+
+function Get-APSUNexisClientVersion(){
 <#
 .SYNOPSIS
    TODO
@@ -14,7 +16,12 @@
 .EXAMPLE
    TODO
 #>
-function Get-APSUNexisClientVersion($ComputerName,[System.Management.Automation.PSCredential] $Credential){
+
+Param(
+    [Parameter(Mandatory = $true)] $ComputerName,
+    [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential
+)
+
 ### Check if NEXIS/ISIS client is already installed ###
     $Results = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* | Select-Object DisplayName, DisplayVersion, InstallDate | Where-Object {($_.DisplayName -like "*Isis*") -or ($_.DisplayName -like "*Nexis*")}}
     Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Nexis Client Versions Installed "
@@ -22,18 +29,19 @@ function Get-APSUNexisClientVersion($ComputerName,[System.Management.Automation.
 }
 
 
-function Install-APSUNexisClient($ComputerName, [System.Management.Automation.PSCredential] $Credential, $PathToInstaller, [switch]$RebootAfterInstallation){
+function Install-APSUNexisClient(){
 <#
 .SYNOPSIS
    Silently installs AvidNEXIS Client on remote hosts.
 .DESCRIPTION
    The Install-APSUNexisClientconsists of six steps:
-   1) Create the C:\NexisTempDir on remote hosts
-   2) Copy the AvidNEXIS installer to the C:\NexisTempDir on remote hosts
-   3) Unblock the copied installer file (so no "Do you want to run this file?" pop-out appears resulting in instalation hang in the next step)
-   4) Run the installer on remote hosts
-   5) Remove folder C:\NexisTempDir from remote hosts
-   6) [OPTIONAL] Reboot the remote hosts
+   1) Check if the PathToInstaller is valid
+   2) Create the C:\NexisTempDir on remote hosts
+   3) Copy the AvidNEXIS installer to the C:\NexisTempDir on remote hosts
+   4) Unblock the copied installer file (so no "Do you want to run this file?" pop-out appears resulting in instalation hang in the next step)
+   5) Run the installer on remote hosts
+   6) Remove folder C:\NexisTempDir from remote hosts
+   7) [OPTIONAL] Reboot the remote hosts
 .PARAMETER ComputerName
    Specifies the computer name.
 .PARAMETER Credentials
@@ -46,6 +54,13 @@ function Install-APSUNexisClient($ComputerName, [System.Management.Automation.PS
    Install-APSUNexisClient -ComputerName $all_hosts -Credential $Cred -PathToInstaller 'C:\AvidInstallers\AvidNEXISClient_Win64_18.11.0.9.msi' -RebootAfterInstallation
 #>
 
+Param(
+    [Parameter(Mandatory = $true)] $ComputerName,
+    [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
+    [Parameter(Mandatory = $true)] $PathToInstaller,
+    [Parameter(Mandatory = $false)] [switch]$RebootAfterInstallation
+)
+
 if ($RebootAfterInstallation)
     {
         Write-Host -BackgroundColor White -ForegroundColor Red "`n WARNING: All the remote hosts will be automatically rebooted after the installation. Press Enter to continue or Ctrl+C to quit. "
@@ -55,12 +70,22 @@ if ($RebootAfterInstallation)
 $InstallerFileName = Split-Path $PathToInstaller -leaf
 $PathToInstallerRemote = 'C:\NexisTempDir\' + $InstallerFileName
 
-#1. Create the NexisTempDir on remote hosts
+#1. Check if the PathToInstaller is valid - cancel installation if not.
+Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Checking if the path to installer is a valid one. Please wait... "
+if (-not (Test-Path -Path $PathToInstaller -PathType leaf)){
+    Write-Host -BackgroundColor White -ForegroundColor Red "`n Path is not valid. Exiting... "
+    return
+}
+else {
+    Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Path is valid. Let's continue... "
+}
+
+#2. Create the NexisTempDir on remote hosts
 Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Creating folder C:\NexisTempDir on remote hosts. Please wait... "
-Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {New-Item -ItemType 'directory' -Path 'C:\NexisTempDir'}
+Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {New-Item -ItemType 'directory' -Path 'C:\NexisTempDir' | Out-Null}
 Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Folder C:\NexisTempDir SUCCESSFULLY created on all remote hosts. "
 
-#2. Copy the AvidNEXIS installer to the local drive of remote hosts
+#3. Copy the AvidNEXIS installer to the local drive of remote hosts
 Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Copying the installer to remote hosts. Please wait... "
 $ComputerName | ForEach-Object -Process {
     $Session = New-PSSession -ComputerName $_ -Credential $Credential
@@ -68,20 +93,20 @@ $ComputerName | ForEach-Object -Process {
 }
 Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Installer SUCCESSFULLY copied to all remote hosts. "
 
-#3. Unblock the copied installer (so no "Do you want to run this file?" pop-out hangs the installation in the next step)
+#4. Unblock the copied installer (so no "Do you want to run this file?" pop-out hangs the installation in the next step)
 Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Unblocking copied files. Please wait... "
 Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Unblock-File -Path $using:PathToInstallerRemote}
 Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n All files SUCCESSFULLY unblocked. "
 
-#4. Run the installer on remote hosts
+#5. Run the installer on remote hosts
 Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Installation in progress. This should take up to a minute. Please wait... "
 Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Start-Process -FilePath $using:PathToInstallerRemote -ArgumentList '/quiet /norestart' -Wait}
 
-#5. Remove folder C:\NexisTempDir from remote hosts
+#6. Remove folder C:\NexisTempDir from remote hosts
 Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Installation of AvidNEXIS Client on all remote hosts DONE. Cleaning up..."
 Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Remove-Item -Path "C:\NexisTempDir\" -Recurse}
 
-#6. Reboot remote hosts if $RebootAfterInstallation switch present
+#7. Reboot remote hosts if $RebootAfterInstallation switch present
 if ($RebootAfterInstallation) 
     {
         Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Restart-Computer -Force}
@@ -92,6 +117,10 @@ else
         Write-Host -BackgroundColor White -ForegroundColor Red "`n Remote hosts were NOT REBOOTED after the installation of AvidNEXIS Client. "
         Write-Host -BackgroundColor White -ForegroundColor Red " Please REBOOT manually later as this is required for AvidNEXIS Client to work properly. "
     }
+}
+
+function Push-APSUNexisConfig(){
+
 }
 
 function Uninstall-APSUNexisClient($ComputerName,[System.Management.Automation.PSCredential] $Credential,[switch]$RebootAfterUninstallation){
@@ -207,7 +236,7 @@ function Get-APSUAvidSoftwareVersions($ComputerName,[System.Management.Automatio
     Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Interplay Engine and other software versions "
     $InterplayEngineVersion | Select-Object PSComputerName, DisplayName, ProductVersion, FileVersion | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
     #>
-    $AvidSoftwareVersions = Invoke-Command -ComputerName $ComputerName -Credential $Cred -ScriptBlock {Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* | Select-Object DisplayName, DisplayVersion, Publisher, InstallDate | Where-Object {$_.Publisher -like "*Avid*"}}
+    $AvidSoftwareVersions = Invoke-Command -ComputerName $ComputerName -Credential $Cred -ScriptBlock {Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* | Select-Object DisplayName, DisplayVersion, Publisher, InstallDate | Where-Object {$_.Publisher -like "*Avid*" -or $_.DisplayName -like "*Avid*"}}
     #$PropertiesToDisplay = 'PSComputerName, DisplayName, DisplayVersion, InstallDate'
 
     $AvidSoftwareVersions | Select-Object $PropertiesToDisplay | Sort-Object -Property $SortProperty | Format-Table -Wrap -AutoSize
@@ -230,4 +259,82 @@ function Get-APSUAvidServices($ComputerName,[System.Management.Automation.PSCred
     $AvidServices = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Get-Service -Displayname "Avid*"}
     Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Avid Services Status "
     $AvidServices | Select-Object PSComputerName, DisplayName, Status, StartType | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
+}
+
+
+##############
+### ACCESS ###
+##############
+
+function Install-APSUAccess(){
+    <#
+    .SYNOPSIS
+       Silently installs Access Client on remote hosts.
+    .DESCRIPTION
+       The Install-APSUAccess consists of six steps:
+       1) Check if the PathToInstaller is valid
+       2) Create the C:\AccessTempDir on remote hosts
+       3) Copy the Access installer to the C:\AccessTempDir on remote hosts
+       4) Unblock the copied installer file (so no "Do you want to run this file?" pop-out appears resulting in instalation hang in the next step)
+       5) Run the installer on remote hosts
+       6) Remove folder C:\AccessTempDir from remote hosts
+    .PARAMETER ComputerName
+       Specifies the computer name.
+    .PARAMETER Credentials
+       Specifies the credentials used to login.
+    .PARAMETER PathToInstaller
+       Specifies the LOCAL path to the installer.
+    .PARAMETER RebootAfterInstallation
+       Specifies if remote hosts shuld be rebooted after the installation.
+    .EXAMPLE
+       Install-APSUAccess -ComputerName $all_hosts -Credential $Cred -PathToInstaller 'C:\AvidInstallers\InterplayAccessSetup.exe'
+    #>
+    
+    Param(
+        [Parameter(Mandatory = $true)] $ComputerName,
+        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
+        [Parameter(Mandatory = $true)] $PathToInstaller
+    )
+    
+    Write-Host -BackgroundColor White -ForegroundColor Red "`n Not working as expected for .exe. Exiting... "
+    return
+
+    $InstallerFileName = Split-Path $PathToInstaller -leaf
+    $PathToInstallerRemote = 'C:\AccessTempDir\' + $InstallerFileName
+    
+    #1. Check if the PathToInstaller is valid - cancel installation if not.
+    Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Checking if the path to installer is a valid one. Please wait... "
+    if (-not (Test-Path -Path $PathToInstaller -PathType leaf)){
+        Write-Host -BackgroundColor White -ForegroundColor Red "`n Path is not valid. Exiting... "
+        return
+    }
+    else {
+        Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Path is valid. Let's continue... "
+    }
+    
+    #2. Create the AccessTempDir on remote hosts
+    Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Creating folder C:\AccessTempDir on remote hosts. Please wait... "
+    Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {New-Item -ItemType 'directory' -Path 'C:\AccessTempDir' | Out-Null}
+    Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Folder C:\AccessTempDir SUCCESSFULLY created on all remote hosts. "
+    
+    #3. Copy the Access installer to the local drive of remote hosts
+    Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Copying the installer to remote hosts. Please wait... "
+    $ComputerName | ForEach-Object -Process {
+        $Session = New-PSSession -ComputerName $_ -Credential $Credential
+        Copy-Item -LiteralPath $PathToInstaller -Destination "C:\AccessTempDir\" -ToSession $Session
+    }
+    Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Installer SUCCESSFULLY copied to all remote hosts. "
+    
+    #4. Unblock the copied installer (so no "Do you want to run this file?" pop-out hangs the installation in the next step)
+    Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Unblocking copied files. Please wait... "
+    Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Unblock-File -Path $using:PathToInstallerRemote}
+    Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n All files SUCCESSFULLY unblocked. "
+    
+    #5. Run the installer on remote hosts
+    Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Installation in progress. This should take up to a minute. Please wait... "
+    Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Start-Process -FilePath $using:PathToInstallerRemote -ArgumentList '/quiet /norestart' -Wait}
+    
+    #6. Remove folder C:\AccessTempDir from remote hosts
+    Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Installation of Access Client on all remote hosts DONE. Cleaning up..."
+    Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Remove-Item -Path "C:\AccessTempDir\" -Recurse}
 }

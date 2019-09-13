@@ -75,3 +75,17 @@ function Test-SelectedProperties($DefaultProperty, $PropertiesList, $Param1, $Pa
         Return $SortProperty
     }
 }
+
+function Set-Shortcut(){
+param (
+    [string]$SourceExe,
+    [string]$ArgumentsToSourceExe,
+    [string]$DestinationPath
+)
+        
+$WshShell = New-Object -comObject WScript.Shell
+$Shortcut = $WshShell.CreateShortcut($DestinationPath)
+$Shortcut.TargetPath = $SourceExe
+$Shortcut.Arguments = $ArgumentsToSourceExe
+$Shortcut.Save()
+}
