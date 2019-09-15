@@ -2,7 +2,7 @@
 ##### EVENTLOG #####
 ####################
 
-function Get-APSUEventLogErrors($ComputerName,[System.Management.Automation.PSCredential] $Credential, $After, $Before){
+function Get-EventLogErrors($ComputerName,[System.Management.Automation.PSCredential] $Credential, $After, $Before){
     ### Get Error events from servers' EventLog
 <#
 .SYNOPSIS

@@ -2,12 +2,12 @@
 ##### TIME SETTINGS #####
 #########################
 
-function Get-APSUTime($ComputerName,[System.Management.Automation.PSCredential] $Credential){
+function Get-Time($ComputerName,[System.Management.Automation.PSCredential] $Credential){
 <#
 .SYNOPSIS
    Gets current time from servers.
 .DESCRIPTION
-   The Get-APSUTime function gets current Date and Time information from a server.
+   The Get-Time function gets current Date and Time information from a server.
    
    The function uses Get-Date cmdlet.
 .PARAMETER ComputerName
@@ -25,12 +25,12 @@ function Get-APSUTime($ComputerName,[System.Management.Automation.PSCredential] 
     #$Time | Select-Object PSComputerName, DateTime | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 }
 
-function Get-APSUTimeZone($ComputerName,[System.Management.Automation.PSCredential] $Credential){
+function Get-TimeZone($ComputerName,[System.Management.Automation.PSCredential] $Credential){
     <#
     .SYNOPSIS
         Gets current time zone from servers.
     .DESCRIPTION
-        The Get-APSUTimeZone function gets current Time Zone and Daylight Saving Time information from a server.
+        The Get-TimeZone function gets current Time Zone and Daylight Saving Time information from a server.
         
         The function uses Get-TimeZone cmdlet.
     .PARAMETER ComputerName
@@ -53,12 +53,12 @@ function Get-APSUTimeZone($ComputerName,[System.Management.Automation.PSCredenti
 ##### TIME SYNC #####
 #####################
 
-function Install-APSUMeinbergNTPDaemon($ComputerName,[System.Management.Automation.PSCredential] $Credential, $PathToInstaller){
+function Install-MeinbergNTPDaemon($ComputerName,[System.Management.Automation.PSCredential] $Credential, $PathToInstaller){
 <#
 .SYNOPSIS
    Silently installs Meinberg NTP Daemon on remote hosts.
 .DESCRIPTION
-   The Install-APSUMeinbergNTPDaemon consists of four steps:
+   The Install-MeinbergNTPDaemon consists of four steps:
    1) Create the C:\MeinbergNTPDTempDir directory on remote hosts
    2) Copy:
        - Meinberg NTP Daemon installer
@@ -74,7 +74,7 @@ function Install-APSUMeinbergNTPDaemon($ComputerName,[System.Management.Automati
 .PARAMETER PathToInstaller
    Specifies the LOCAL path to the installer.
 .EXAMPLE
-   Install-APSUMeinbergNTPDaemon -ComputerName $all_hosts -Credential $Cred -PathToInstaller 'C:\AvidInstallers\NTP\' `
+   Install-MeinbergNTPDaemon -ComputerName $all_hosts -Credential $Cred -PathToInstaller 'C:\AvidInstallers\NTP\' `
                                  -PathToInstallIni '' -PathToNtpConf
 #>
 
@@ -108,14 +108,14 @@ Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock 
 Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Installation on all remote hosts DONE. Rebooting... "
 }
 
-function Install-APSUMeinbergNTPMonitor(){
+function Install-MeinbergNTPMonitor(){
 }
 
-function Set-APSUMeinbergNTPDaemonConfig(){
+function Set-MeinbergNTPDaemonConfig(){
 }
 
-function Sync-APSUTime(){
+function Sync-Time(){
 }
 
-function Get-APSUTimeSync(){
+function Get-TimeSync(){
 }

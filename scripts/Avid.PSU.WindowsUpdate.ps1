@@ -2,12 +2,12 @@
 ##### WINDOWS UPDATE #####
 ##########################
 
-function Get-APSUWindowsUpdateServiceStatus($ComputerName,[System.Management.Automation.PSCredential] $Credential) {
+function Get-WindowsUpdateServiceStatus($ComputerName,[System.Management.Automation.PSCredential] $Credential) {
 <#
 .SYNOPSIS
    Gets the information about Windows Update Service on a server.
 .DESCRIPTION
-   The Get-APSUWindowsUpdateService function gets the Status and StartType properties of Windows Update Service on a server. 
+   The Get-WindowsUpdateService function gets the Status and StartType properties of Windows Update Service on a server. 
 
    The function reads the Status and StartType properties of wuauserv service.
 .PARAMETER ComputerName
@@ -22,12 +22,12 @@ function Get-APSUWindowsUpdateServiceStatus($ComputerName,[System.Management.Aut
     $WindowsUpdateStatus | Select-Object PSComputerName, Status, StartType | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 }
 
-function Set-APSUWindowsUpdateService($ComputerName,[System.Management.Automation.PSCredential] $Credential, [switch]$Enable, [switch]$Disable){
+function Set-WindowsUpdateService($ComputerName,[System.Management.Automation.PSCredential] $Credential, [switch]$Enable, [switch]$Disable){
     <#
     .SYNOPSIS
         Enables or disables Windows Update Service on a server.
     .DESCRIPTION
-        The Set-APSUWindowsUpdateService function does two things, depending on the switch parameter used:
+        The Set-WindowsUpdateService function does two things, depending on the switch parameter used:
         1) For -Enable parameter it starts Windows Update Service on a server and sets its startup type to Automatic,
         2) For -Disable parameter it stops Windows Update Service on a server and sets its startup type to Disabled.
     .PARAMETER ComputerName

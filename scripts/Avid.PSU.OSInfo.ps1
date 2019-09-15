@@ -2,12 +2,12 @@
 ##### OS VERSION #####
 ######################
 
-function Get-APSUOSVersion($ComputerName,[System.Management.Automation.PSCredential] $Credential){
+function Get-OSVersion($ComputerName,[System.Management.Automation.PSCredential] $Credential){
 <#
 .SYNOPSIS
    Gets detailed OS Version for a server.
 .DESCRIPTION
-   The Get-APSUOSVersion function gets the detailed information about OS Version of a server.
+   The Get-OSVersion function gets the detailed information about OS Version of a server.
 
    The function reads specific values from "HKLM:SOFTWARE\Microsoft\Windows NT\CurrentVersion" registry key. The read values are: 
    ProductName, BuildBranch, CurrentMajorVersionNumber, CurrentMinorVersionNumber, ReleaseID, CurrentBuildNumber, UBR and InstallDate.
@@ -28,12 +28,12 @@ function Get-APSUOSVersion($ComputerName,[System.Management.Automation.PSCredent
 }
 
 
-function Push-APSUBGInfo(){
+function Push-BGInfo(){
    <#
    .SYNOPSIS
       Pushes and configures BGInfo on remote hosts.
    .DESCRIPTION
-      The Push-APSUBGInfo consists of five steps:
+      The Push-BGInfo consists of five steps:
       1) Check if the PathToBGInfoExecutable and PathToBGInfoTemplate are valid
       2) Create the C:\BGInfo folder on remote hosts
       3) Copy the BGInfo executable and template to the C:\BGInfo folder on remote hosts
@@ -48,7 +48,7 @@ function Push-APSUBGInfo(){
    .PARAMETER PathToBGInfoTemplate
       Specifies the LOCAL path to the BGInfo template.
    .EXAMPLE
-      Push-APSUBGInfo -ComputerName $all_hosts -Credential $Cred -PathToBGInfoExecutable 'C:\AvidInstallers\BGInfo\BGInfo.exe' -PathToBGInfoTemplate 'C:\AvidInstallers\BGInfo\x64Client.bgi'
+      Push-BGInfo -ComputerName $all_hosts -Credential $Cred -PathToBGInfoExecutable 'C:\AvidInstallers\BGInfo\BGInfo.exe' -PathToBGInfoTemplate 'C:\AvidInstallers\BGInfo\x64Client.bgi'
    #>
    
    Param(

@@ -3,7 +3,7 @@
 #################
 
 
-function Get-APSUNexisClientVersion(){
+function Get-NexisClientVersion(){
 <#
 .SYNOPSIS
    TODO
@@ -29,12 +29,12 @@ Param(
 }
 
 
-function Install-APSUNexisClient(){
+function Install-NexisClient(){
 <#
 .SYNOPSIS
    Silently installs AvidNEXIS Client on remote hosts.
 .DESCRIPTION
-   The Install-APSUNexisClientconsists of six steps:
+   The Install-NexisClientconsists of six steps:
    1) Check if the PathToInstaller is valid
    2) Create the C:\NexisTempDir on remote hosts
    3) Copy the AvidNEXIS installer to the C:\NexisTempDir on remote hosts
@@ -51,7 +51,7 @@ function Install-APSUNexisClient(){
 .PARAMETER RebootAfterInstallation
    Specifies if remote hosts shuld be rebooted after the installation.
 .EXAMPLE
-   Install-APSUNexisClient -ComputerName $all_hosts -Credential $Cred -PathToInstaller 'C:\AvidInstallers\AvidNEXISClient_Win64_18.11.0.9.msi' -RebootAfterInstallation
+   Install-NexisClient -ComputerName $all_hosts -Credential $Cred -PathToInstaller 'C:\AvidInstallers\AvidNEXISClient_Win64_18.11.0.9.msi' -RebootAfterInstallation
 #>
 
 Param(
@@ -119,22 +119,22 @@ else
     }
 }
 
-function Push-APSUNexisConfig(){
+function Push-NexisConfig(){
 
 }
 
-function Uninstall-APSUNexisClient($ComputerName,[System.Management.Automation.PSCredential] $Credential,[switch]$RebootAfterUninstallation){
+function Uninstall-NexisClient($ComputerName,[System.Management.Automation.PSCredential] $Credential,[switch]$RebootAfterUninstallation){
 <#
 .SYNOPSIS
    Silently uninstalls AvidNEXIS Client on remote hosts.
 .DESCRIPTION
-   The Uninstall-APSUNexisClient
+   The Uninstall-NexisClient
 .PARAMETER ComputerName
    Specifies the computer name.
 .PARAMETER Credentials
    Specifies the credentials used to login.
 .EXAMPLE
-   Uninstall-APSUNexisClient -ComputerName $all_hosts -Credential $Cred -RebootAfterUninstallation
+   Uninstall-NexisClient -ComputerName $all_hosts -Credential $Cred -RebootAfterUninstallation
 #>
 
 if ($RebootAfterUninstallation)
@@ -169,12 +169,12 @@ else
 ##### AVID SOFTWARE CHECK #####
 ###############################
 
-function Get-APSUAvidSoftwareVersions($ComputerName,[System.Management.Automation.PSCredential] $Credential, [switch]$SortByPSComputerName, [switch]$SortByDisplayName, [switch]$SortByDisplayVersion, [switch]$SortByInstallDate){
+function Get-AvidSoftwareVersions($ComputerName,[System.Management.Automation.PSCredential] $Credential, [switch]$SortByPSComputerName, [switch]$SortByDisplayName, [switch]$SortByDisplayVersion, [switch]$SortByInstallDate){
     <#
     .SYNOPSIS
         Gets installed Avid Software versions.
     .DESCRIPTION
-        The Get-APSUAvidSoftwareVersions function consists of two parts:
+        The Get-AvidSoftwareVersions function consists of two parts:
         1) First, retrieves the version of NXNServer.exe file for Interplay Engine
         2) Second, retrieves all the keys from "HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\" containing word "Avid" in the "Publishers" value
     .PARAMETER ComputerName
@@ -243,12 +243,12 @@ function Get-APSUAvidSoftwareVersions($ComputerName,[System.Management.Automatio
     }
 }
    
-function Get-APSUAvidServices($ComputerName,[System.Management.Automation.PSCredential] $Credential){
+function Get-AvidServices($ComputerName,[System.Management.Automation.PSCredential] $Credential){
         <#
     .SYNOPSIS
         Gets information about Installed Avid Services.
     .DESCRIPTION
-        The Get-APSUAvidServices function gets Status and StartType of Installed Avid Services on a server.
+        The Get-AvidServices function gets Status and StartType of Installed Avid Services on a server.
     .PARAMETER ComputerName
         Specifies the computer name.
     .PARAMETER Credentials
@@ -266,12 +266,12 @@ function Get-APSUAvidServices($ComputerName,[System.Management.Automation.PSCred
 ### ACCESS ###
 ##############
 
-function Install-APSUAccess(){
+function Install-Access(){
     <#
     .SYNOPSIS
        Silently installs Access Client on remote hosts.
     .DESCRIPTION
-       The Install-APSUAccess consists of six steps:
+       The Install-Access consists of six steps:
        1) Check if the PathToInstaller is valid
        2) Create the C:\AccessTempDir on remote hosts
        3) Copy the Access installer to the C:\AccessTempDir on remote hosts
@@ -287,7 +287,7 @@ function Install-APSUAccess(){
     .PARAMETER RebootAfterInstallation
        Specifies if remote hosts shuld be rebooted after the installation.
     .EXAMPLE
-       Install-APSUAccess -ComputerName $all_hosts -Credential $Cred -PathToInstaller 'C:\AvidInstallers\InterplayAccessSetup.exe'
+       Install-Access -ComputerName $all_hosts -Credential $Cred -PathToInstaller 'C:\AvidInstallers\InterplayAccessSetup.exe'
     #>
     
     Param(
