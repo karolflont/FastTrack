@@ -1,91 +1,92 @@
-function Test-SelectedProperties($DefaultProperty, $PropertiesList, $Param1, $Param2, $Param3, $Param4, $Param5, $Param6, $Param7, $Param8, $Param9, $Param10){
+function Test-IfExactlyOneSwitchParameterIsTrue{
         <#
     .SYNOPSIS
-        Sorts the object by a selected property.
+        Tests if exactly one switch parameter from a given set is true.
     .DESCRIPTION
-        The Test-SelectedProperties function does two things:
-        1) Checks if only one sort parameter is passed to the parent function
-        2) Returns this sort parameter.
-    .PARAMETER DefaultProperty
-        Specifies the default property to sort. Defined by parent function.
-    .PARAMETER ParametersList
-        Specifies the properties list.
+        The Test-IfExactlyOneSwitchParameterIsTrue function does two things:
+        1) Checks if exactly one parameter is passed to the parent function
+        2) Returns:
+        - the index of this parameter in the input array (Remember it's 0 based!) if exactly one switch is selcted
+        - $null if none of the switches is $true
+        - -1 if both switches are $true
     .EXAMPLE
-        TODO
+        Test-IfExactlyOneSwitchParameterIsTrue $Enable $Disable
+        Test-IfExactlyOneSwitchParameterIsTrue $SortByPSComputerName $SortByName $SortByInterfaceAlias $SortByInterfaceIndex
     #>
+    param(
+        [Parameter(Mandatory = $false)] $Param0,
+        [Parameter(Mandatory = $false)] $Param1,
+        [Parameter(Mandatory = $false)] $Param2,
+        [Parameter(Mandatory = $false)] $Param3,
+        [Parameter(Mandatory = $false)] $Param4,
+        [Parameter(Mandatory = $false)] $Param5,
+        [Parameter(Mandatory = $false)] $Param6,
+        [Parameter(Mandatory = $false)] $Param7,
+        [Parameter(Mandatory = $false)] $Param8,
+        [Parameter(Mandatory = $false)] $Param9 
+    )
 
-    #Default sort property
-    $SortProperty = $DefaultProperty
+    $index = $null
 
-    #Definig switch count to check if no more than 1 switch parameter is defined
+    #Defining switch count to check if no more than 1 switch parameter is defined
     $SwitchCount = 0
 
-
+    if ($Param0)  {
+        $SwitchCount = $SwitchCount + 1
+        $index = 0
+    }
     if ($Param1)  {
         $SwitchCount = $SwitchCount + 1
-        $SortProperty = $PropertiesList[0]
+        $index = 1
     }
     if ($Param2)  {
         $SwitchCount = $SwitchCount + 1
-        $SortProperty = $PropertiesList[1]
+        $index = 2
     }
     if ($Param3)  {
         $SwitchCount = $SwitchCount + 1
-        $SortProperty = $PropertiesList[2]
+        $index = 3
     }
     if ($Param4)  {
         $SwitchCount = $SwitchCount + 1
-        $SortProperty = $PropertiesList[3]
+        $index = 4
     }
     if ($Param5)  {
         $SwitchCount = $SwitchCount + 1
-        $SortProperty = $PropertiesList[4]
+        $index = 5
     }
     if ($Param6)  {
         $SwitchCount = $SwitchCount + 1
-        $SortProperty = $PropertiesList[5]
+        $index = 6
     }
     if ($Param7)  {
         $SwitchCount = $SwitchCount + 1
-        $SortProperty = $PropertiesList[6]
+        $index = 7
     }
     if ($Param8)  {
         $SwitchCount = $SwitchCount + 1
-        $SortProperty = $PropertiesList[7]
+        $index = 8
     }
     if ($Param9)  {
         $SwitchCount = $SwitchCount + 1
-        $SortProperty = $PropertiesList[8]
-    }
-    if ($Param10)  {
-        $SwitchCount = $SwitchCount + 1
-        $SortProperty = $PropertiesList[9]
+        $index = 9
     }
 
-    $InfoString = $null
     if ($SwitchCount -gt 1){
-        for ($i = 0; $i -lt $PropertiesList.Count; $i++)
-        { 
-           $InfoString = $InfoString + "-" + $PropertiesList[$i] + "/" 
-        }
-        Write-Host -BackgroundColor White -ForegroundColor Red "`n Please specify ONLY ONE of the $InfoString switch parameters. "
+        #If more than one switch was selected, write info message and return -1
+        Write-Host -BackgroundColor White -ForegroundColor Red "`n Please specify ONE switch parameter. "
+        Return -1
+    }
+    elseif ($SwitchCount -eq 1){
+        #If exactly one switch was selected, return the index of selected switch (Remember, it's 0 based!)
+        Return $index
+    }
+    else {
+        #If none switch was selected, write info message and return $null
+        Write-Host -BackgroundColor White -ForegroundColor Red "`n Please specify ONE switch parameter. "
         Return
     }
-    else{
-        Return $SortProperty
-    }
 }
 
-function Set-Shortcut(){
-param (
-    [string]$SourceExe,
-    [string]$ArgumentsToSourceExe,
-    [string]$DestinationPath
-)
-        
-$WshShell = New-Object -comObject WScript.Shell
-$Shortcut = $WshShell.CreateShortcut($DestinationPath)
-$Shortcut.TargetPath = $SourceExe
-$Shortcut.Arguments = $ArgumentsToSourceExe
-$Shortcut.Save()
-}
+
+

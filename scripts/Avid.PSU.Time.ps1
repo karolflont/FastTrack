@@ -1,15 +1,14 @@
 #########################
 ##### TIME SETTINGS #####
 #########################
-
-function Get-Time($ComputerName,[System.Management.Automation.PSCredential] $Credential){
+function Get-TimeAndTimeZone{
 <#
 .SYNOPSIS
-   Gets current time from servers.
+   Gets current time and time zone from servers.
 .DESCRIPTION
-   The Get-Time function gets current Date and Time information from a server.
+   The Get-Time function gets current Date, Time, Time Zone and Daylight Saving Time information from a server.
    
-   The function uses Get-Date cmdlet.
+   The function uses Get-Date and Get-TimeZone cmdlet.
 .PARAMETER ComputerName
    Specifies the computer name.
 .PARAMETER Credentials
@@ -17,43 +16,29 @@ function Get-Time($ComputerName,[System.Management.Automation.PSCredential] $Cre
 .EXAMPLE
    TODO
 #>
+param(
+        [Parameter(Mandatory = $true)] $ComputerName,
+        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential
+    )
+
     Write-Host "This funciton does not work when the computer from which you run the function has a different timezone set than"
     Write-Host "the computers you provide in the -ComputerName parameter. It displays time in your computer timezone and not the remote hosts one."
     Write-Host "This needs to be corrected."
+
+    $TimeZone = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock{Get-TimeZone}
+    Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Current TIMEZONE on servers "
+    $TimeZone | Select-Object PSComputerName, StandardName, BaseUtcOffset, SupportsDaylightSavingTime | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
+
     #$Time = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock{Get-Date | Out-String}
     #Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Current TIME on servers "
     #$Time | Select-Object PSComputerName, DateTime | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 }
-
-function Get-TimeZone($ComputerName,[System.Management.Automation.PSCredential] $Credential){
-    <#
-    .SYNOPSIS
-        Gets current time zone from servers.
-    .DESCRIPTION
-        The Get-TimeZone function gets current Time Zone and Daylight Saving Time information from a server.
-        
-        The function uses Get-TimeZone cmdlet.
-    .PARAMETER ComputerName
-        Specifies the computer name.
-    .PARAMETER Credentials
-        Specifies the credentials used to login.
-    .EXAMPLE
-        TODO
-    #>
-        $TimeZone = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock{Get-TimeZone}
-        Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Current TIMEZONE on servers "
-        $TimeZone | Select-Object PSComputerName, StandardName, BaseUtcOffset, SupportsDaylightSavingTime | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
-    }
-
-
-### Set time
-### Set timezone
-
+function Set-TimeAndTimeZone{
+}
 #####################
 ##### TIME SYNC #####
 #####################
-
-function Install-MeinbergNTPDaemon($ComputerName,[System.Management.Automation.PSCredential] $Credential, $PathToInstaller){
+function Install-MeinbergNTPDaemon{
 <#
 .SYNOPSIS
    Silently installs Meinberg NTP Daemon on remote hosts.
@@ -77,6 +62,15 @@ function Install-MeinbergNTPDaemon($ComputerName,[System.Management.Automation.P
    Install-MeinbergNTPDaemon -ComputerName $all_hosts -Credential $Cred -PathToInstaller 'C:\AvidInstallers\NTP\' `
                                  -PathToInstallIni '' -PathToNtpConf
 #>
+param(
+   [Parameter(Mandatory = $true)] $ComputerName,
+   [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
+   [Parameter(Mandatory = $true)] $PathToInstaller,
+   [Parameter(Mandatory = $true)] $NTPServerPrimary,
+   [Parameter(Mandatory = $false)] $NTPServerSecondary,
+   [Parameter(Mandatory = $false)] $PrimaryPointingTo,
+   [Parameter(Mandatory = $true)] $SecondaryPointingTo
+    )
 
 Write-Host -BackgroundColor White -ForegroundColor Red "`n WARNING: All the remote hosts will be automatically rebooted after the installation. Press Enter to continue or Ctrl+C to quit. "
 [void](Read-Host)
@@ -107,15 +101,7 @@ Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Installation in 
 Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Start-Process -FilePath $using:PathToInstallerRemote -ArgumentList '/quiet' -Wait}
 Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Installation on all remote hosts DONE. Rebooting... "
 }
-
-function Install-MeinbergNTPMonitor(){
+function Push-MeinbergNTPDaemonConfig{
 }
-
-function Set-MeinbergNTPDaemonConfig(){
-}
-
-function Sync-Time(){
-}
-
-function Get-TimeSync(){
+function Get-TimeSyncStatus{
 }

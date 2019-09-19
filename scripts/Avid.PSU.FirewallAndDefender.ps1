@@ -1,8 +1,7 @@
 ####################
 ##### FIREWALL #####
 ####################
-
-function Get-FirewallServiceStatus($ComputerName,[System.Management.Automation.PSCredential] $Credential){
+function Get-FirewallServiceStatus{
     <#
     .SYNOPSIS
         Gets the status of Firewall service.
@@ -15,15 +14,17 @@ function Get-FirewallServiceStatus($ComputerName,[System.Management.Automation.P
     .EXAMPLE
         TODO
     #>
+    param(
+        [Parameter(Mandatory = $true)] $ComputerName,
+        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential
+    )
     $ComputerName = $YLEHKI_servers
     $Credential = $Cred
     $AvidSoftwareVersions = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Get-Service -Name "MpsSvc"}
     $AvidSoftwareVersions | Select-Object PSComputerName, DisplayName, Status, StartType | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 
 }
-
-function Set-Firewall($ComputerName,[System.Management.Automation.PSCredential] $Credential,[switch]$ON, [switch]$OFF)
-{
+function Set-Firewall{
  <#
     .SYNOPSIS
         Turns the firewall ON or OFF for all profiles: Public, Private and Domain. (Turn ON/OFF!!! - not ENABLE/DISABLE the service)
@@ -36,41 +37,38 @@ function Set-Firewall($ComputerName,[System.Management.Automation.PSCredential] 
     .PARAMETER Credentials
         Specifies the credentials used to login.
     .EXAMPLE
-        TODO
+        Set-Firewall -ComputerName $srv_IP -Credential $cred -On
     #>
-    if ($ON) {
-        if ($OFF) {
-            Write-Host -BackgroundColor White -ForegroundColor Red "`n Please specify ONLY ONE of the -ON/-OFF switch parameters. "
-        Return
-        }
-        Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {
-            $result = NetSh Advfirewall set allprofiles state on
+    param(
+        [Parameter(Mandatory = $true)] $ComputerName,
+        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
+        [Parameter(Mandatory = $false)] [switch]$On,
+        [Parameter(Mandatory = $false)] [switch]$Off
+    )
+
+    $ActionIndex = Test-IfExactlyOneSwitchParameterIsTrue $On $Off
+    
+    if ($ActionIndex -eq 0){
+        #If On switch was selected
+        $result = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {
+            NetSh Advfirewall set allprofiles state on
             }
-        Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Firewall turned ON. "
+        Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Firewall on all hosts turned ON for all profiles: Domain networks, Private networks and Guest or Public networks. "
+        $result
     }
-    elseif ($OFF) {
-        if ($ON) {
-            Write-Host -BackgroundColor White -ForegroundColor Red "`n Please specify ONLY ONE of the -ON/-OFF switch parameters. "
-            Return
-        }
-        Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {
-            $result = NetSh Advfirewall set allprofiles state off
+    elseif ($ActionIndex -eq 1){
+        #If Off switch was selected
+        $result = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {
+            NetSh Advfirewall set allprofiles state off
             }
-        Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Firewall turned OFF. "
-    }
-    else {
-        Write-Host -BackgroundColor White -ForegroundColor Red "`n Please specify ONE of the -ON/-OFF switch parameters. "
-        Return
-    }
-    $result    
+        Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Firewall on all hosts turned OFF for all profiles: Domain networks, Private networks and Guest or Public networks. "
+        $result
+    }   
 }
-
-
 ########################
 ### WINDOWS DEFENDER ###
 ########################
-
-function Get-WindowsDefenderRealtimeMonitoringStatus($ComputerName,[System.Management.Automation.PSCredential] $Credential) {
+function Get-WindowsDefenderRealtimeMonitoringStatus{
     <#
     .SYNOPSIS
        Gets the status of Windows Defender Realtime Monitoring.
@@ -83,12 +81,16 @@ function Get-WindowsDefenderRealtimeMonitoringStatus($ComputerName,[System.Manag
     .EXAMPLE
        TODO
     #>
+    param(
+        [Parameter(Mandatory = $true)] $ComputerName,
+        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential
+    )
+
         $WindowsDefenderRealtimeMonitoringStatus = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Get-MpPreference}
         Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Windows Defender Realtime Monitoring Status "
         $WindowsDefenderRealtimeMonitoringStatus | Select-Object PSComputerName, DisableRealTimeMonitoring | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
     }
-    
-function Set-WindowsDefenderRealtimeMonitoring($ComputerName,[System.Management.Automation.PSCredential] $Credential, [switch]$Enable, [switch]$Disable){
+    function Set-WindowsDefenderRealtimeMonitoring{
     <#
     .SYNOPSIS
         Enables or disables Windows Defender Realtime Monitoring.
@@ -101,6 +103,13 @@ function Set-WindowsDefenderRealtimeMonitoring($ComputerName,[System.Management.
     .EXAMPLE
         TODO
     #>
+    param(
+        [Parameter(Mandatory = $true)] $ComputerName,
+        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
+        [Parameter(Mandatory = $false)] [switch]$Enable,
+        [Parameter(Mandatory = $false)] [switch]$Disable
+    )
+
     if ($Enable) {
         if ($Disable) {
             Write-Host -BackgroundColor White -ForegroundColor Red "`n Please specify ONLY ONE of the -Enable/-Disable switch parameters. "

@@ -1,55 +1,79 @@
 ############################
 ### NETWORK RELATED INFO ###
 ############################
+function Get-NetworkInfo{
+   <#
+   .SYNOPSIS
+   TODO
+   .DESCRIPTION
+   TODO
+   .PARAMETER ComputerName
+   Specifies the computer name.
+   .PARAMETER Credentials
+   Specifies the credentials used to login.
+   .EXAMPLE
+   TODO
+   #>
+   param (
+      [Parameter(Mandatory = $true)] $ComputerName,
+      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
+      [Parameter(Mandatory = $false)] [switch]$SortByPSComputerName,
+      [Parameter(Mandatory = $false)] [switch]$SortByName,
+      [Parameter(Mandatory = $false)] [switch]$SortByInterfaceAlias,
+      [Parameter(Mandatory = $false)] [switch]$SortByInterfaceIndex,
+      [Parameter(Mandatory = $false)] [switch]$SortByIPv4Connectivity,
+      [Parameter(Mandatory = $false)] [switch]$SortByNetworkCategory
+   )
+   
+   #Default sort property
+   $DefaultSortProperty = "PSComputerName"
+   $PropertiesToDisplay = ('PSComputerName','Name','InterfaceAlias','InterfaceIndex','IPv4Connectivity','NetworkCategory') 
+   
+   $SortPropertyIndex = Test-IfExactlyOneSwitchParameterIsTrue $SortByPSComputerName $SortByName $SortByInterfaceAlias $SortByInterfaceIndex $SortByIPv4Connectivity $SortByNetworkCategory
+   
+   if ($null -eq $SortPropertyIndex){
+      #If none of the switches is selected, use the DafaultSortProperty
+      $SortProperty = $DefaultSortProperty
+   }
+   elseif ($SortPropertyIndex -ge 0){
+      #If one switch is selected, use it as SortProperty
+      $SortProperty = $PropertiesToDisplay[$SortPropertyIndex]
+   }
+   else{
+      #If more than one switch is selected, return
+      Return
+   }
+   
+   $NetworkInfo = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Get-NetConnectionProfile}
+   $NetworkInfo | Select-Object $PropertiesToDisplay | Sort-Object -Property $SortProperty | Format-Table -Wrap -AutoSize
 
-function Get-NetworkInfo($ComputerName,[System.Management.Automation.PSCredential] $Credential, [switch]$SortByPSComputerName, [switch]$SortByName, [switch]$SortByInterfaceAlias, [switch]$SortByInterfaceIndex, [switch]$SortByIPv4Connectivity, [switch]$SortByNetworkCategory){
-    <#
-    .SYNOPSIS
-    TODO
-    .DESCRIPTION
-    TODO
-    .PARAMETER ComputerName
-    Specifies the computer name.
-    .PARAMETER Credentials
-    Specifies the credentials used to login.
-    .EXAMPLE
-    TODO
-    #>
-    
-        #Default sort property
-        $DefaultSortProperty = "PSComputerName"
-        $PropertiesToDisplay = ('PSComputerName','Name','InterfaceAlias','InterfaceIndex','IPv4Connectivity','NetworkCategory') 
-    
-        $SortProperty = Test-SelectedProperties $DefaultSortProperty $PropertiesToDisplay $SortByPSComputerName $SortByName $SortByInterfaceAlias $SortByInterfaceIndex $SortByIPv4Connectivity $SortByNetworkCategory
-    
-    
-        if (!$SortProperty) 
-        {
-            Return
-        }
-        else {
-            $NetworkInfo = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Get-NetConnectionProfile}
-            $NetworkInfo | Select-Object $PropertiesToDisplay | Sort-Object -Property $SortProperty | Format-Table -Wrap -AutoSize
-        }
-    }
+   #Retrieving only IPv4 addresses
+   #get-netipaddress | Where-Object -FilterScript {$_.AddressFamily -match “IPv4”} |Where-Object -FilterScript {$_.InterfaceAlias -notlike “Loopback*”}| Select-Object -ExpandProperty IPAddress | out-file C:\bginfo\MyIPv4Address.txt
 
+   #GWMI Win32_NetworkAdapterConfiguration -Filter "IPEnabled = $true" |select @{N='IPv4'; E={($_."IPAddress").split(",")[0]}}
+}
+function Get-NICPowerManagementStatus{
 
-    #IN PROGRESS
+}
+function Set-NICPowerManagement{
+
+}
+#IN PROGRESS
 ###############
 ##### RDP #####
 ###############
 #IN PROGRESS
-
-function Get-RemoteDesktopStatus($ComputerName,[System.Management.Automation.PSCredential] $Credential){
+function Get-RemoteDesktopStatus{
    <#
    .SYNOPSIS
       Checks if Remote Desktop connection to a specific computer is possible.
    .DESCRIPTION
-      The Get-RemoteDesktopStatus function checks three parameters determining if Remote Desktop to a computer is possible. These are:
-      1) "fDenyTSConnections" value of "HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server" registry key.
-      2) "Remote Desktop Services" service status
+      The Get-RemoteDesktopStatus function checks five parameters determining if Remote Desktop to a computer is possible. These are:
+      1) "Remote Desktop Services" service status
+      2) "fDenyTSConnections" value of "HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server" registry key.
       3) "Windows Firewall" service status
-      4) "Remote Desktop" DisplayGroup firewall rule existance (if firewall is running)
+      4) "Remote Desktop" DisplayGroup firewall rule existance
+      5) "Network Level Authentication" status
    .PARAMETER ComputerName
       Specifies the computer name.
    .PARAMETER Credentials
@@ -57,43 +81,88 @@ function Get-RemoteDesktopStatus($ComputerName,[System.Management.Automation.PSC
    .EXAMPLE
       TODO
    #>
-       ### Check if RDP is enabled - IN PROGRESS!!! - see help above for more info
-       $RDPStatus = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Get-ItemProperty -Path 'HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server' -Name fDenyTSConnections}
-       Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n RDP Status "
-       $RDPStatus | Select-Object PSComputerName, fDenyTSConnections | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
+   param(
+        [Parameter(Mandatory = $true)] $ComputerName,
+        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential
+    )
+    Write-Host -BackgroundColor White -ForegroundColor Red "`n RDP and Firewall Services statuses NOT yet implemented. "
+
+   ### Check if RDP is enabled - IN PROGRESS!!! - see help above for more info
+    $StatusTable = Invoke-Command -ComputerName $srv_IP -Credential $Cred -ScriptBlock {
+      $RDPStatus = (Get-ItemProperty -Path 'HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections").fDenyTSConnections
+      $RDPFirewallRuleStatus = (Get-NetFirewallRule -Name "RemoteDesktop-UserMode-In-TCP").Enabled
+      $NLAStatus = (Get-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication").UserAuthentication
+   
+      $HostStatus = New-Object -TypeName psobject
+      $HostStatus | Add-Member -MemberType NoteProperty -Name "RemoteDesktop" -Value $RDPStatus
+      $HostStatus | Add-Member -MemberType NoteProperty -Name "RDPFirewallRule" -Value $RDPFirewallRuleStatus
+      $HostStatus | Add-Member -MemberType NoteProperty -Name "NetworkLevelAuthentication" -Value $NLAStatus
+      $HostStatus
    }
    
-   
-   function Enable-RemoteDesktop($ComputerName,[System.Management.Automation.PSCredential] $Credential){
+   for ($i = 0; $i -lt $StatusTable.Length; $i++) {
+      if ($StatusTable[$i].RemoteDesktop -eq 0) {$StatusTable[$i].RemoteDesktop = "Enabled"}
+      elseif ($StatusTable[$i].RemoteDesktop -eq 1) {$StatusTable[$i].RemoteDesktop = "Disabled"}
+
+      if ($StatusTable[$i].RDPFirewallRule -eq $false) {$StatusTable[$i].RDPFirewallRule = "Disabled"}
+      elseif ($StatusTable[$i].RDPFirewallRule -eq $true) {$StatusTable[$i].RDPFirewallRule = "Enabled"}
+
+      if ($StatusTable[$i].NetworkLevelAuthentication -eq 0) {$StatusTable[$i].NetworkLevelAuthentication = "Disabled"}
+      elseif ($StatusTable[$i].NetworkLevelAuthentication -eq 1) {$StatusTable[$i].NetworkLevelAuthentication = "Enabled"}      
+   }
+
+   Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Remote Desktop access status summary "
+   $StatusTable | Select-Object PSComputerName, RemoteDesktop, RDPFirewallRule, NetworkLevelAuthentication | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
+   }   
+function Set-RemoteDesktop{
    <#
    .SYNOPSIS
-      TODO
+   TODO
    .DESCRIPTION
-      TODO
+   TODO
    .PARAMETER ComputerName
-      Specifies the computer name.
+   Specifies the computer name.
    .PARAMETER Credentials
-      Specifies the credentials used to login.
+   Specifies the credentials used to login.
    .EXAMPLE
-      TODO
+   TODO
    #>
-       Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-ItemProperty -Path 'HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server' -Name fDenyTSConnections -Value 0}
-       Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Enable-NetFirewallRule -DisplayGroup "Remote Desktop"}
+   param (
+      [Parameter(Mandatory = $true)] $ComputerName,
+      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
+      [Parameter(Mandatory = $false)] [switch] $EnableWithDisabledNLA,
+      [Parameter(Mandatory = $false)] [switch] $EnableWithEnabledNLA,
+      [Parameter(Mandatory = $false)] [switch] $Disable
+   ) 
+   Write-Host -BackgroundColor White -ForegroundColor Red "`n RDP and Firewall Services toggling NOT yet implemented. "
+
+   $ActionIndex = Test-IfExactlyOneSwitchParameterIsTrue $EnableWithDisabledNLA $EnableWithEnabledNLA $Disable
+
+   if ($ActionIndex -eq 0){
+      #If EnableWithDisabledNLA switch was selected
+      Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-ItemProperty -Path 'HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0}
+      Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n RDP ENABLED for all hosts. "
+      Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Enable-NetFirewallRule -DisplayGroup "Remote Desktop"}
+      Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n RDP firewall rule ADDED for all remote hosts. "
+      Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 0}
+      Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Network Level Authentication for RDP DISABLED for all remote hosts. "
    }
-   
-   function Disable-RemoteDesktop($ComputerName,[System.Management.Automation.PSCredential] $Credential){
-   <#
-   .SYNOPSIS
-      TODO
-   .DESCRIPTION
-      TODO
-   .PARAMETER ComputerName
-      Specifies the computer name.
-   .PARAMETER Credentials
-      Specifies the credentials used to login.
-   .EXAMPLE
-      TODO
-   #>
-   Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-ItemProperty -Path 'HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server' -Name fDenyTSConnections -Value 1}
-   Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Disable-NetFirewallRule -DisplayGroup "Remote Desktop"}
+   elseif ($ActionIndex -eq 1){
+      #If EnableWithEnabledNLA switch was selected
+      Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-ItemProperty -Path 'HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0}
+      Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n RDP ENABLED for all hosts. "
+      Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Disable-NetFirewallRule -DisplayGroup "Remote Desktop"}
+      Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n RDP firewall rule ADDED for all remote hosts. "
+      Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1}
+      Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Network Level Authentication for RDP ENABLED for all remote hosts. "
    }
+   elseif ($ActionIndex -eq 2){
+      #If Disable switch was selected
+      Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-ItemProperty -Path 'HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 1}
+      Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n RDP DISABLED for all hosts. "
+      Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Disable-NetFirewallRule -DisplayGroup "Remote Desktop"}
+      Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n RDP firewall rule REMOVED for all remote hosts. "
+      Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1}
+      Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Network Level Authentication for RDP ENABLED for all remote hosts (default value). "
+   }
+}

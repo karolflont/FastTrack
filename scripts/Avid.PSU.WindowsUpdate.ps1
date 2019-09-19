@@ -1,8 +1,7 @@
 ##########################
 ##### WINDOWS UPDATE #####
 ##########################
-
-function Get-WindowsUpdateServiceStatus($ComputerName,[System.Management.Automation.PSCredential] $Credential) {
+function Get-WindowsUpdateServiceStatus {
 <#
 .SYNOPSIS
    Gets the information about Windows Update Service on a server.
@@ -17,12 +16,16 @@ function Get-WindowsUpdateServiceStatus($ComputerName,[System.Management.Automat
 .EXAMPLE
    TODO
 #>
+param(
+        [Parameter(Mandatory = $true)] $ComputerName,
+        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential
+    )
+
     $WindowsUpdateStatus = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Get-Service -Name wuauserv}
     Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Windows Update Status "
     $WindowsUpdateStatus | Select-Object PSComputerName, Status, StartType | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 }
-
-function Set-WindowsUpdateService($ComputerName,[System.Management.Automation.PSCredential] $Credential, [switch]$Enable, [switch]$Disable){
+function Set-WindowsUpdateService{
     <#
     .SYNOPSIS
         Enables or disables Windows Update Service on a server.
@@ -37,6 +40,13 @@ function Set-WindowsUpdateService($ComputerName,[System.Management.Automation.PS
     .EXAMPLE
         TODO
     #>
+    param(
+        [Parameter(Mandatory = $true)] $ComputerName,
+        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
+        [Parameter(Mandatory = $false)] [switch]$Enable,
+        [Parameter(Mandatory = $false)] [switch]$Disable
+    )
+
     if ($Enable) {
         if ($Disable) {
             Write-Host -BackgroundColor White -ForegroundColor Red "`n Please specify ONLY ONE of the -Enable/-Disable switch parameters. "

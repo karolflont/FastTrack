@@ -1,8 +1,7 @@
 ####################
 ##### EVENTLOG #####
 ####################
-
-function Get-EventLogErrors($ComputerName,[System.Management.Automation.PSCredential] $Credential, $After, $Before){
+function Get-EventLogErrors{
     ### Get Error events from servers' EventLog
 <#
 .SYNOPSIS
@@ -16,6 +15,14 @@ function Get-EventLogErrors($ComputerName,[System.Management.Automation.PSCreden
 .EXAMPLE
    TODO
 #>
+Param(
+        [Parameter(Mandatory = $true)] $ComputerName,
+        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
+        [Parameter(Mandatory = $false)] $After,
+        [Parameter(Mandatory = $false)] $Before
+    )
+
+
     if ($After) {$EventLogAfter = Get-Date $After}
     if ($Before) {$EventLogBefore = Get-Date $Before}
     if ($After){
@@ -62,4 +69,8 @@ function Get-EventLogErrors($ComputerName,[System.Management.Automation.PSCreden
         
         Write-Output $EventLogSummaryList | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
     }
+}
+function Invoke-CollectInSilentMode{
+}
+function New-AvidSystemCheck{
 }

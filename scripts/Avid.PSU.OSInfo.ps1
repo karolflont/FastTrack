@@ -1,8 +1,7 @@
 ######################
 ##### OS VERSION #####
 ######################
-
-function Get-OSVersion($ComputerName,[System.Management.Automation.PSCredential] $Credential){
+function Get-OSVersion{
 <#
 .SYNOPSIS
    Gets detailed OS Version for a server.
@@ -20,20 +19,22 @@ function Get-OSVersion($ComputerName,[System.Management.Automation.PSCredential]
 .EXAMPLE
    Another example of how to use this cmdlet
 #>
+param(
+        [Parameter(Mandatory = $true)] $ComputerName,
+        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential
+    )
 
     $OSVersion = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {(Get-ItemProperty -Path "HKLM:SOFTWARE\Microsoft\Windows NT\CurrentVersion" -Name ProductName, BuildBranch, CurrentMajorVersionNumber, CurrentMinorVersionNumber, ReleaseID, CurrentBuildNumber, UBR, InstallDate)}
     Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n OS Version `n"
     $OSVersion | Select-Object PSComputerName, ProductName, BuildBranch, CurrentMajorVersionNumber, CurrentMinorVersionNumber, ReleaseID, CurrentBuildNumber, UBR, InstallDate | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 
 }
-
-
-function Push-BGInfo(){
+function Install-BGInfo{
    <#
    .SYNOPSIS
-      Pushes and configures BGInfo on remote hosts.
+      Installs and configures BGInfo on remote hosts.
    .DESCRIPTION
-      The Push-BGInfo consists of five steps:
+      The Install-BGInfo consists of five steps:
       1) Check if the PathToBGInfoExecutable and PathToBGInfoTemplate are valid
       2) Create the C:\BGInfo folder on remote hosts
       3) Copy the BGInfo executable and template to the C:\BGInfo folder on remote hosts
@@ -48,7 +49,7 @@ function Push-BGInfo(){
    .PARAMETER PathToBGInfoTemplate
       Specifies the LOCAL path to the BGInfo template.
    .EXAMPLE
-      Push-BGInfo -ComputerName $all_hosts -Credential $Cred -PathToBGInfoExecutable 'C:\AvidInstallers\BGInfo\BGInfo.exe' -PathToBGInfoTemplate 'C:\AvidInstallers\BGInfo\x64Client.bgi'
+      Install-BGInfo -ComputerName $all_hosts -Credential $Cred -PathToBGInfoExecutable 'C:\AvidInstallers\BGInfo\BGInfo.exe' -PathToBGInfoTemplate 'C:\AvidInstallers\BGInfo\x64Client.bgi'
    #>
    
    Param(
