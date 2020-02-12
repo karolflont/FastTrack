@@ -68,12 +68,11 @@ function Get-RemoteDesktopStatus{
    .SYNOPSIS
       Checks if Remote Desktop connection to a specific computer is possible.
    .DESCRIPTION
-      The Get-RemoteDesktopStatus function checks five parameters determining if Remote Desktop to a computer is possible. These are:
+      The Get-RemoteDesktopStatus function checks four parameters determining if Remote Desktop to a computer is possible. These are:
       1) "Remote Desktop Services" service status
       2) "fDenyTSConnections" value of "HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server" registry key.
-      3) "Windows Firewall" service status
-      4) "Remote Desktop" DisplayGroup firewall rule existance
-      5) "Network Level Authentication" status
+      3) "Remote Desktop" DisplayGroup firewall rule existance
+      4) "Network Level Authentication" status
    .PARAMETER ComputerName
       Specifies the computer name.
    .PARAMETER Credentials
@@ -85,15 +84,15 @@ function Get-RemoteDesktopStatus{
         [Parameter(Mandatory = $true)] $ComputerName,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential
     )
-    Write-Host -BackgroundColor White -ForegroundColor Red "`n RDP and Firewall Services statuses NOT yet implemented. "
 
-   ### Check if RDP is enabled - IN PROGRESS!!! - see help above for more info
     $StatusTable = Invoke-Command -ComputerName $srv_IP -Credential $Cred -ScriptBlock {
+      $RDPServicesStatus = (Get-Service -Name TermService).Status
       $RDPStatus = (Get-ItemProperty -Path 'HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections").fDenyTSConnections
       $RDPFirewallRuleStatus = (Get-NetFirewallRule -Name "RemoteDesktop-UserMode-In-TCP").Enabled
       $NLAStatus = (Get-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication").UserAuthentication
    
       $HostStatus = New-Object -TypeName psobject
+      $HostStatus | Add-Member -MemberType NoteProperty -Name "RDPServices" -Value $RDPServicesStatus
       $HostStatus | Add-Member -MemberType NoteProperty -Name "RemoteDesktop" -Value $RDPStatus
       $HostStatus | Add-Member -MemberType NoteProperty -Name "RDPFirewallRule" -Value $RDPFirewallRuleStatus
       $HostStatus | Add-Member -MemberType NoteProperty -Name "NetworkLevelAuthentication" -Value $NLAStatus
@@ -112,7 +111,7 @@ function Get-RemoteDesktopStatus{
    }
 
    Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Remote Desktop access status summary "
-   $StatusTable | Select-Object PSComputerName, RemoteDesktop, RDPFirewallRule, NetworkLevelAuthentication | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
+   $StatusTable | Select-Object PSComputerName, RDPServices, RemoteDesktop, RDPFirewallRule, NetworkLevelAuthentication | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
    }   
 function Set-RemoteDesktop{
    <#
@@ -130,16 +129,18 @@ function Set-RemoteDesktop{
    param (
       [Parameter(Mandatory = $true)] $ComputerName,
       [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
-      [Parameter(Mandatory = $false)] [switch] $EnableWithDisabledNLA,
-      [Parameter(Mandatory = $false)] [switch] $EnableWithEnabledNLA,
-      [Parameter(Mandatory = $false)] [switch] $Disable
+      [Parameter] [switch] $EnableWithDisabledNLA,
+      [Parameter] [switch] $EnableWithEnabledNLA,
+      [Parameter] [switch] $Disable,
+      [Parameter] [switch] $DisableRDPService
    ) 
-   Write-Host -BackgroundColor White -ForegroundColor Red "`n RDP and Firewall Services toggling NOT yet implemented. "
 
-   $ActionIndex = Test-IfExactlyOneSwitchParameterIsTrue $EnableWithDisabledNLA $EnableWithEnabledNLA $Disable
+   $ActionIndex = Test-IfExactlyOneSwitchParameterIsTrue $EnableWithDisabledNLA $EnableWithEnabledNLA $Disable $DisableRDPService
 
    if ($ActionIndex -eq 0){
       #If EnableWithDisabledNLA switch was selected
+      Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-Service -Name TermServiceset-service -Name TermService -Status Running -StartupType Manual}
+      Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Remote Desktop Services (TermService) service ENABLED for all hosts. "
       Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-ItemProperty -Path 'HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0}
       Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n RDP ENABLED for all hosts. "
       Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Enable-NetFirewallRule -DisplayGroup "Remote Desktop"}
@@ -149,6 +150,8 @@ function Set-RemoteDesktop{
    }
    elseif ($ActionIndex -eq 1){
       #If EnableWithEnabledNLA switch was selected
+      Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-Service -Name TermServiceset-service -Name TermService -Status Running -StartupType Manual}
+      Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Remote Desktop Services (TermService) service ENABLED for all hosts. "
       Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-ItemProperty -Path 'HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0}
       Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n RDP ENABLED for all hosts. "
       Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Disable-NetFirewallRule -DisplayGroup "Remote Desktop"}
@@ -164,5 +167,10 @@ function Set-RemoteDesktop{
       Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n RDP firewall rule REMOVED for all remote hosts. "
       Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1}
       Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Network Level Authentication for RDP ENABLED for all remote hosts (default value). "
+   }
+   elseif ($ActionIndex -eq 3){
+      #If DisableRDPService switch was selected
+      Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-Service -Name TermService -Status Stopped -StartupType Disabled}
+      Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Remote Desktop Services (TermService) service STOPPED and DISABLED for all hosts. "
    }
 }
