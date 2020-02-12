@@ -133,3 +133,16 @@ function Get-WindowsDefenderRealtimeMonitoringStatus{
 
     Get-WindowsDefenderRealtimeMonitoringStatus $ComputerName $Credential
 }
+
+function Get-WindowsDefenderStatus{
+    #Get-Service -Name windefend
+    #Get-Service -Name mpssvc
+    #https://docs.microsoft.com/en-us/windows/security/threat-protection/windows-defender-antivirus/windows-defender-antivirus-on-windows-server-2016
+}
+function Uninstall-WindowsDefender{
+#Uninstall-WindowsFeature -Name Windows-Defender
+}
+function Install-WindowsDefender{
+    #Install-WindowsFeature -Name Windows-Defender
+}
+

@@ -39,11 +39,15 @@ Push-NexisConfig
 
 ### BEAUTIFIERS
 Install-BGInfo
-Create-DesktopShortcuts
 
 ### DIAGNOSTICS
 Get-EventLogErrors
 Run-CollectInSilentMode
 Run-AvidSystemCheck
                   
+}
+
+
+Invoke-CustomScript {
+
 }
