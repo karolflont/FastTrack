@@ -1,7 +1,7 @@
 ####################
 ##### HOSTNAME #####
 ####################
-function Get-Hostname{
+function Get-AvHostname{
    <#
    .SYNOPSIS
    TODO
@@ -20,7 +20,7 @@ Param(
 )
        Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {hostname}
 }
-function Set-Hostname{
+function Set-AvHostname{
       <#
       .SYNOPSIS
          Changes the hostname of a remote computer.
@@ -67,7 +67,7 @@ function Set-Hostname{
 ##############
 ### DOMAIN ###
 ##############
-function Get-Domain{
+function Get-AvDomain{
       <#
       .SYNOPSIS
          Checks the Active Directory Domain or Workgroup name for a Computer.
@@ -78,7 +78,7 @@ function Get-Domain{
       .PARAMETER Credentials
          Specifies the credentials used to login.
       .EXAMPLE
-         Get-Domain -ComputerName $all_hosts_IPs -Credential $Cred
+         Get-AvDomain -ComputerName $all_hosts_IPs -Credential $Cred
       #>
       Param(
          [Parameter(Mandatory = $true)] $ComputerName,
@@ -88,7 +88,7 @@ function Get-Domain{
          Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n DOMAIN MEMBERSHIP "
          $DomainMembership | Select-Object PSComputerName, Name, PartOfDomain, Domain  | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
       }
-function Join-Domain{
+function Join-AvDomain{
 <#
 .SYNOPSIS
    Joins computers to an Active Directory Domain.
@@ -124,7 +124,7 @@ Write-Host -BackgroundColor White -ForegroundColor DarkBlue " Reboot triggered f
 #####################
 ### AVIDPSG USER #####
 ######################
-function Get-AvidPSGUserAccount{
+function Get-AvPSGUserAccount{
    <#
 .SYNOPSIS
    TODO
@@ -150,7 +150,7 @@ Param(
     Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Administrators Group Members "
     $AvidPSGUserGroupStatus | Select-Object PSComputerName, Name, PrincipalSource, ObjectClass | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize # Where-Object {$_.Name -like "*AvidPSG*"} | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 }
-function Set-AvidPSGUserAccount{
+function Set-AvPSGUserAccount{
 <#
 .SYNOPSIS
    TODO

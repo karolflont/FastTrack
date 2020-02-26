@@ -1,7 +1,7 @@
 ####################
 ##### EVENTLOG #####
 ####################
-function Get-EventLogErrors{
+function Get-AvEventLogErrors{
     ### Get Error events from servers' EventLog
 <#
 .SYNOPSIS
@@ -70,7 +70,7 @@ Param(
         Write-Output $EventLogSummaryList | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
     }
 }
-function Invoke-CollectInSilentMode{
+function Invoke-AvCollectInSilentMode{
 }
-function New-AvidSystemCheck{
+function New-AvSystemCheck{
 }

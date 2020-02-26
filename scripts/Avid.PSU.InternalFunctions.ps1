@@ -1,17 +1,17 @@
-function Test-IfExactlyOneSwitchParameterIsTrue{
+function Test-AvIfExactlyOneSwitchParameterIsTrue{
         <#
     .SYNOPSIS
         Tests if exactly one switch parameter from a given set is true.
     .DESCRIPTION
-        The Test-IfExactlyOneSwitchParameterIsTrue function does two things:
+        The Test-AvIfExactlyOneSwitchParameterIsTrue function does two things:
         1) Checks if exactly one parameter is passed to the parent function
         2) Returns:
         - the index of this parameter in the input array (Remember it's 0 based!) if exactly one switch is selcted
         - $null if none of the switches is $true
         - -1 if both switches are $true
     .EXAMPLE
-        Test-IfExactlyOneSwitchParameterIsTrue $Enable $Disable
-        Test-IfExactlyOneSwitchParameterIsTrue $SortByPSComputerName $SortByName $SortByInterfaceAlias $SortByInterfaceIndex
+        Test-AvIfExactlyOneSwitchParameterIsTrue $Enable $Disable
+        Test-AvIfExactlyOneSwitchParameterIsTrue $SortByPSComputerName $SortByName $SortByInterfaceAlias $SortByInterfaceIndex
     #>
     param(
         [Parameter(Mandatory = $false)] $Param0,

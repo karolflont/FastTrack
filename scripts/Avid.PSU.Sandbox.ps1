@@ -1,7 +1,7 @@
 ##############
 ### ACCESS ###
 ##############
-function Install-Access{
+function Install-AvAccess{
     <#
     .SYNOPSIS
        Silently installs Access Client on remote hosts.

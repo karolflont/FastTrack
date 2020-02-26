@@ -1,7 +1,7 @@
 ############################
 ### NETWORK RELATED INFO ###
 ############################
-function Get-NetworkInfo{
+function Get-AvNetworkInfo{
    <#
    .SYNOPSIS
    TODO
@@ -29,7 +29,7 @@ function Get-NetworkInfo{
    $DefaultSortProperty = "PSComputerName"
    $PropertiesToDisplay = ('PSComputerName','Name','InterfaceAlias','InterfaceIndex','IPv4Connectivity','NetworkCategory') 
    
-   $SortPropertyIndex = Test-IfExactlyOneSwitchParameterIsTrue $SortByPSComputerName $SortByName $SortByInterfaceAlias $SortByInterfaceIndex $SortByIPv4Connectivity $SortByNetworkCategory
+   $SortPropertyIndex = Test-AvIfExactlyOneSwitchParameterIsTrue $SortByPSComputerName $SortByName $SortByInterfaceAlias $SortByInterfaceIndex $SortByIPv4Connectivity $SortByNetworkCategory
    
    if ($null -eq $SortPropertyIndex){
       #If none of the switches is selected, use the DafaultSortProperty
@@ -52,10 +52,10 @@ function Get-NetworkInfo{
 
    #GWMI Win32_NetworkAdapterConfiguration -Filter "IPEnabled = $true" |select @{N='IPv4'; E={($_."IPAddress").split(",")[0]}}
 }
-function Get-NICPowerManagementStatus{
+function Get-AvNICPowerManagementStatus{
 
 }
-function Set-NICPowerManagement{
+function Set-AvNICPowerManagement{
 
 }
 #IN PROGRESS
@@ -63,12 +63,12 @@ function Set-NICPowerManagement{
 ##### RDP #####
 ###############
 #IN PROGRESS
-function Get-RemoteDesktopStatus{
+function Get-AvRemoteDesktopStatus{
    <#
    .SYNOPSIS
       Checks if Remote Desktop connection to a specific computer is possible.
    .DESCRIPTION
-      The Get-RemoteDesktopStatus function checks four parameters determining if Remote Desktop to a computer is possible. These are:
+      The Get-AvRemoteDesktopStatus function checks four parameters determining if Remote Desktop to a computer is possible. These are:
       1) "Remote Desktop Services" service status
       2) "fDenyTSConnections" value of "HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server" registry key.
       3) "Remote Desktop" DisplayGroup firewall rule existance
@@ -113,7 +113,7 @@ function Get-RemoteDesktopStatus{
    Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Remote Desktop access status summary "
    $StatusTable | Select-Object PSComputerName, RDPServices, RemoteDesktop, RDPFirewallRule, NetworkLevelAuthentication | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
    }   
-function Set-RemoteDesktop{
+function Set-AvRemoteDesktop{
    <#
    .SYNOPSIS
    TODO
@@ -135,7 +135,7 @@ function Set-RemoteDesktop{
       [Parameter] [switch] $DisableRDPService
    ) 
 
-   $ActionIndex = Test-IfExactlyOneSwitchParameterIsTrue $EnableWithDisabledNLA $EnableWithEnabledNLA $Disable $DisableRDPService
+   $ActionIndex = Test-AvIfExactlyOneSwitchParameterIsTrue $EnableWithDisabledNLA $EnableWithEnabledNLA $Disable $DisableRDPService
 
    if ($ActionIndex -eq 0){
       #If EnableWithDisabledNLA switch was selected

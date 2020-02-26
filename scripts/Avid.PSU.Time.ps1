@@ -1,12 +1,12 @@
 #########################
 ##### TIME SETTINGS #####
 #########################
-function Get-TimeAndTimeZone{
+function Get-AvTimeAndTimeZone{
 <#
 .SYNOPSIS
    Gets current time and time zone from servers.
 .DESCRIPTION
-   The Get-Time function gets current Date, Time, Time Zone and Daylight Saving Time information from a server.
+   The Get-AvTime function gets current Date, Time, Time Zone and Daylight Saving Time information from a server.
    
    The function uses Get-Date and Get-TimeZone cmdlet.
 .PARAMETER ComputerName
@@ -33,12 +33,12 @@ param(
     #Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Current TIME on servers "
     #$Time | Select-Object PSComputerName, DateTime | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 }
-function Set-TimeAndTimeZone{
+function Set-AvTimeAndTimeZone{
 }
 #####################
 ##### TIME SYNC #####
 #####################
-function Install-MeinbergNTPDaemon{
+function Install-AvMeinbergNTPDaemon{
 <#
 .SYNOPSIS
    Silently installs Meinberg NTP Daemon on remote hosts.
@@ -101,7 +101,7 @@ Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Installation in 
 Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Start-Process -FilePath $using:PathToInstallerRemote -ArgumentList '/quiet' -Wait}
 Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Installation on all remote hosts DONE. Rebooting... "
 }
-function Push-MeinbergNTPDaemonConfig{
+function Push-AvMeinbergNTPDaemonConfig{
 }
-function Get-TimeSyncStatus{
+function Get-AvTimeSyncStatus{
 }

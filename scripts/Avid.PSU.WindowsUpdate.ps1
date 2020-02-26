@@ -1,12 +1,12 @@
 ##########################
 ##### WINDOWS UPDATE #####
 ##########################
-function Get-WindowsUpdateServiceStatus {
+function Get-AvWindowsUpdateServiceStatus {
 <#
 .SYNOPSIS
    Gets the information about Windows Update Service on a server.
 .DESCRIPTION
-   The Get-WindowsUpdateService function gets the Status and StartType properties of Windows Update Service on a server. 
+   The Get-AvWindowsUpdateServiceStatus function gets the Status and StartType properties of Windows Update Service on a server. 
 
    The function reads the Status and StartType properties of wuauserv service.
 .PARAMETER ComputerName
@@ -25,7 +25,7 @@ param(
     Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Windows Update Status "
     $WindowsUpdateStatus | Select-Object PSComputerName, Status, StartType | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 }
-function Set-WindowsUpdateService{
+function Set-AvWindowsUpdateService{
     <#
     .SYNOPSIS
         Enables or disables Windows Update Service on a server.

@@ -1,12 +1,12 @@
 ########################
 ### WINDOWS FIREWALL ###
 ########################
-function Get-FirewallStatus{
+function Get-AvFirewallStatus{
  <#
     .SYNOPSIS
         Gets the status of Firewall service.
     .DESCRIPTION
-        The Get-AvidSoftwareVersions function retrieves the
+        The Get-AvSoftwareVersions function retrieves the
     .PARAMETER ComputerName
         Specifies the computer name.
     .PARAMETER Credentials
@@ -27,12 +27,12 @@ Return
     $AvidSoftwareVersions | Select-Object PSComputerName, DisplayName, Status, StartType | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 
 }
-function Set-FirewallService{
+function Set-AvFirewallService{
 <#
 .SYNOPSIS
     Sets Windows Firewall service (MpsSvc) status i startup type .
 .DESCRIPTION
-    The Get-AvidSoftwareVersions function retrieves the
+    The Get-AvSoftwareVersions function retrieves the
 .PARAMETER ComputerName
     Specifies the computer name.
 .PARAMETER Credentials
@@ -52,7 +52,7 @@ Return
     $AvidSoftwareVersions | Select-Object PSComputerName, DisplayName, Status, StartType | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 
 }
-function Set-FirewallState{
+function Set-AvFirewallState{
  <#
     .SYNOPSIS
         Turns the firewall ON or OFF for all profiles: Public, Private and Domain. (Turn ON/OFF!!! - not ENABLE/DISABLE the service)
@@ -98,12 +98,12 @@ Return
 ########################
 ### WINDOWS DEFENDER ###
 ########################
-function Get-DefenderStatus{
+function Get-AvDefenderStatus{
     <#
     .SYNOPSIS
        Gets the status of Windows Defender Realtime Monitoring.
     .DESCRIPTION
-       The Get-DefenderStatus function gets the Status of Windows Defender Realtime Monitoring on a server. 
+       The AvDefenderStatus function gets the Status of Windows Defender Realtime Monitoring on a server. 
     .PARAMETER ComputerName
        Specifies the computer name.
     .PARAMETER Credentials
@@ -126,7 +126,7 @@ Return
         Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Windows Defender Realtime Monitoring Status "
         $WindowsDefenderRealtimeMonitoringStatus | Select-Object PSComputerName, DisableRealTimeMonitoring | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
     }
-function Install-Defender{
+function Install-AvDefender{
 <#
 .SYNOPSIS
     Installs Windows Defender Feature.
@@ -149,7 +149,7 @@ Return
     Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Install-WindowsFeature -Name Windows-Defender}
     Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Windows Defender INSTALLED on all remote hosts. "
 }
-function Uninstall-Defender{
+function Uninstall-AvDefender{
     <#
     .SYNOPSIS
         Uninstalls Windows Defender Feature.
@@ -172,7 +172,7 @@ Return
         Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Uninstall-WindowsFeature -Name Windows-Defender}
         Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Windows Defender UNINSTALLED on all remote hosts. "
     }
-function Set-Defender{
+function Set-AvDefender{
 <#
 .SYNOPSIS
     Enables or disables Windows Defender Realtime Monitoring.
@@ -185,7 +185,7 @@ function Set-Defender{
 .EXAMPLE
     TODO
 #>
-Write-Host -BackgroundColor White -ForegroundColor Red "`n Not yes implemented."
+Write-Host -BackgroundColor White -ForegroundColor Red "`n Not yet implemented."
 Return
 param(
     [Parameter(Mandatory = $true)] $ComputerName,
@@ -215,7 +215,7 @@ else {
     Return
 }
 
-Get-WindowsDefenderRealtimeMonitoringStatus $ComputerName $Credential
+Get-AvWindowsDefenderRealtimeMonitoringStatus $ComputerName $Credential
 }
 
 

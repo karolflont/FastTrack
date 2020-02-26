@@ -1,7 +1,7 @@
 #############################################
 ### DISABLE SERVER MANAGER START AT LOGON ###
 #############################################
-function Get-ServerManagerBehaviorAtLogon{
+function Get-AvServerManagerBehaviorAtLogon{
 <#
 .SYNOPSIS
    TODO
@@ -22,7 +22,7 @@ param(
     Write-Host -BackgroundColor White -ForegroundColor DarkBlue " `n Server Manager Behavior At Logon"
     Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Get-ScheduledTask -TaskName ServerManager}
 }
-function Set-ServerManagerBehaviorAtLogon{
+function Set-AvServerManagerBehaviorAtLogon{
 <#
 .SYNOPSIS
     TODO
@@ -42,7 +42,7 @@ param(
         [Parameter(Mandatory = $false)] [switch] $Disable
     )
 
-    $ActionIndex = Test-IfExactlyOneSwitchParameterIsTrue $Enable $Disable
+    $ActionIndex = Test-AvIfExactlyOneSwitchParameterIsTrue $Enable $Disable
 
     if ($ActionIndex -eq 0){
         #If Enable switch was selected
@@ -59,7 +59,7 @@ param(
 ###############
 ##### UAC #####
 ###############
-function Get-UACLevel{
+function Get-AvUACLevel{
 <#
 .SYNOPSIS
    TODO
@@ -86,7 +86,7 @@ param(
     Write-Host -BackgroundColor White -ForegroundColor DarkBlue " 0 - Never notify me                                             "
     $UACLevel | Select-Object PSComputerName, ConsentPromptBehaviorAdmin | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 }
-function Set-UACLevel{
+function Set-AvUACLevel{
 <#
 .SYNOPSIS
    TODO
@@ -107,31 +107,31 @@ param(
         [Parameter(Mandatory = $false)] [switch] $NeverNotify
     )
 
-    $ActionIndex = Test-IfExactlyOneSwitchParameterIsTrue $AlwaysNotify $NotifyWhenAppsMakeChangesToComputer $NeverNotify
+    $ActionIndex = Test-AvIfExactlyOneSwitchParameterIsTrue $AlwaysNotify $NotifyWhenAppsMakeChangesToComputer $NeverNotify
     
     if ($ActionIndex -eq 0){
         #If AlwaysNotify switch was selected
         Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "ConsentPromptBehaviorAdmin" -Value "2"}
         Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n UAC Level changed to `"Always notify me`" for all hosts. "
-        Get-UACLevel $ComputerName $Credential
+        AvUACLevel $ComputerName $Credential
     }
     elseif ($ActionIndex -eq 1){
         #If NotifyWhenAppsMakeChangesToComputer switch was selected
         Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "ConsentPromptBehaviorAdmin" -Value "5"}
         Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n UAC Level changed to `"Notify me only when apps try to make changes to my computer`" for all hosts. "
-        Get-UACLevel $ComputerName $Credential
+        Get-AvUACLevel $ComputerName $Credential
     }
     elseif ($ActionIndex -eq 2){
         #If NeverNotify switch was selected
         Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "ConsentPromptBehaviorAdmin" -Value "0"}
         Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n UAC Level changed to `"Never notify me`" for all hosts. "
-        Get-UACLevel $ComputerName $Credential
+        Get-AvUACLevel $ComputerName $Credential
     }
 }
 ################################
 ##### PROCESSOR SCHEDULING #####
 ################################
-function Get-ProcessorScheduling{
+function Get-AvProcessorScheduling{
     <#
     .SYNOPSIS
         Gets the Processor Scheduling setting: programs or background services
@@ -155,7 +155,7 @@ function Get-ProcessorScheduling{
     Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Processor scheduling status: 38 - programs; 0(default) or 24 - background services "
     $ProcesorSchedulingStatus | Select-Object PSComputerName, Win32PrioritySeparation | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 }
-function Set-ProcessorScheduling{
+function Set-AvProcessorScheduling{
     <#
     .SYNOPSIS
         Sets processor schedulling to Programs or Background Services.
@@ -175,7 +175,7 @@ function Set-ProcessorScheduling{
         [Parameter(Mandatory = $false)] [switch]$BackgroundServices
     )
 
-    $ActionIndex = Test-IfExactlyOneSwitchParameterIsTrue $Programs $BackgroundService
+    $ActionIndex = Test-AvIfExactlyOneSwitchParameterIsTrue $Programs $BackgroundService
     
     if ($ActionIndex -eq 0){
         #If Programs switch was selected
@@ -183,7 +183,7 @@ function Set-ProcessorScheduling{
             Set-ItemProperty HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl -Name Win32PrioritySeparation -Value 38
         }
         Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Processor scheduling set to PROGRAMS. "
-        Get-ProcessorScheduling $ComputerName $Credential
+        Get-AvProcessorScheduling $ComputerName $Credential
     }
     elseif ($ActionIndex -eq 1){
         #If BackgroundService switch was selected
@@ -191,7 +191,7 @@ function Set-ProcessorScheduling{
             Set-ItemProperty HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl -Name Win32PrioritySeparation -Value 24
         }
         Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Processor scheduling set to BACKGROUND SERVICES. "
-        Get-ProcessorScheduling $ComputerName $Credential
+        Get-AvProcessorScheduling $ComputerName $Credential
     }
 }
 ################################
@@ -202,12 +202,12 @@ function Set-VisualEffects{
 #####################
 ##### AUTOLOGON #####
 #####################
-function Get-AutologonStatus{
+function Get-AvAutologonStatus{
     <#
     .SYNOPSIS
         Gets Windows Autologon status.
     .DESCRIPTION
-        The Get-Autologon function gets Windows Autologon status. 
+        The Get-AvAutologon function gets Windows Autologon status. 
     .PARAMETER ComputerName
         Specifies the computer name.
     .PARAMETER Credentials
@@ -252,7 +252,7 @@ function Get-AutologonStatus{
     #Set-ItemProperty $RegPath "DefaultPassword" -Value "$DefaultPassword" -type String
     
     }
-function Set-Autologon{
+function Set-AvAutologon{
     <#
     .SYNOPSIS
         Enables or disables Windows Autologon.
@@ -293,13 +293,13 @@ function Set-Autologon{
         Return
     }
 
-    Get-WindowsDefenderRealtimeMonitoringStatus $ComputerName $Credential
+    Get-AvWindowsDefenderRealtimeMonitoringStatus $ComputerName $Credential
 }
 ####################
 ##### KEYBOARD #####
 ####################
 #https://docs.microsoft.com/en-us/windows-hardware/manufacture/desktop/default-input-locales-for-windows-language-packs
-function Get-KeyboardLayout{
+function Get-AvKeyboardLayout{
 <#
 .SYNOPSIS
    TODO
@@ -327,7 +327,7 @@ param(
         Write-Host $InputMethodTips[$i]
     }
 }
-function Set-KeyboardLayout{
+function Set-AvKeyboardLayout{
 <#
 .SYNOPSIS
    TODO
@@ -351,12 +351,12 @@ param(
 ######################
 ##### POWER PLAN #####
 ######################
-function Get-PowerPlan{
+function Get-AvPowerPlan{
     <#
     .SYNOPSIS
        Gets the ACTIVE Power Plan of the server.
     .DESCRIPTION
-       The Get-PowerPlan function gets the ACTIVE Power Plan of the server.
+       The Get-AvPowerPlan function gets the ACTIVE Power Plan of the server.
 
        The function uses Get-CimInstance cmdlet.
     .PARAMETER ComputerName
@@ -375,7 +375,7 @@ function Get-PowerPlan{
     Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Active Power Plan "
     $PowerPlan | Where-Object {$_.IsActive -eq $True} | Select-Object PSComputerName, ElementName | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 }
-function Set-PowerPlan{
+function Set-AvPowerPlan{
 <#
 .SYNOPSIS
     Sets the ACTIVE Power Plan of the server.
@@ -401,7 +401,7 @@ function Set-PowerPlan{
         [Parameter(Mandatory = $false)] [switch] $PowerSaver,
         [Parameter(Mandatory = $false)] [switch] $AvidOptimized
     )
-    $ActionIndex = Test-IfExactlyOneSwitchParameterIsTrue $HighPerformance $Balanced $PowerSaver $AvidOptimized 
+    $ActionIndex = Test-AvIfExactlyOneSwitchParameterIsTrue $HighPerformance $Balanced $PowerSaver $AvidOptimized 
     
     if ($ActionIndex -eq 0){
         #If HighPerformance switch was selected
@@ -410,7 +410,7 @@ function Set-PowerPlan{
             Invoke-CimMethod -InputObject $HighPerformancePowerPlan -MethodName Activate | Out-Null
         }
         Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Power Plan SET to HIGH PERFORMANCE. "
-        Get-PowerPlan $ComputerName $Credential
+        Get-AvPowerPlan $ComputerName $Credential
     }
     elseif ($ActionIndex -eq 1){
         #If Balanced switch was selected
@@ -419,7 +419,7 @@ function Set-PowerPlan{
             Invoke-CimMethod -InputObject $BalancedPowerPlan -MethodName Activate | Out-Null
         }
         Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Power Plan SET to BALANCED. "
-        Get-PowerPlan $ComputerName $Credential
+        Get-AvPowerPlan $ComputerName $Credential
     }
     elseif ($ActionIndex -eq 2){
         #If PowerSaver switch was selected
@@ -428,7 +428,7 @@ function Set-PowerPlan{
             Invoke-CimMethod -InputObject $PowerSaverPowerPlan -MethodName Activate | Out-Null
         }
         Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Power Plan SET to POWER SAVER. "
-        Get-PowerPlan $ComputerName $Credential
+        Get-AvPowerPlan $ComputerName $Credential
     }
     elseif ($ActionIndex -eq 3){
         #If AvidOptimized switch was selected

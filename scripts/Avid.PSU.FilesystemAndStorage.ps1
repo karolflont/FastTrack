@@ -1,6 +1,6 @@
-function Get-PartitionInfo{
+function Get-AvPartitionInfo{
 }
-function Set-Partition{
+function Set-AvPartition{
     param(
     [Parameter(Mandatory = $true)] $ComputerName,
     [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
@@ -12,7 +12,7 @@ function Set-Partition{
 ##### SHOW HIDDEN FILES, FOLDERS AND DRIVES #####
 #################################################
 # This is the equivalent of Folder Menu -> Tools -> Folder Options -> View -> Advanced settings -> Show hidden files, folders and drives
-function Get-HiddenFilesAndFoldersStatus{
+function Get-AvHiddenFilesAndFoldersStatus{
     ### Get "Show hidden files, folders and drives" option status
 <#
 .SYNOPSIS
@@ -36,7 +36,7 @@ param(
     Write-Host -BackgroundColor White -ForegroundColor DarkBlue " 2 - Hidden files, folders and drives HIDDEN "
     $HiddenFilesAndFoldersStatus | Select-Object PSComputerName, Hidden | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 }
-function Set-HiddenFilesAndFolders{
+function Set-AvHiddenFilesAndFolders{
     <#
     .SYNOPSIS
         Shows or hides hidden files and folders.
@@ -94,5 +94,5 @@ function Set-HiddenFilesAndFolders{
         Return
     }
 
-    Get-HiddenFilesAndFoldersStatus $ComputerName $Credential
+    Get-AvHiddenFilesAndFoldersStatus $ComputerName $Credential
 }

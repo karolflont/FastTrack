@@ -1,12 +1,12 @@
 ######################
 ##### OS VERSION #####
 ######################
-function Get-OSVersion{
+function Get-AvOSVersion{
 <#
 .SYNOPSIS
    Gets detailed OS Version for a server.
 .DESCRIPTION
-   The Get-OSVersion function gets the detailed information about OS Version of a server.
+   The Get-AvOSVersion function gets the detailed information about OS Version of a server.
 
    The function reads specific values from "HKLM:SOFTWARE\Microsoft\Windows NT\CurrentVersion" registry key. The read values are: 
    ProductName, BuildBranch, CurrentMajorVersionNumber, CurrentMinorVersionNumber, ReleaseID, CurrentBuildNumber, UBR and InstallDate.
@@ -29,7 +29,7 @@ param(
     $OSVersion | Select-Object PSComputerName, ProductName, BuildBranch, CurrentMajorVersionNumber, CurrentMinorVersionNumber, ReleaseID, CurrentBuildNumber, UBR, InstallDate | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 
 }
-function Install-BGInfo{
+function Install-AvBGInfo{
    <#
    .SYNOPSIS
       Installs and configures BGInfo on remote hosts.
@@ -122,4 +122,6 @@ function Install-BGInfo{
    #5. Run BGInfo on remote hosts
    Write-Host -BackgroundColor White -ForegroundColor Red "`n Please use the desktop shortcut on remote hosts to run BGInfo for the first time. "
    Write-Host -BackgroundColor White -ForegroundColor Red " Also, remember to add the right BGInfo fields on appropriate hosts. "
+}
+function Get-AvUptime{
 }

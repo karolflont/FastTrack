@@ -1,4 +1,4 @@
 
 
 
-Install-WindowsFeature -Name Failover-Clustering –IncludeManagementTools
+#Install-WindowsFeature -Name Failover-Clustering –IncludeManagementTools

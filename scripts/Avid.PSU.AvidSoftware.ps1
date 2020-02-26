@@ -1,7 +1,7 @@
 #################
 ##### NEXIS #####
 #################
-function Get-NexisClientVersion{
+function Get-AvNexisClientVersion{
 <#
 .SYNOPSIS
    TODO
@@ -25,7 +25,7 @@ Param(
     Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Nexis Client Versions Installed "
     $Results | Select-Object PSComputerName, DisplayName, DisplayVersion, InstallDate | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 }
-function Install-NexisClient{
+function Install-AvNexisClient{
 <#
 .SYNOPSIS
    Silently installs AvidNEXIS Client on remote hosts.
@@ -114,10 +114,10 @@ else
         Write-Host -BackgroundColor White -ForegroundColor Red " Please REBOOT manually later as this is required for AvidNEXIS Client to work properly. "
     }
 }
-function Push-NexisConfig{
+function Push-AvNexisConfig{
 
 }
-function Uninstall-NexisClient{
+function Uninstall-AvNexisClient{
 <#
 .SYNOPSIS
    Silently uninstalls AvidNEXIS Client on remote hosts.
@@ -167,12 +167,12 @@ else
 ###############################
 ##### AVID SOFTWARE CHECK #####
 ###############################
-function Get-AvidSoftwareVersions{
+function Get-AvSoftwareVersions{
     <#
     .SYNOPSIS
         Gets installed Avid Software versions.
     .DESCRIPTION
-        The Get-AvidSoftwareVersions function consists of two parts:
+        The Get-AvSoftwareVersions function consists of two parts:
         1) First, retrieves the version of NXNServer.exe file for Interplay Engine
         2) Second, retrieves all the keys from "HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\" containing word "Avid" in the "Publishers" value
     .PARAMETER ComputerName
@@ -249,12 +249,12 @@ function Get-AvidSoftwareVersions{
     $AvidSoftwareVersions | Select-Object $PropertiesToDisplay | Sort-Object -Property $SortProperty | Format-Table -Wrap -AutoSize
     }
 } 
-function Get-AvidServices{
+function Get-AvServices{
         <#
     .SYNOPSIS
         Gets information about Installed Avid Services.
     .DESCRIPTION
-        The Get-AvidServices function gets Status and StartType of Installed Avid Services on a server.
+        The Get-AvServices function gets Status and StartType of Installed Avid Services on a server.
     .PARAMETER ComputerName
         Specifies the computer name.
     .PARAMETER Credentials
@@ -274,7 +274,7 @@ function Get-AvidServices{
 #################
 ### AVID PREP ###
 #################
-function Invoke-AvidPrep{
+function Invoke-AvAvidPrep{
 }
 
 
