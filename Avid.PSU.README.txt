@@ -1,3 +1,76 @@
 Welcome!
 
-Avid.PSUtilities PowerShell module is a set of functions that ease life when you need to perform same operation on multiple servers. 
+Avid.PSUtilities PowerShell module is a set of functions that ease life when you need to perform same operation on multiple servers.
+
+
+
+Appendix 1. Sample System Configuration file - basic.
+{
+    "systemName":"LopDEV",
+    "hosts": [
+        {
+            "IP":"192.168.30.31",
+            "hostname":"lop-ie2",
+            "alias":"ie",
+            "role":["PAM","IE"]
+        },
+        {
+            "IP":"192.168.30.32",
+            "hostname":"lop-tc-01",
+            "alias":"tc1",
+            "role":["PAM","TRC"]
+        },
+        {
+            "IP":"192.168.30.33",
+            "hostname":"lop-tc-02",
+            "alias":"tc2",
+            "role":["PAM","TRC"]
+        }
+    ]
+}
+
+Appendix 2. Sample System Configuration file - advanced.
+{
+    "systemName":"LopDEV",
+    "hosts": [
+        {
+            "IP":"192.168.30.31",
+            "hostname":"lop-ie2",
+            "alias":"ie",
+            "role":["PAM","IE"]
+        },
+        {
+            "IP":"192.168.30.32",
+            "hostname":"lop-tc-01",
+            "alias":"tc1",
+            "role":["PAM","TRC"]
+        },
+        {
+            "IP":"192.168.30.33",
+            "hostname":"lop-tc-02",
+            "alias":"tc2",
+            "role":["PAM","TRC"]
+        }
+    ],
+    "domain":{
+        "mainSuffix":"lop.prm",
+        "additionalSuffixes":[],
+        "DNSServers":[
+            {
+                "IP":"192.168.30.71",
+                "alias":"dc1",
+                "role":["DC"]
+            },
+            {
+                "IP":"192.168.30.72",
+                "alias":"dc2",
+                "role":["DC"]
+            }
+        ]
+    },
+    "timesync":{
+        "inhouseSources": ["192.168.30.71"],
+        "AvidSystemPrimaryMaster": "",
+        "AvidSystemSecondaryMaster": ""
+    }
+}
