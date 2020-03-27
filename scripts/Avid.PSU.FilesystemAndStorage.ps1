@@ -31,9 +31,9 @@ param(
     [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential
 )
     $HiddenFilesAndFoldersStatus = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Get-ItemProperty "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "Hidden"}
-    Write-Host -BackgroundColor White -ForegroundColor DarkBlue " `n SHOW HIDDEN FILES, FOLDERS AND DRIVES STATUS"
-    Write-Host -BackgroundColor White -ForegroundColor DarkBlue " 1 - Hidden files, folders and drives SHOWN  "
-    Write-Host -BackgroundColor White -ForegroundColor DarkBlue " 2 - Hidden files, folders and drives HIDDEN "
+    Write-Host -ForegroundColor Cyan "`n SHOW HIDDEN FILES, FOLDERS AND DRIVES STATUS"
+    Write-Host -ForegroundColor Cyan "1 - Hidden files, folders and drives SHOWN  "
+    Write-Host -ForegroundColor Cyan "2 - Hidden files, folders and drives HIDDEN "
     $HiddenFilesAndFoldersStatus | Select-Object PSComputerName, Hidden | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 }
 function Set-AvHiddenFilesAndFolders{
@@ -59,13 +59,13 @@ function Set-AvHiddenFilesAndFolders{
     [Parameter(Mandatory = $false)] [switch]$Hide
     )
 
-    Write-Host -BackgroundColor White -ForegroundColor Red "`n WARNING: This will restart the explorer.exe process on all hosts after changing the parameter. "
-    Write-Host -BackgroundColor White -ForegroundColor Red "This means ALL your opened folders will be closed and ongoing copy processes will also be stopped. Press Enter to continue or Ctrl+C to quit. "
+    Write-Host -ForegroundColor Yellow "`nWARNING: This will restart the explorer.exe process on all hosts after changing the parameter. "
+    Write-Host -ForegroundColor Red "This means ALL your opened folders will be closed and ongoing copy processes will also be stopped. Press Enter to continue or Ctrl+C to quit. "
     [void](Read-Host)
 
     if ($Show) {
         if ($Hide) {
-            Write-Host -BackgroundColor White -ForegroundColor Red "`n Please specify ONLY ONE of the -Show/-Hide switch parameters. "
+            Write-Host -ForegroundColor Red "`nPlease specify ONLY ONE of the -Show/-Hide switch parameters. "
         Return
         }
         Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {
@@ -74,11 +74,11 @@ function Set-AvHiddenFilesAndFolders{
                 Stop-Process -ProcessName explorer -Force
             }
         }
-        Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Hidden files and folders SHOWN. "
+        Write-Host -ForegroundColor Green "`nHidden files and folders SHOWN. "
     }
     elseif ($Hide) {
         if ($Show) {
-            Write-Host -BackgroundColor White -ForegroundColor Red "`n Please specify ONLY ONE of the -Show/-Hide switch parameters. "
+            Write-Host -ForegroundColor Red "`nPlease specify ONLY ONE of the -Show/-Hide switch parameters. "
             Return
         }
         Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {
@@ -87,10 +87,10 @@ function Set-AvHiddenFilesAndFolders{
                 Stop-Process -ProcessName explorer -Force
             }
         }
-        Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Hidden files and folders HIDDEN. "
+        Write-Host -ForegroundColor Green "`nHidden files and folders HIDDEN. "
     }
     else {
-        Write-Host -BackgroundColor White -ForegroundColor Red "`n Please specify ONE of the -Show/-Hide switch parameters. "
+        Write-Host -ForegroundColor Red "`nPlease specify ONE of the -Show/-Hide switch parameters. "
         Return
     }
 

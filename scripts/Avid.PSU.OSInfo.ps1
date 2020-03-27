@@ -25,9 +25,51 @@ param(
     )
 
     $OSVersion = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {(Get-ItemProperty -Path "HKLM:SOFTWARE\Microsoft\Windows NT\CurrentVersion" -Name ProductName, BuildBranch, CurrentMajorVersionNumber, CurrentMinorVersionNumber, ReleaseID, CurrentBuildNumber, UBR, InstallDate)}
-    Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n OS Version `n"
+    Write-Host -ForegroundColor Cyan "`nOS Version `n"
     $OSVersion | Select-Object PSComputerName, ProductName, BuildBranch, CurrentMajorVersionNumber, CurrentMinorVersionNumber, ReleaseID, CurrentBuildNumber, UBR, InstallDate | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 
+}
+function Get-AvHWSpecification{
+   <#
+   .SYNOPSIS
+   Outputs a table smamrizing CPU, RAM and C: drive size for a list of computers.
+   .DESCRIPTION
+   The Get-AvHWSpecification function uses:
+   - Get-WmiObject -Class Win32_Processor
+   - Get-WmiObject -Class Win32_physicalmemory
+   - Get-Partition -DriveLetter C
+   - Get-Partition -DriveLetter D
+   .PARAMETER ComputerIP
+   Specifies the computer name.
+   .PARAMETER Credentials
+   Specifies the credentials used to login.
+   .EXAMPLE
+   #>
+   Param(
+      [Parameter(Mandatory = $true)] $ComputerIP,
+      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential
+   )
+
+   $HWSpecification = Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {
+      [pscustomobject]@{HostnameSetOnHost = $env:computername
+         NumberOfCores = (Get-WmiObject -Class Win32_Processor | Select-Object -Property NumberOfCores).NumberOfCores
+         NumberOfLogicalProcessors = (Get-WmiObject -Class Win32_Processor | Select-Object -Property NumberOfLogicalProcessors).NumberOfLogicalProcessors
+                              RAM = (Get-WmiObject -Class Win32_physicalmemory | Measure-Object -Property Capacity -Sum).Sum
+                              C_PartitionSize = (Get-Partition -DriveLetter C | Select-Object -Property Size).Size
+                              D_PartitionSize = (Get-Partition -DriveLetter D -ErrorAction SilentlyContinue | Select-Object -Property Size).Size}
+   }
+
+   $HWSpecification | Select-Object -Property @{Name = "ComputerIP" ; Expression = {$_.PSComputerName} },
+                                                                     HostnameSetOnHost,
+                                                                     NumberOfCores,
+                                                                     NumberOfLogicalProcessors,
+                                                                     @{Name = "RAM(GB)" ; Expression = {$_.RAM/1GB} },
+                                                                     @{Name = "C_PartitionSize(GB)" ; Expression = {[Math]::Round(($_.C_PartitionSize / 1GB),2)} }, 
+                                                                     @{Name = "D_PartitionSize(GB)" ; Expression = {
+                                                                        if ($null -eq $_.D_PartitionSize) {$result = "N/A"}
+                                                                        else {$result = [Math]::Round(($_.D_PartitionSize / 1GB),2)}
+                                                                        $result}} `
+                                                                     | Sort-Object -Property ComputerIP | Format-Table -Wrap -AutoSize
 }
 function Install-AvBGInfo{
    <#
@@ -69,46 +111,46 @@ function Install-AvBGInfo{
    $BGInfoArguments = $PathToBGInfoTemplateRemote + " /NOLICPROMPT /TIMER:0"
    
    #1. Check if the PathToBGInfoExecutable and PathToBGInfoTemplate are valid - cancel installation if not.
-   Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Checking if the path to BGInfo executable and template are valid ones. Please wait... "
+   Write-Host -ForegroundColor Cyan "`nChecking if the path to BGInfo executable and template are valid ones. Please wait... "
    if (-not (Test-Path -Path $PathToBGInfoExecutable -PathType leaf)){
       if (-not (Test-Path -Path $PathToBGInfoTemplate -PathType leaf)){
-         Write-Host -BackgroundColor White -ForegroundColor Red "`n Paths to BGInfo executable and BGInfo tempate are not valid. Exiting... "
+         Write-Host -ForegroundColor Red "`nPaths to BGInfo executable and BGInfo tempate are not valid. Exiting... "
          return
       }
-      Write-Host -BackgroundColor White -ForegroundColor Red "`n Path to BGInfo executable is not valid. Exiting... "
+      Write-Host -ForegroundColor Red "`nPath to BGInfo executable is not valid. Exiting... "
       return
    }
    elseif (Test-Path -Path $PathToBGInfoExecutable -PathType leaf){
       if (-not (Test-Path -Path $PathToBGInfoTemplate -PathType leaf)){
-         Write-Host -BackgroundColor White -ForegroundColor Red "`n Path to BGInfo tempate is not valid. Exiting... "
+         Write-Host -ForegroundColor Red "`nPath to BGInfo tempate is not valid. Exiting... "
          return
       }
    }
    else {
-       Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Paths are valid. Let's continue... "
+       Write-Host -ForegroundColor Green "`nPaths are valid. Let's continue... "
    }
    
    #2. Create the C:\BGInfo folders on remote hosts
-   Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Creating folder C:\BGInfo on remote hosts. Please wait... "
+   Write-Host -ForegroundColor Cyan "`nCreating folder C:\BGInfo on remote hosts. Please wait... "
    Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {New-Item -ItemType 'directory' -Path 'C:\BGInfo' | Out-Null}
-   Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Folder C:\BGInfo SUCCESSFULLY created on all remote hosts. "
+   Write-Host -ForegroundColor Green "`nFolder C:\BGInfo SUCCESSFULLY created on all remote hosts. "
    
    #3. Copy the BGInfo executable and template to the local drive of remote hosts
-   Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Copying the BGInfo executable and template to remote hosts. Please wait... "
+   Write-Host -ForegroundColor Cyan "`nCopying the BGInfo executable and template to remote hosts. Please wait... "
    $ComputerName | ForEach-Object -Process {
        $Session = New-PSSession -ComputerName $_ -Credential $Credential
        Copy-Item -LiteralPath $PathToBGInfoExecutable -Destination "C:\BGInfo\" -ToSession $Session
        Copy-Item -LiteralPath $PathToBGInfoTemplate -Destination "C:\BGInfo\" -ToSession $Session
    }
-   Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n BGInfo Executable and template SUCCESSFULLY copied to all remote hosts. "
+   Write-Host -ForegroundColor Green "`nBGInfo Executable and template SUCCESSFULLY copied to all remote hosts. "
    
    #4. Unblock the copied installer (so no "Do you want to run this file?" pop-out hangs the installation in the next step)
-   #Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Unblocking copied files. Please wait... "
+   #Write-Host -ForegroundColor Cyan "`nUnblocking copied files. Please wait... "
    #Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Unblock-File -Path $using:PathToInstallerRemote}
-   #Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n All files SUCCESSFULLY unblocked. "
+   #Write-Host -ForegroundColor Green "`nAll files SUCCESSFULLY unblocked. "
    
    #5. Create the GBInfo shortcut in common startup folder
-   Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Creating BGInfo autostart and desktop shortcuts on remote hosts. Please wait... "
+   Write-Host -ForegroundColor Cyan "`nCreating BGInfo autostart and desktop shortcuts on remote hosts. Please wait... "
    Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock{
       $WshShell = New-Object -comObject WScript.Shell
       $Shortcut = $WshShell.CreateShortcut($using:PathToShortcut)
@@ -117,11 +159,42 @@ function Install-AvBGInfo{
       $Shortcut.Save()
       Copy-Item $using:PathToShortcut -Destination "C:\Users\Public\Desktop"
    }
-   Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n BGInfo autostart and desktop shortcuts SUCCESFULY created on all remote hosts. "
+   Write-Host -ForegroundColor Green "`nBGInfo autostart and desktop shortcuts SUCCESFULY created on all remote hosts. "
 
    #5. Run BGInfo on remote hosts
-   Write-Host -BackgroundColor White -ForegroundColor Red "`n Please use the desktop shortcut on remote hosts to run BGInfo for the first time. "
-   Write-Host -BackgroundColor White -ForegroundColor Red " Also, remember to add the right BGInfo fields on appropriate hosts. "
+   Write-Host -ForegroundColor Red "`nPlease use the desktop shortcut on remote hosts to run BGInfo for the first time. "
+   Write-Host -ForegroundColor Red "Also, remember to add the right BGInfo fields on appropriate hosts. "
 }
 function Get-AvUptime{
+<#
+.SYNOPSIS
+Outputs ptime for a list of computers.
+.DESCRIPTION
+The Get-AvUptime function uses:
+- Get-WmiObject -Class Win32_Processor
+- Get-WmiObject -Class Win32_physicalmemory
+- Get-Partition -DriveLetter C
+- Get-Partition -DriveLetter D
+.PARAMETER ComputerIP
+Specifies the computer name.
+.PARAMETER Credentials
+Specifies the credentials used to login.
+.EXAMPLE
+#>
+Param(
+   [Parameter(Mandatory = $true)] $ComputerIP,
+   [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential
+)
+
+$Uptime = Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {
+   $LastBootUptime = (Get-CimInstance Win32_OperatingSystem).LastBootUpTime
+   [pscustomobject]@{HostnameSetOnHost = $env:computername
+      LastBootUpTime = $LastBootUptime
+   }
+}
+$Uptime | Select-Object -Property @{Name = "ComputerIP" ; Expression = {$_.PSComputerName} },
+                                                                  HostnameSetOnHost,
+                                                                  @{Name = "LastBootUpTimeInYourComputerTimezone" ; Expression = {$_.LastBootUpTime} },
+                                                                  @{Name = "Uptime" ; Expression = {(get-date) - $_.LastBootUpTime} } `
+                                                                  | Sort-Object -Property ComputerIP | Format-Table -Wrap -AutoSize
 }

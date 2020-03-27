@@ -19,7 +19,7 @@ param(
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential
     )
 
-    Write-Host -BackgroundColor White -ForegroundColor DarkBlue " `n Server Manager Behavior At Logon"
+    Write-Host -ForegroundColor Cyan  " `n Server Manager Behavior At Logon"
     Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Get-ScheduledTask -TaskName ServerManager}
 }
 function Set-AvServerManagerBehaviorAtLogon{
@@ -47,12 +47,12 @@ param(
     if ($ActionIndex -eq 0){
         #If Enable switch was selected
         Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Get-ScheduledTask -TaskName ServerManager | Enable-ScheduledTask}
-        Write-Host -BackgroundColor White -ForegroundColor DarkGreen " `n Server Manager Start At Logon ENABLED for all remote hosts."
+        Write-Host -ForegroundColor Green "`n Server Manager Start At Logon ENABLED for all remote hosts."
     }
     elseif ($ActionIndex -eq 1){
         #If Disable switch was selected
         Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Get-ScheduledTask -TaskName ServerManager | Disable-ScheduledTask}
-        Write-Host -BackgroundColor White -ForegroundColor DarkGreen " `n Server Manager Start At Logon DISABLED for all remote hosts."
+        Write-Host -ForegroundColor Green "`n Server Manager Start At Logon DISABLED for all remote hosts."
     } 
 }
 
@@ -80,10 +80,10 @@ param(
     ### Check UAC level - Windows Server 2016 only!!!
     # https://gallery.technet.microsoft.com/scriptcenter/Disable-UAC-using-730b6ecd#content
     $UACLevel = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "ConsentPromptBehaviorAdmin"}
-    Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n UAC Level                                                       "
-    Write-Host -BackgroundColor White -ForegroundColor DarkBlue " 2 - Always notify me                                            "
-    Write-Host -BackgroundColor White -ForegroundColor DarkBlue " 5 - Notify me only when apps try to make changes to my computer "
-    Write-Host -BackgroundColor White -ForegroundColor DarkBlue " 0 - Never notify me                                             "
+    Write-Host -ForegroundColor Cyan "`nUAC Level                                                       "
+    Write-Host -ForegroundColor Cyan "2 - Always notify me                                            "
+    Write-Host -ForegroundColor Cyan "5 - Notify me only when apps try to make changes to my computer "
+    Write-Host -ForegroundColor Cyan "0 - Never notify me                                             "
     $UACLevel | Select-Object PSComputerName, ConsentPromptBehaviorAdmin | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 }
 function Set-AvUACLevel{
@@ -112,19 +112,19 @@ param(
     if ($ActionIndex -eq 0){
         #If AlwaysNotify switch was selected
         Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "ConsentPromptBehaviorAdmin" -Value "2"}
-        Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n UAC Level changed to `"Always notify me`" for all hosts. "
+        Write-Host -ForegroundColor Green "`nUAC Level changed to `"Always notify me`" for all hosts. "
         AvUACLevel $ComputerName $Credential
     }
     elseif ($ActionIndex -eq 1){
         #If NotifyWhenAppsMakeChangesToComputer switch was selected
         Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "ConsentPromptBehaviorAdmin" -Value "5"}
-        Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n UAC Level changed to `"Notify me only when apps try to make changes to my computer`" for all hosts. "
+        Write-Host -ForegroundColor Green "`nUAC Level changed to `"Notify me only when apps try to make changes to my computer`" for all hosts. "
         Get-AvUACLevel $ComputerName $Credential
     }
     elseif ($ActionIndex -eq 2){
         #If NeverNotify switch was selected
         Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "ConsentPromptBehaviorAdmin" -Value "0"}
-        Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n UAC Level changed to `"Never notify me`" for all hosts. "
+        Write-Host -ForegroundColor Green "`nUAC Level changed to `"Never notify me`" for all hosts. "
         Get-AvUACLevel $ComputerName $Credential
     }
 }
@@ -152,7 +152,12 @@ function Get-AvProcessorScheduling{
     $ProcesorSchedulingStatus = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock{
         Get-ItemProperty HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl -Name Win32PrioritySeparation
     }
-    Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Processor scheduling status: 38 - programs; 0(default) or 24 - background services "
+    Write-Host -ForegroundColor Cyan "`nProcessor scheduling status:"
+    Write-Host -ForegroundColor Cyan "2 - Default value. Optimized for background services on Windows Server and for programs on Windows Workstation (e.g. Win10)"
+    Write-Host -ForegroundColor Cyan "24 - Optimized for background services (longer, fixed-length processor intervals in which foreground processes and background processes get equal processor priority)"
+    Write-Host -ForegroundColor Cyan "38 - Optimized for programs (short, variable length processor intervals in which foreground processes get three times as much processor time as do background processes)"
+    Write-Host -ForegroundColor Cyan "https://docs.microsoft.com/en-us/previous-versions//cc976120(v=technet.10)?redirectedfrom=MSDN"
+
     $ProcesorSchedulingStatus | Select-Object PSComputerName, Win32PrioritySeparation | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 }
 function Set-AvProcessorScheduling{
@@ -182,7 +187,7 @@ function Set-AvProcessorScheduling{
         Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock{
             Set-ItemProperty HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl -Name Win32PrioritySeparation -Value 38
         }
-        Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Processor scheduling set to PROGRAMS. "
+        Write-Host -ForegroundColor Green "`nProcessor scheduling set to PROGRAMS. "
         Get-AvProcessorScheduling $ComputerName $Credential
     }
     elseif ($ActionIndex -eq 1){
@@ -190,7 +195,7 @@ function Set-AvProcessorScheduling{
         Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock{
             Set-ItemProperty HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl -Name Win32PrioritySeparation -Value 24
         }
-        Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Processor scheduling set to BACKGROUND SERVICES. "
+        Write-Host -ForegroundColor Green "`nProcessor scheduling set to BACKGROUND SERVICES. "
         Get-AvProcessorScheduling $ComputerName $Credential
     }
 }
@@ -274,22 +279,22 @@ function Set-AvAutologon{
 
     if ($Enable) {
         if ($Disable) {
-            Write-Host -BackgroundColor White -ForegroundColor Red "`n Please specify ONLY ONE of the -Enable/-Disable switch parameters. "
+            Write-Host -ForegroundColor Red "`nPlease specify ONLY ONE of the -Enable/-Disable switch parameters. "
         Return
         }
         Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-MpPreference -DisableRealtimeMonitoring $false}
-        Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Windows Defender Realtime Monitoring ENABLED. "
+        Write-Host -ForegroundColor Green "`nWindows Defender Realtime Monitoring ENABLED. "
     }
     elseif ($Disable) {
         if ($Enable) {
-            Write-Host -BackgroundColor White -ForegroundColor Red "`n Please specify ONLY ONE of the -Enable/-Disable switch parameters. "
+            Write-Host -ForegroundColor Red "`nPlease specify ONLY ONE of the -Enable/-Disable switch parameters. "
             Return
         }
         Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-MpPreference -DisableRealtimeMonitoring $true}
-        Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Windows Defender Realtime Monitoring DISABLED. "
+        Write-Host -ForegroundColor Green "`nWindows Defender Realtime Monitoring DISABLED. "
     }
     else {
-        Write-Host -BackgroundColor White -ForegroundColor Red "`n Please specify ONE of the -Enable/-Disable switch parameters. "
+        Write-Host -ForegroundColor Red "`nPlease specify ONE of the -Enable/-Disable switch parameters. "
         Return
     }
 
@@ -321,7 +326,7 @@ param(
     $InputMethodTips = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {
         $LanguageList = Get-WinUserLanguageList
         $LanguageList.InputMethodTips}
-    Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Default keyboard layout (0409:0000000409 - en-US) `n"
+    Write-Host -ForegroundColor Cyan "`nDefault keyboard layout (0409:0000000409 - en-US) `n"
     for ($i=0; $i -le $ComputerName.Count; $i++) {
         Write-Host -NoNewline $ComputerName[$i], " "
         Write-Host $InputMethodTips[$i]
@@ -372,7 +377,7 @@ function Get-AvPowerPlan{
     )
 
     $PowerPlan = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Get-CimInstance -Namespace root\cimv2\power -ClassName win32_PowerPlan}
-    Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Active Power Plan "
+    Write-Host -ForegroundColor Cyan "`nActive Power Plan "
     $PowerPlan | Where-Object {$_.IsActive -eq $True} | Select-Object PSComputerName, ElementName | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 }
 function Set-AvPowerPlan{
@@ -409,7 +414,7 @@ function Set-AvPowerPlan{
             $HighPerformancePowerPlan = Get-CimInstance -Name root\cimv2\power -Class win32_PowerPlan -Filter "ElementName = 'High performance'"
             Invoke-CimMethod -InputObject $HighPerformancePowerPlan -MethodName Activate | Out-Null
         }
-        Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Power Plan SET to HIGH PERFORMANCE. "
+        Write-Host -ForegroundColor Green "`nPower Plan SET to HIGH PERFORMANCE. "
         Get-AvPowerPlan $ComputerName $Credential
     }
     elseif ($ActionIndex -eq 1){
@@ -418,7 +423,7 @@ function Set-AvPowerPlan{
             $BalancedPowerPlan = Get-CimInstance -Name root\cimv2\power -Class win32_PowerPlan -Filter "ElementName = 'Balanced'"
             Invoke-CimMethod -InputObject $BalancedPowerPlan -MethodName Activate | Out-Null
         }
-        Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Power Plan SET to BALANCED. "
+        Write-Host -ForegroundColor Green "`nPower Plan SET to BALANCED. "
         Get-AvPowerPlan $ComputerName $Credential
     }
     elseif ($ActionIndex -eq 2){
@@ -427,12 +432,12 @@ function Set-AvPowerPlan{
             $PowerSaverPowerPlan = Get-CimInstance -Name root\cimv2\power -Class win32_PowerPlan -Filter "ElementName = 'Power saver'"
             Invoke-CimMethod -InputObject $PowerSaverPowerPlan -MethodName Activate | Out-Null
         }
-        Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Power Plan SET to POWER SAVER. "
+        Write-Host -ForegroundColor Green "`nPower Plan SET to POWER SAVER. "
         Get-AvPowerPlan $ComputerName $Credential
     }
     elseif ($ActionIndex -eq 3){
         #If AvidOptimized switch was selected
-        Write-Host -BackgroundColor White -ForegroundColor Red "`n AvidOptimized power plan is not yet implemented. "
+        Write-Host -ForegroundColor Red "`nAvidOptimized power plan is not yet implemented. "
         Return
     }
 

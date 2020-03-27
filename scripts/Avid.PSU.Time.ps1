@@ -26,11 +26,11 @@ param(
     Write-Host "This needs to be corrected."
 
     $TimeZone = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock{Get-TimeZone}
-    Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Current TIMEZONE on servers "
+    Write-Host -ForegroundColor Cyan "`nCurrent TIMEZONE on servers "
     $TimeZone | Select-Object PSComputerName, StandardName, BaseUtcOffset, SupportsDaylightSavingTime | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 
     #$Time = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock{Get-Date | Out-String}
-    #Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Current TIME on servers "
+    #Write-Host -ForegroundColor Cyan "`nCurrent TIME on servers "
     #$Time | Select-Object PSComputerName, DateTime | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 }
 function Set-AvTimeAndTimeZone{
@@ -72,34 +72,34 @@ param(
    [Parameter(Mandatory = $true)] $SecondaryPointingTo
     )
 
-Write-Host -BackgroundColor White -ForegroundColor Red "`n WARNING: All the remote hosts will be automatically rebooted after the installation. Press Enter to continue or Ctrl+C to quit. "
+Write-Host -ForegroundColor Yellow "`nWARNING: All the remote hosts will be automatically rebooted after the installation. Press Enter to continue or Ctrl+C to quit. "
 [void](Read-Host)
 
 $InstallerFileName = Split-Path $PathToInstaller -leaf
 $PathToInstallerRemote = 'C:\NexisTempDir\' + $InstallerFileName
 
 #1. Create the NexisTempDir on remote hosts
-Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Creating folder C:\NexisTempDir on remote hosts. Please wait... "
+Write-Host -ForegroundColor Cyan "`nCreating folder C:\NexisTempDir on remote hosts. Please wait... "
 Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {New-Item -ItemType 'directory' -Path 'C:\NexisTempDir'}
-Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Folder C:\NexisTempDir SUCCESSFULLY created on all remote hosts. "
+Write-Host -ForegroundColor Green "`nFolder C:\NexisTempDir SUCCESSFULLY created on all remote hosts. "
 
 #2. Copy the AvidNEXIS installer to the local drive of remote hosts
-Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Copying the installer to remote hosts. Please wait... "
+Write-Host -ForegroundColor Cyan "`nCopying the installer to remote hosts. Please wait... "
 $ComputerName | ForEach-Object -Process {
     $Session = New-PSSession -ComputerName $_ -Credential $Credential
     Copy-Item -LiteralPath $PathToInstaller -Destination "C:\NexisTempDir\" -ToSession $Session
 }
-Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Installer SUCCESSFULLY copied to all remote hosts. "
+Write-Host -ForegroundColor Green "`nInstaller SUCCESSFULLY copied to all remote hosts. "
 
 #3. Unblock the copied installer (so no "Do you want to run this file?" pop-out hangs the installation in the next step)
-Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Unblocking copied files. Please wait... "
+Write-Host -ForegroundColor Cyan "`nUnblocking copied files. Please wait... "
 Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Unblock-File -Path $using:PathToInstallerRemote}
-Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n All files SUCCESSFULLY unblocked. "
+Write-Host -ForegroundColor Green "`nAll files SUCCESSFULLY unblocked. "
 
 #4. Run the installer on remote hosts
-Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Installation in progress. This should take up to a minute. Please wait... "
+Write-Host -ForegroundColor Cyan "`nInstallation in progress. This should take up to a minute. Please wait... "
 Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Start-Process -FilePath $using:PathToInstallerRemote -ArgumentList '/quiet' -Wait}
-Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Installation on all remote hosts DONE. Rebooting... "
+Write-Host -ForegroundColor Green "`nInstallation on all remote hosts DONE. Rebooting... "
 }
 function Push-AvMeinbergNTPDaemonConfig{
 }

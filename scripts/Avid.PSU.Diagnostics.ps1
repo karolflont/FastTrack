@@ -40,12 +40,12 @@ Param(
        $FullEventLogList = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Get-EventLog -LogName System -EntryType Error} 
     }
     
-    Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Number of Error type EventLog entries "
+    Write-Host -ForegroundColor Cyan "`nNumber of Error type EventLog entries "
 
     for ($i=0; $i -lt $ComputerName.Count; $i++){
         $ServerEventLogList = $FullEventLogList | Where-Object PSComputerName -eq $ComputerName[$i]
-        $message = "`n Summary of Error type EventLog entries for " + $ComputerName[$i]
-        Write-Host -BackgroundColor White -ForegroundColor DarkBlue $message
+        $message = "`nSummary of Error type EventLog entries for " + $ComputerName[$i]
+        Write-Host -ForegroundColor Cyan $message
         $ServerEventLogListSummary = $ServerEventLogList | Group-Object Source | Sort-Object Count -Descending | Select-Object Name, Count
         $EventLogSummaryList = @()
    

@@ -8,7 +8,8 @@ function Test-AvIfExactlyOneSwitchParameterIsTrue{
         2) Returns:
         - the index of this parameter in the input array (Remember it's 0 based!) if exactly one switch is selcted
         - $null if none of the switches is $true
-        - -1 if both switches are $true
+        - -1 if more than one switch is $true
+        NOTE: Test-AvIfExactlyOneSwitchParameterIsTrue handles up to 10 parameters
     .EXAMPLE
         Test-AvIfExactlyOneSwitchParameterIsTrue $Enable $Disable
         Test-AvIfExactlyOneSwitchParameterIsTrue $SortByPSComputerName $SortByName $SortByInterfaceAlias $SortByInterfaceIndex
@@ -74,7 +75,7 @@ function Test-AvIfExactlyOneSwitchParameterIsTrue{
 
     if ($SwitchCount -gt 1){
         #If more than one switch was selected, write info message and return -1
-        Write-Host -BackgroundColor White -ForegroundColor Red "`n Please specify ONE switch parameter. "
+        Write-Host -ForegroundColor Red "`nPlease specify ONE switch parameter. "
         Return -1
     }
     elseif ($SwitchCount -eq 1){
@@ -83,7 +84,7 @@ function Test-AvIfExactlyOneSwitchParameterIsTrue{
     }
     else {
         #If none switch was selected, write info message and return $null
-        Write-Host -BackgroundColor White -ForegroundColor Red "`n Please specify ONE switch parameter. "
+        Write-Host -ForegroundColor Red "`nPlease specify ONE switch parameter. "
         Return
     }
 }

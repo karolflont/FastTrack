@@ -22,7 +22,7 @@ param(
     )
 
     $WindowsUpdateStatus = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Get-Service -Name wuauserv}
-    Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Windows Update Status "
+    Write-Host -ForegroundColor Cyan "`nWindows Update Status "
     $WindowsUpdateStatus | Select-Object PSComputerName, Status, StartType | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 }
 function Set-AvWindowsUpdateService{
@@ -49,26 +49,26 @@ function Set-AvWindowsUpdateService{
 
     if ($Enable) {
         if ($Disable) {
-            Write-Host -BackgroundColor White -ForegroundColor Red "`n Please specify ONLY ONE of the -Enable/-Disable switch parameters. "
+            Write-Host -ForegroundColor Red "`nPlease specify ONLY ONE of the -Enable/-Disable switch parameters. "
         Return
         }
         $WindowsUpdateStatus = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-Service -Name wuauserv -StartupType Automatic -Status Running -PassThru}
-        Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Windows Update Service ENABLED. "
+        Write-Host -ForegroundColor Green "`nWindows Update Service ENABLED. "
     }
     elseif ($Disable) {
         if ($Enable) {
-            Write-Host -BackgroundColor White -ForegroundColor Red "`n Please specify ONLY ONE of the -Enable/-Disable switch parameters. "
+            Write-Host -ForegroundColor Red "`nPlease specify ONLY ONE of the -Enable/-Disable switch parameters. "
             Return
         }
         Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Stop-Service -Name wuauserv -Force}
         $WindowsUpdateStatus = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-Service -Name wuauserv -StartupType Disabled -PassThru}
-        Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Windows Update Service DISABLED. "
+        Write-Host -ForegroundColor Green "`nWindows Update Service DISABLED. "
     }
     else {
-        Write-Host -BackgroundColor White -ForegroundColor Red "`n Please specify ONE of the -Enable/-Disable switch parameters. "
+        Write-Host -ForegroundColor Red "`nPlease specify ONE of the -Enable/-Disable switch parameters. "
         Return
     }
 
-    Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Windows Update Status "
+    Write-Host -ForegroundColor Cyan "`nWindows Update Status "
     $WindowsUpdateStatus | Select-Object PSComputerName, Status, StartType | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 }

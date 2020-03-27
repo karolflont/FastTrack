@@ -1,30 +1,6 @@
 #################
 ##### NEXIS #####
 #################
-function Get-AvNexisClientVersion{
-<#
-.SYNOPSIS
-   TODO
-.DESCRIPTION
-   TODO
-.PARAMETER ComputerName
-   Specifies the computer name.
-.PARAMETER Credentials
-   Specifies the credentials used to login.
-.EXAMPLE
-   TODO
-#>
-
-Param(
-    [Parameter(Mandatory = $true)] $ComputerName,
-    [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential
-)
-
-### Check if NEXIS/ISIS client is already installed ###
-    $Results = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* | Select-Object DisplayName, DisplayVersion, InstallDate | Where-Object {($_.DisplayName -like "*Isis*") -or ($_.DisplayName -like "*Nexis*")}}
-    Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Nexis Client Versions Installed "
-    $Results | Select-Object PSComputerName, DisplayName, DisplayVersion, InstallDate | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
-}
 function Install-AvNexisClient{
 <#
 .SYNOPSIS
@@ -59,7 +35,7 @@ Param(
 
 if ($RebootAfterInstallation)
     {
-        Write-Host -BackgroundColor White -ForegroundColor Red "`n WARNING: All the remote hosts will be automatically rebooted after the installation. Press Enter to continue or Ctrl+C to quit. "
+        Write-Host -ForegroundColor Yellow "`nWARNING: All the remote hosts will be automatically rebooted after the installation. Press Enter to continue or Ctrl+C to quit. "
         [void](Read-Host)
     }
 
@@ -67,51 +43,51 @@ $InstallerFileName = Split-Path $PathToInstaller -leaf
 $PathToInstallerRemote = 'C:\NexisTempDir\' + $InstallerFileName
 
 #1. Check if the PathToInstaller is valid - cancel installation if not.
-Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Checking if the path to installer is a valid one. Please wait... "
+Write-Host -ForegroundColor Cyan "`nChecking if the path to installer is a valid one. Please wait... "
 if (-not (Test-Path -Path $PathToInstaller -PathType leaf)){
-    Write-Host -BackgroundColor White -ForegroundColor Red "`n Path is not valid. Exiting... "
+    Write-Host -ForegroundColor Red "`nPath is not valid. Exiting... "
     return
 }
 else {
-    Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Path is valid. Let's continue... "
+    Write-Host -ForegroundColor Green "`nPath is valid. Let's continue... "
 }
 
 #2. Create the NexisTempDir on remote hosts
-Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Creating folder C:\NexisTempDir on remote hosts. Please wait... "
+Write-Host -ForegroundColor Cyan "`nCreating folder C:\NexisTempDir on remote hosts. Please wait... "
 Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {New-Item -ItemType 'directory' -Path 'C:\NexisTempDir' | Out-Null}
-Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Folder C:\NexisTempDir SUCCESSFULLY created on all remote hosts. "
+Write-Host -ForegroundColor Green "`nFolder C:\NexisTempDir SUCCESSFULLY created on all remote hosts. "
 
 #3. Copy the AvidNEXIS installer to the local drive of remote hosts
-Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Copying the installer to remote hosts. Please wait... "
+Write-Host -ForegroundColor Cyan "`nCopying the installer to remote hosts. Please wait... "
 $ComputerName | ForEach-Object -Process {
     $Session = New-PSSession -ComputerName $_ -Credential $Credential
     Copy-Item -LiteralPath $PathToInstaller -Destination "C:\NexisTempDir\" -ToSession $Session
 }
-Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Installer SUCCESSFULLY copied to all remote hosts. "
+Write-Host -ForegroundColor Green "`nInstaller SUCCESSFULLY copied to all remote hosts. "
 
 #4. Unblock the copied installer (so no "Do you want to run this file?" pop-out hangs the installation in the next step)
-Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Unblocking copied files. Please wait... "
+Write-Host -ForegroundColor Cyan "`nUnblocking copied files. Please wait... "
 Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Unblock-File -Path $using:PathToInstallerRemote}
-Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n All files SUCCESSFULLY unblocked. "
+Write-Host -ForegroundColor Green "`nAll files SUCCESSFULLY unblocked. "
 
 #5. Run the installer on remote hosts
-Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Installation in progress. This should take up to a minute. Please wait... "
+Write-Host -ForegroundColor Cyan "`nInstallation in progress. This should take up to a minute. Please wait... "
 Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Start-Process -FilePath $using:PathToInstallerRemote -ArgumentList '/quiet /norestart' -Wait}
 
 #6. Remove folder C:\NexisTempDir from remote hosts
-Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Installation of AvidNEXIS Client on all remote hosts DONE. Cleaning up..."
+Write-Host -ForegroundColor Cyan "`nInstallation of AvidNEXIS Client on all remote hosts DONE. Cleaning up..."
 Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Remove-Item -Path "C:\NexisTempDir\" -Recurse}
 
 #7. Reboot remote hosts if $RebootAfterInstallation switch present
 if ($RebootAfterInstallation) 
     {
         Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Restart-Computer -Force}
-        Write-Host -BackgroundColor White -ForegroundColor Red "`n Reboot triggered for all remote hosts. "
+        Write-Host -ForegroundColor Red "`nReboot triggered for all remote hosts. "
     }
 else
     {
-        Write-Host -BackgroundColor White -ForegroundColor Red "`n Remote hosts were NOT REBOOTED after the installation of AvidNEXIS Client. "
-        Write-Host -BackgroundColor White -ForegroundColor Red " Please REBOOT manually later as this is required for AvidNEXIS Client to work properly. "
+        Write-Host -ForegroundColor Red "`nRemote hosts were NOT REBOOTED after the installation of AvidNEXIS Client. "
+        Write-Host -ForegroundColor Red "Please REBOOT manually later as this is required for AvidNEXIS Client to work properly. "
     }
 }
 function Push-AvNexisConfig{
@@ -139,28 +115,28 @@ Param(
 
 if ($RebootAfterUninstallation)
     {
-        Write-Host -BackgroundColor White -ForegroundColor Red "`n WARNING: All the remote hosts will be automatically rebooted after the installation. Press Enter to continue or Ctrl+C to quit. "
+        Write-Host -ForegroundColor Yellow "`nWARNING: All the remote hosts will be automatically rebooted after the installation. Press Enter to continue or Ctrl+C to quit. "
         [void](Read-Host)
     }
 
 #1. Uninstall AvidNEXIS Client on remote hosts
-Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Uninstallation in progress. This can take a while. Please wait... "
+Write-Host -ForegroundColor Cyan "`nUninstallation in progress. This can take a while. Please wait... "
 Invoke-Command -ComputerName $ComputerName -Credential $Cred -ScriptBlock
     {
         $app = Get-WmiObject -Class Win32_Product | Where-Object {$_.Name -match "Avid NEXIS Client"}
         $app.Uninstall()
     }
-Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Uninstallation of AvidNEXIS Client on all remote hosts DONE. "
+Write-Host -ForegroundColor Green "`nUninstallation of AvidNEXIS Client on all remote hosts DONE. "
 
 #2. Reboot remote hosts if $reboot switch present
 if ($RebootAfterUninstallation) 
     {
         Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Restart-Computer -Force}
-        Write-Host -BackgroundColor White -ForegroundColor Red "`n Reboot triggered for all remote hosts. "
+        Write-Host -ForegroundColor Red "`nReboot triggered for all remote hosts. "
     }
 else
     {
-        Write-Host -BackgroundColor White -ForegroundColor Red "`n Remote hosts were NOT REBOOTED after uninstallation of AvidNEXISClient. "
+        Write-Host -ForegroundColor Red "`nRemote hosts were NOT REBOOTED after uninstallation of AvidNEXISClient. "
     }
 
 }
@@ -186,52 +162,24 @@ function Get-AvSoftwareVersions{
     Param(
         [Parameter(Mandatory = $true)] $ComputerName,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
-        [Parameter(Mandatory = $false)] [switch]$SortByPSComputerName,
+        [Parameter(Mandatory = $false)] [switch]$SortByComputerIP,
+        [Parameter(Mandatory = $false)] [switch]$SortByHostnameInConfigFile,
         [Parameter(Mandatory = $false)] [switch]$SortByDisplayName,
         [Parameter(Mandatory = $false)] [switch]$SortByDisplayVersion,
         [Parameter(Mandatory = $false)] [switch]$SortByInstallDate
     )
 
     #Default sort property
-    $DefaultSortProperty = "PSComputerName"
-    $PropertiesToDisplay = ('PSComputerName', 'DisplayName', 'DisplayVersion', 'InstallDate') 
+    $DefaultSortProperty = "ComputerIP"
+    $PropertiesToDisplay = ('ComputerIP', 'HostnameInConfigFile', 'DisplayName', 'DisplayVersion', 'InstallDate') 
 
-    $SortProperty = Test-SelectedProperties $DefaultSortProperty $PropertiesToDisplay $SortByPSComputerName $SortByDisplayName $SortByDisplayVersion $SortByInstallDate
+    $ActionIndex = Test-AvIfExactlyOneSwitchParameterIsTrue $SortByComputerIP $SortByHostnameInConfigFile $SortByDisplayVersion $SortByInstallDate
 
-
-    if (!$SortProperty) 
+    if (($null -eq $ActionIndex) -or ($ActionIndex -eq -1)) 
     {
         Return
     }
     else {
-
-     <#
-    #Checking the input
-    $SwitchCount = 0
-
-    if ($SortByPSComputerName)  {
-        $SwitchCount = $SwitchCount + 1
-        $SortProperty = "PSComputerName"
-    }
-    if ($SortByDisplayName)  {
-        $SwitchCount = $SwitchCount + 1
-        $SortProperty = "DisplayName"
-    }
-    if ($SortByDisplayVersion)  {
-        $SwitchCount = $SwitchCount + 1
-        $SortProperty = "DisplayVersion"
-    }
-    if ($SortByInstallDate)  {
-        $SwitchCount = $SwitchCount + 1
-        $SortProperty = "InstallDate"
-    }
-    
-
-    if ($SwitchCount -gt 1){
-        Write-Host -BackgroundColor White -ForegroundColor Red "`n Please specify ONLY ONE of the -SortByPSComputerName/-SortByDisplayName/-SortByDisplayVersion/-SortByInstallDate switch parameters. "
-        Return
-    }
-    #>
 
     <# NOT NEEDED ANY MORE IN 2018.11 AND LATER
     $InterplayEngineVersion = Invoke-Command -ComputerName $YLEHKI_servers -Credential $Cred -ScriptBlock{
@@ -240,16 +188,27 @@ function Get-AvSoftwareVersions{
         }
     }
     $InterplayEngineVersion| Add-Member -MemberType NoteProperty -Name DisplayName -Value "Avid Interplay Engine"
-    Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Interplay Engine and other software versions "
+    Write-Host -ForegroundColor Cyan "`nInterplay Engine and other software versions "
     $InterplayEngineVersion | Select-Object PSComputerName, DisplayName, ProductVersion, FileVersion | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
     #>
-    $AvidSoftwareVersions = Invoke-Command -ComputerName $ComputerName -Credential $Cred -ScriptBlock {Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* | Select-Object DisplayName, DisplayVersion, Publisher, InstallDate | Where-Object {$_.Publisher -like "*Avid*" -or $_.DisplayName -like "*Avid*"}}
-    #$PropertiesToDisplay = 'PSComputerName, DisplayName, DisplayVersion, InstallDate'
+    $AvidSoftwareVersions = Invoke-Command -ComputerName $ComputerName -Credential $Cred -ScriptBlock {Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* | Select-Object DisplayName, DisplayVersion, Publisher, InstallDate | Where-Object {($_.Publisher -like "*Avid*") -or ($_.DisplayName -like "*Avid*") -or ($_.DisplayName -like "*Isis*") -or ($_.DisplayName -like "*Nexis*")}}
 
-    $AvidSoftwareVersions | Select-Object $PropertiesToDisplay | Sort-Object -Property $SortProperty | Format-Table -Wrap -AutoSize
+    $sc = $global:SysConfig | ConvertFrom-Json
+
+    $AvidSoftwareVersionsRaw = $AvidSoftwareVersions | Select-Object -Property @{Name = "ComputerIP" ; Expression = {$_.PSComputerName} },
+    @{Name = "HostnameInConfigFile" ; Expression = {
+        $CurrentIP = $_.PSComputerName
+        ($sc.hosts | Where-object {$_.IP -eq $CurrentIP}).hostname
+        }
+    },
+    DisplayName,
+    DisplayVersion,
+    InstallDate
+
+    $AvidSoftwareVersionsRaw | Select-Object $PropertiesToDisplay | Sort-Object -Property $PropertiesToDisplay[$ActionIndex] | Format-Table -Wrap -AutoSize
     }
 } 
-function Get-AvServices{
+function Get-AvServicesStatus{
         <#
     .SYNOPSIS
         Gets information about Installed Avid Services.
@@ -268,7 +227,7 @@ function Get-AvServices{
     )
 
     $AvidServices = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Get-Service -Displayname "Avid*"}
-    Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Avid Services Status "
+    Write-Host -ForegroundColor Cyan "`nAvid Services Status "
     $AvidServices | Select-Object PSComputerName, DisplayName, Status, StartType | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 }
 #################

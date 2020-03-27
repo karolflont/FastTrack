@@ -1,12 +1,13 @@
 ########################
 ### WINDOWS FIREWALL ###
 ########################
-function Get-AvFirewallStatus{
+function Get-AvFirewallServiceStatus{
  <#
     .SYNOPSIS
         Gets the status of Firewall service.
     .DESCRIPTION
-        The Get-AvSoftwareVersions function retrieves the
+        The Get-AvFirewallServiceStatus uses:
+        - Get-Service -Name MpsSvc
     .PARAMETER ComputerName
         Specifies the computer name.
     .PARAMETER Credentials
@@ -14,15 +15,12 @@ function Get-AvFirewallStatus{
     .EXAMPLE
         TODO
     #>
-Write-Host -BackgroundColor White -ForegroundColor Red "`n Not yes implemented."
-Return
 
     param(
         [Parameter(Mandatory = $true)] $ComputerName,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential
     )
-    $ComputerName = $YLEHKI_servers
-    $Credential = $Cred
+
     $AvidSoftwareVersions = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Get-Service -Name "MpsSvc"}
     $AvidSoftwareVersions | Select-Object PSComputerName, DisplayName, Status, StartType | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 
@@ -40,7 +38,7 @@ function Set-AvFirewallService{
 .EXAMPLE
     TODO
 #>
-Write-Host -BackgroundColor White -ForegroundColor Red "`n Not yes implemented."
+Write-Host -ForegroundColor Red "`nThis function is not yet implemented."
 Return
     param(
         [Parameter(Mandatory = $true)] $ComputerName,
@@ -67,8 +65,7 @@ function Set-AvFirewallState{
     .EXAMPLE
         Set-Firewall -ComputerName $srv_IP -Credential $cred -On
     #>
-    Write-Host -BackgroundColor White -ForegroundColor Red "`n Not yes implemented."
-Return
+
     param(
         [Parameter(Mandatory = $true)] $ComputerName,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
@@ -76,14 +73,14 @@ Return
         [Parameter(Mandatory = $false)] [switch]$Off
     )
 
-    $ActionIndex = Test-IfExactlyOneSwitchParameterIsTrue $On $Off
+    $ActionIndex = Test-AvIfExactlyOneSwitchParameterIsTrue $On $Off
     
     if ($ActionIndex -eq 0){
         #If On switch was selected
         $result = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {
             NetSh Advfirewall set allprofiles state on
             }
-        Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Firewall on all hosts turned ON for all profiles: Domain networks, Private networks and Guest or Public networks. "
+        Write-Host -ForegroundColor Green "`nFirewall on all hosts turned ON for all profiles: Domain networks, Private networks and Guest or Public networks. "
         $result
     }
     elseif ($ActionIndex -eq 1){
@@ -91,7 +88,7 @@ Return
         $result = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {
             NetSh Advfirewall set allprofiles state off
             }
-        Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Firewall on all hosts turned OFF for all profiles: Domain networks, Private networks and Guest or Public networks. "
+        Write-Host -ForegroundColor Green "`nFirewall on all hosts turned OFF for all profiles: Domain networks, Private networks and Guest or Public networks. "
         $result
     }   
 }
@@ -111,7 +108,7 @@ function Get-AvDefenderStatus{
     .EXAMPLE
        TODO
     #>
-    Write-Host -BackgroundColor White -ForegroundColor Red "`n Not yes implemented."
+    Write-Host -ForegroundColor Red "`nThis function is not yet implemented."
 Return
 
     #Get-Service -Name windefend
@@ -123,7 +120,7 @@ Return
     )
 
         $WindowsDefenderRealtimeMonitoringStatus = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Get-MpPreference}
-        Write-Host -BackgroundColor White -ForegroundColor DarkBlue "`n Windows Defender Realtime Monitoring Status "
+        Write-Host -ForegroundColor Cyan "`nWindows Defender Realtime Monitoring Status "
         $WindowsDefenderRealtimeMonitoringStatus | Select-Object PSComputerName, DisableRealTimeMonitoring | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
     }
 function Install-AvDefender{
@@ -139,7 +136,7 @@ function Install-AvDefender{
 .EXAMPLE
     TODO
 #>
-Write-Host -BackgroundColor White -ForegroundColor Red "`n Not yes implemented."
+Write-Host -ForegroundColor Red "`nThis function is not yet implemented."
 Return
     param(
         [Parameter(Mandatory = $true)] $ComputerName,
@@ -147,7 +144,7 @@ Return
     )
 
     Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Install-WindowsFeature -Name Windows-Defender}
-    Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Windows Defender INSTALLED on all remote hosts. "
+    Write-Host -ForegroundColor Green "`nWindows Defender INSTALLED on all remote hosts. "
 }
 function Uninstall-AvDefender{
     <#
@@ -162,7 +159,7 @@ function Uninstall-AvDefender{
     .EXAMPLE
         TODO
     #>
-    Write-Host -BackgroundColor White -ForegroundColor Red "`n Not yes implemented."
+    Write-Host -ForegroundColor Red "`nThis function is not yet implemented."
 Return
         param(
             [Parameter(Mandatory = $true)] $ComputerName,
@@ -170,7 +167,7 @@ Return
         )
     
         Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Uninstall-WindowsFeature -Name Windows-Defender}
-        Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Windows Defender UNINSTALLED on all remote hosts. "
+        Write-Host -ForegroundColor Green "`nWindows Defender UNINSTALLED on all remote hosts. "
     }
 function Set-AvDefender{
 <#
@@ -185,7 +182,7 @@ function Set-AvDefender{
 .EXAMPLE
     TODO
 #>
-Write-Host -BackgroundColor White -ForegroundColor Red "`n Not yet implemented."
+Write-Host -ForegroundColor Red "`nThis function is not yet implemented."
 Return
 param(
     [Parameter(Mandatory = $true)] $ComputerName,
@@ -196,22 +193,22 @@ param(
 
 if ($Enable) {
     if ($Disable) {
-        Write-Host -BackgroundColor White -ForegroundColor Red "`n Please specify ONLY ONE of the -Enable/-Disable switch parameters. "
+        Write-Host -ForegroundColor Red "`nPlease specify ONLY ONE of the -Enable/-Disable switch parameters. "
     Return
     }
     Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-MpPreference -DisableRealtimeMonitoring $false}
-    Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Windows Defender Realtime Monitoring ENABLED. "
+    Write-Host -ForegroundColor Green "`nWindows Defender Realtime Monitoring ENABLED. "
 }
 elseif ($Disable) {
     if ($Enable) {
-        Write-Host -BackgroundColor White -ForegroundColor Red "`n Please specify ONLY ONE of the -Enable/-Disable switch parameters. "
+        Write-Host -ForegroundColor Red "`nPlease specify ONLY ONE of the -Enable/-Disable switch parameters. "
         Return
     }
     Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-MpPreference -DisableRealtimeMonitoring $true}
-    Write-Host -BackgroundColor White -ForegroundColor DarkGreen "`n Windows Defender Realtime Monitoring DISABLED. "
+    Write-Host -ForegroundColor Green "`nWindows Defender Realtime Monitoring DISABLED. "
 }
 else {
-    Write-Host -BackgroundColor White -ForegroundColor Red "`n Please specify ONE of the -Enable/-Disable switch parameters. "
+    Write-Host -ForegroundColor Red "`nPlease specify ONE of the -Enable/-Disable switch parameters. "
     Return
 }
 

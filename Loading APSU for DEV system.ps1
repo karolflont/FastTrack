@@ -1,6 +1,9 @@
 ﻿### Copy
-$source = 'C:\Users\kflont\LocalDrive - Avid\_POWERSHELL\Avid.PSUtilities'
-$destination = 'C:\Program Files\WindowsPowerShell\Modules'
+$env:PSModulePath -split ';'
+#$env:PSModulePath += ";C:\Users\kflont\Documents\WindowsPowerShell\Modules"
+$source = 'F:\Avid\LocalDrive - Avid\_POWERSHELL\Avid.PSUtilities'
+$destination = $HOME + "\Documents\WindowsPowerShell\Modules"
+#$destination = 'C:\Program Files\WindowsPowerShell\Modules'
 Copy-Item -LiteralPath $source -Destination $destination -Recurse -Force
 
 ### Loading the module to the active memory
@@ -11,7 +14,7 @@ Import-Module Avid.PSUtilities -Force
 Get-Command -Module Avid.PSUtilities
 
 ### Set PAM servers nemes list
-Import-AvSystemConfiguration -Path 'C:\Users\kflont\LocalDrive - Avid\_POWERSHELL\Avid.PSUtilities\SystemConfiguration.json'
+Import-AvSystemConfiguration -Path 'C:\Users\kflont\LocalDrive - Avid\_POWERSHELL\Avid.PSUtilities\SystemConfigurationLOCALHOST.json'
 
 ###NO DOMAIN
 #1. Configuring winrm
@@ -25,7 +28,7 @@ Set-Item WSMan:\localhost\Client\TrustedHosts -Value * -Force
 
 ### NO DOMAIN - Set the credentials to access the servers
 $Username = 'administrator'
-$Password = 'is-admin18'
+$Password = 'is-admin20'
 $pass = ConvertTo-SecureString -AsPlainText $Password -Force
 $Cred = New-Object System.Management.Automation.PSCredential -ArgumentList $Username,$pass
 #or
