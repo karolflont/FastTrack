@@ -1,22 +1,26 @@
-﻿### Copy
-# source
-$source = $null
-Write-Host -ForegroundColor Green "`nPlease type the path to Avid.PSUtilities folder, e.g. c:\My Folder\Avid.PSUtilities or hit ENTER to keep the default path, which is $(Get-Location). "
-$source = Read-Host
-# Validating the Avid.PSUtilities folder path
-while((-not (Test-Path ([string]$source + "\" + "Avid.PSUtilities.psd1")))){
-   if ($source.Length -eq 0){
-     $source = Get-Location
-   }
-   if(-not (Test-Path ([string]$source + "\" + "Avid.PSUtilities.psd1"))){
-    Write-Host -ForegroundColor Red "`nThe path you entered is not valid. Cannot find Avid.PSUtilities.psd1 file in the specified path. Please try again or hit Ctrl+c to quit. "
-   }
-   $source = Read-Host
-}
+﻿#Requires -RunAsAdministrator
 
-Write-Host -ForegroundColor Green "`nInstalling... "
+# Getting the path to current directory
+$source = Get-Location
 
-# destination - using user PS module path (no need for admin rights of the user running the session)
+    # Validating the directory path
+    while((-not (Test-Path ([string]$source + "\" + "Avid.PSUtilities.psd1")))){
+       if ($source.Length -eq 0){
+         $source = Get-Location
+       }
+       if(-not (Test-Path ([string]$source + "\" + "Avid.PSUtilities.psd1"))){
+        Write-Host -ForegroundColor Red "`nYou are running this script from $source folder. This script requires two conditions to run properly: "
+        Write-Host -ForegroundColor Red " - This script must be placed in Avid.PSUtilities folder, "
+        Write-Host -ForegroundColor Red " - There has to be a valid Avid.PSUtilities.psd1 file in the Avid.PSUtilities folder. "
+        Write-Host -ForegroundColor Red "`nHit Enter to quit."
+       }
+       [void](Read-Host)
+       return
+    }
+
+Write-Host -ForegroundColor Green "`nInstalling Avid.PSUtilities module... "
+
+# Setting the module's destination - using user's PSModulePath
 $PSMPaths = $env:PSModulePath -split ';'
 foreach ($PSMPAth in $PSMPaths) {
   if ($PSMPath -like "*Documents*"){
@@ -24,20 +28,17 @@ foreach ($PSMPAth in $PSMPaths) {
   }
 }
 
+# Copying the module to the user's PSModulePath
 Copy-Item -LiteralPath $source -Destination $destination -Recurse -Force
+Write-Host -ForegroundColor Green "`nModule Avid.PSUtilites installed. "
 
-### Loading the module to the active memory
+# Loading the module to the active memory
 Import-Module Avid.PSUtilities -Force
-Write-Host -ForegroundColor Green "`nModule Avid.PSUtilites imported successfully. "
+Write-Host -ForegroundColor Green "`nModule Avid.PSUtilites imported. "
 
-### Listing all cmdlets from AvidPSUtilities module
-Write-Host -ForegroundColor Green "`nFunctions available in Avid.PSUtilities module: "
-Get-Command -Module Avid.PSUtilities
-
-### Adding "all hosts" to trusted hosts
+# Adding "all hosts" to trusted hosts
 Set-Item WSMan:\localhost\Client\TrustedHosts -Value "*" -Force
+Write-Host -ForegroundColor Green "`nMWSMan:\localhost\Client\TrustedHosts updated with '*' "
 
-### Footer message
-Write-Host -ForegroundColor Green "`nCheck Avid.PSU.SAMPLE.ps1 for sample usage of Avid.PSUtilities module. "
-Write-Host -ForegroundColor Green "Hit enter to close this window. "
-[void](Read-Host)
+# Footer message
+Write-Host -ForegroundColor Yellow "`nCheck Avid.PSU.SAMPLE.ps1 for sample usage of Avid.PSUtilities module. "
