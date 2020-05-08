@@ -14,7 +14,7 @@ function Test-AvPowershellRemoting {
    .PARAMETER Credentials
       Specifies the credentials used to login.
    .EXAMPLE
-      Test-AvPowershellRemoting -ComputerName $All
+      Test-AvPowershellRemoting -ComputerName $all
    #>
    param (
       [Parameter(Mandatory = $true)] $ComputerIP,
@@ -68,7 +68,7 @@ function Test-AvPowershellRemoting {
       Write-Host -ForegroundColor Red "`n"
    }
    else {
-      Write-Host -ForegroundColor Green "All tests PASSED. Powershell remoting is working on all tested hosts."
+      Write-Host -ForegroundColor Green "all tests PASSED. Powershell remoting is working on all tested hosts."
       Write-Host -ForegroundColor Red "`n"
    }
 }

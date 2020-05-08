@@ -106,11 +106,11 @@ function Get-AvDefenderStatus{
     .PARAMETER Credentials
        Specifies the credentials used to login.
     .EXAMPLE
-       TODO
+       Get-AvHostname -ComputerIP $all -Credential $cred
     #>
-    Write-Host -ForegroundColor Red "`nThis function is not yet implemented."
-Return
 
+    #TODO:
+    #Add checking for these two services:
     #Get-Service -Name windefend
     #Get-Service -Name mpssvc
     #https://docs.microsoft.com/en-us/windows/security/threat-protection/windows-defender-antivirus/windows-defender-antivirus-on-windows-server-2016

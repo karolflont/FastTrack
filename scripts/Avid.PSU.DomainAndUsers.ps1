@@ -4,21 +4,25 @@
 function Get-AvHostname{
    <#
    .SYNOPSIS
-   Outputs a table comparying current hostnames and hostnames defined in $sysConfig variable for a list of computers.
+   Outputs a table comparing current hostnames and hostnames defined in $sysConfig variable for a list of computers.
    .DESCRIPTION
    The Get-AvHostname function uses:
    - $env:computername variable on remote hosts
    - "IP" and "hostname" fields from $sysConfig global variable
    .PARAMETER ComputerIP
-   Specifies the computer name.
+   Specifies the computer IP.
    .PARAMETER Credentials
    Specifies the credentials used to login.
    .PARAMETER RawOutput
    Specifies if the output should be formatted or not.
    .EXAMPLE
-   TODO
-   1) Should also check domain sufix of remote hosts and compare with suffix set in $AvidPSUSystemConfiguration
+   Get-AvHostname -ComputerIP $all -Credential $cred
    #>
+
+   <# TODO
+      1) Check domain sufix of remote hosts and compare with suffix set in $AvidPSUSystemConfiguration
+   #>
+
    Param(
       [Parameter(Mandatory = $true)] $ComputerIP,
       [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
@@ -71,7 +75,7 @@ function Set-AvHostname{
    .PARAMETER Force
       If Force switch is used, no questions are asked during the execution of this function.
    .EXAMPLE
-      Set-AvHostname -ComputerIP $All -Credential $Cred
+      Set-AvHostname -ComputerIP $all -Credential $Cred
    #>
    Param(
       [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
@@ -89,7 +93,7 @@ function Set-AvHostname{
                                      | Sort-Object -Property ComputerIP | Format-Table -Wrap -AutoSize
       [void](Read-Host)
       if ($RebootAfterHostnameChange){
-         Write-Host -ForegroundColor Yellow "`nWARNING: All remote hosts will be automatically rebooted after changing the hostnames. Press Enter to continue or Ctrl+C to quit. "
+         Write-Host -ForegroundColor Yellow "`nWARNING: all remote hosts will be automatically rebooted after changing the hostnames. Press Enter to continue or Ctrl+C to quit. "
          [void](Read-Host)
       }
    }
@@ -103,13 +107,13 @@ function Set-AvHostname{
       Invoke-Command -ComputerName $ComputerIP[$i] -Credential $Credential -ScriptBlock {Rename-Computer -ComputerName $using:IP -NewName $using:NCN}
       }
    
-   Write-Host -ForegroundColor Cyan "`nAll hostnames changed. "
+   Write-Host -ForegroundColor Cyan "`nall hostnames changed. "
    
    #6. Reboot remote hosts if $RebootAfterIHostnameChange switch present
    if ($RebootAfterHostnameChange) {
       Write-Host -ForegroundColor Cyan "`nWaiting for all remote hosts to reboot (We'll not wait more than 5 minutes though.)... "
       Restart-Computer -ComputerName $ComputerIP -Credential $Credential -Wait -For PowerShell -Timeout 300 -WsmanAuthentication Default -Force
-      Write-Host -ForegroundColor Cyan "`nAll remote hosts rebooted and available for PowerShell Remoting again. "
+      Write-Host -ForegroundColor Cyan "`nall remote hosts rebooted and available for PowerShell Remoting again. "
    }
    else{
       Write-Host -ForegroundColor Cyan "`nRemote hosts were NOT REBOOTED after the hostname change. "

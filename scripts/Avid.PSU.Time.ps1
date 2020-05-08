@@ -72,7 +72,7 @@ param(
    [Parameter(Mandatory = $true)] $SecondaryPointingTo
     )
 
-Write-Host -ForegroundColor Yellow "`nWARNING: All the remote hosts will be automatically rebooted after the installation. Press Enter to continue or Ctrl+C to quit. "
+Write-Host -ForegroundColor Yellow "`nWARNING: all the remote hosts will be automatically rebooted after the installation. Press Enter to continue or Ctrl+C to quit. "
 [void](Read-Host)
 
 $InstallerFileName = Split-Path $PathToInstaller -leaf
@@ -94,7 +94,7 @@ Write-Host -ForegroundColor Green "`nInstaller SUCCESSFULLY copied to all remote
 #3. Unblock the copied installer (so no "Do you want to run this file?" pop-out hangs the installation in the next step)
 Write-Host -ForegroundColor Cyan "`nUnblocking copied files. Please wait... "
 Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Unblock-File -Path $using:PathToInstallerRemote}
-Write-Host -ForegroundColor Green "`nAll files SUCCESSFULLY unblocked. "
+Write-Host -ForegroundColor Green "`nall files SUCCESSFULLY unblocked. "
 
 #4. Run the installer on remote hosts
 Write-Host -ForegroundColor Cyan "`nInstallation in progress. This should take up to a minute. Please wait... "

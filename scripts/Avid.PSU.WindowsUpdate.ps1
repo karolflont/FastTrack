@@ -7,7 +7,6 @@ function Get-AvWindowsUpdateServiceStatus {
    Gets the information about Windows Update Service on a server.
 .DESCRIPTION
    The Get-AvWindowsUpdateServiceStatus function gets the Status and StartType properties of Windows Update Service on a server. 
-
    The function reads the Status and StartType properties of wuauserv service.
 .PARAMETER ComputerName
    Specifies the computer name.

@@ -224,7 +224,7 @@ function Install-AvBGInfo{
    #4. Unblock the copied installer (so no "Do you want to run this file?" pop-out hangs the installation in the next step)
    #Write-Host -ForegroundColor Cyan "`nUnblocking copied files. Please wait... "
    #Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Unblock-File -Path $using:PathToInstallerRemote}
-   #Write-Host -ForegroundColor Green "`nAll files SUCCESSFULLY unblocked. "
+   #Write-Host -ForegroundColor Green "`nall files SUCCESSFULLY unblocked. "
    
    #5. Create the GBInfo shortcut in common startup folder
    Write-Host -ForegroundColor Cyan "`nCreating BGInfo autostart and desktop shortcuts on remote hosts. Please wait... "

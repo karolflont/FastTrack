@@ -14,6 +14,8 @@ while((-not (Test-Path ([string]$source + "\" + "Avid.PSUtilities.psd1")))){
    $source = Read-Host
 }
 
+Write-Host -ForegroundColor Green "`nInstalling... "
+
 # destination - using user PS module path (no need for admin rights of the user running the session)
 $PSMPaths = $env:PSModulePath -split ';'
 foreach ($PSMPAth in $PSMPaths) {
@@ -33,7 +35,7 @@ Write-Host -ForegroundColor Green "`nFunctions available in Avid.PSUtilities mod
 Get-Command -Module Avid.PSUtilities
 
 ### Adding "all hosts" to trusted hosts
-Set-Item WSMan:\localhost\Client\TrustedHosts -Value * -Force
+Set-Item WSMan:\localhost\Client\TrustedHosts -Value "*" -Force
 
 ### Footer message
 Write-Host -ForegroundColor Green "`nCheck Avid.PSU.SAMPLE.ps1 for sample usage of Avid.PSUtilities module. "
