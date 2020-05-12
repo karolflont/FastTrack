@@ -26,6 +26,11 @@ function Install-AvNexisClient{
    Install-NexisClient -ComputerName $all_hosts -Credential $Cred -PathToInstaller 'C:\AvidInstallers\AvidNEXISClient_Win64_18.11.0.9.msi' -RebootAfterInstallation
 #>
 
+<#
+TODO
+Wait for rebooted hosts to come back.
+#>
+
 Param(
     [Parameter(Mandatory = $true)] $ComputerName,
     [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
@@ -90,9 +95,7 @@ else
         Write-Host -ForegroundColor Red "Please REBOOT manually later as this is required for AvidNEXIS Client to work properly. "
     }
 }
-function Push-AvNexisConfig{
 
-}
 function Uninstall-AvNexisClient{
 <#
 .SYNOPSIS
@@ -148,93 +151,79 @@ function Get-AvSoftwareVersions{
     .SYNOPSIS
         Gets installed Avid Software versions.
     .DESCRIPTION
-        The Get-AvSoftwareVersions function consists of two parts:
-        1) First, retrieves the version of NXNServer.exe file for Interplay Engine
-        2) Second, retrieves all the keys from "HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\" containing word "Avid" in the "Publishers" value
-    .PARAMETER ComputerName
-        Specifies the computer name.
+        The Get-AvSoftwareVersions function retrieves all the keys from "HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\" containing words:
+        - Avid in the "Publishers" value
+        - {Avid|Isis|Nexis} in "DisplayName" value
+        Results are sorted by Alias, unless one of the 'SortBy' switches is selected.
+    .PARAMETER ComputerIP
+        Specifies computer IP.
     .PARAMETER Credentials
-        Specifies the credentials used to login.
+        Specifies credentials used to login.
     .EXAMPLE
-        TODO
+        Get-AvSoftwareVersions -ComputerIP $all -Credential $cred
+        Get-AvSoftwareVersions -ComputerIP $all -Credential $cred -SortByDisplayVersion
+
     #>
     
     Param(
-        [Parameter(Mandatory = $true)] $ComputerName,
+        [Parameter(Mandatory = $true)] $ComputerIP,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
-        [Parameter(Mandatory = $false)] [switch]$SortByComputerIP,
+        [Parameter(Mandatory = $false)] [switch]$SortByAlias,
         [Parameter(Mandatory = $false)] [switch]$SortByHostnameInConfigFile,
         [Parameter(Mandatory = $false)] [switch]$SortByDisplayName,
         [Parameter(Mandatory = $false)] [switch]$SortByDisplayVersion,
         [Parameter(Mandatory = $false)] [switch]$SortByInstallDate
     )
 
-    #Default sort property
-    $DefaultSortProperty = "ComputerIP"
-    $PropertiesToDisplay = ('ComputerIP', 'HostnameInConfigFile', 'DisplayName', 'DisplayVersion', 'InstallDate') 
+    $PropertiesToDisplay = ('Alias', 'HostnameInConfigFile', 'DisplayName', 'DisplayVersion', 'InstallDate') 
 
-    $ActionIndex = Test-AvIfExactlyOneSwitchParameterIsTrue $SortByComputerIP $SortByHostnameInConfigFile $SortByDisplayVersion $SortByInstallDate
+    $ActionIndex = Test-AvIfExactlyOneSwitchParameterIsTrue $SortByAlias $SortByHostnameInConfigFile $SortByDisplayName $SortByDisplayVersion $SortByInstallDate
 
-    if (($null -eq $ActionIndex) -or ($ActionIndex -eq -1)) 
-    {
-        Return
-    }
-    else {
+    # A message displayed in case empty objects are returned from all remote computers
+    $NullMessage = "`nNO Avid Software installed on any of the remote hosts. "
 
-    <# NOT NEEDED ANY MORE IN 2018.11 AND LATER
-    $InterplayEngineVersion = Invoke-Command -ComputerName $YLEHKI_servers -Credential $Cred -ScriptBlock{
-        If (Test-Path "C:\Program Files\Avid\Avid Interplay Engine\Server\NXNServer.exe"){
-            (Get-Item "C:\Program Files\Avid\Avid Interplay Engine\Server\NXNServer.exe").VersionInfo
-        }
-    }
-    $InterplayEngineVersion| Add-Member -MemberType NoteProperty -Name DisplayName -Value "Avid Interplay Engine"
-    Write-Host -ForegroundColor Cyan "`nInterplay Engine and other software versions "
-    $InterplayEngineVersion | Select-Object PSComputerName, DisplayName, ProductVersion, FileVersion | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
-    #>
-    $AvidSoftwareVersions = Invoke-Command -ComputerName $ComputerName -Credential $Cred -ScriptBlock {Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* | Select-Object DisplayName, DisplayVersion, Publisher, InstallDate | Where-Object {($_.Publisher -like "*Avid*") -or ($_.DisplayName -like "*Avid*") -or ($_.DisplayName -like "*Isis*") -or ($_.DisplayName -like "*Nexis*")}}
+    $ScriptBlock = {Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* | Select-Object DisplayName, DisplayVersion, Publisher, InstallDate | Where-Object {($_.Publisher -like "*Avid*") -or ($_.DisplayName -like "*Avid*") -or ($_.DisplayName -like "*Isis*") -or ($_.DisplayName -like "*Nexis*")}}
 
-    $sc = $global:SysConfig | ConvertFrom-Json
+    Invoke-AvScriptBlock -ScriptBlock $ScriptBlock -NullMessage $NullMessage -ActionIndex $ActionIndex -PropertiesToDisplay $PropertiesToDisplay -ComputerIP $ComputerIP -Credential $Credential
+}
 
-    $AvidSoftwareVersionsRaw = $AvidSoftwareVersions | Select-Object -Property @{Name = "ComputerIP" ; Expression = {$_.PSComputerName} },
-    @{Name = "HostnameInConfigFile" ; Expression = {
-        $CurrentIP = $_.PSComputerName
-        ($sc.hosts | Where-object {$_.IP -eq $CurrentIP}).hostname
-        }
-    },
-    DisplayName,
-    DisplayVersion,
-    InstallDate
-
-    $AvidSoftwareVersionsRaw | Select-Object $PropertiesToDisplay | Sort-Object -Property $PropertiesToDisplay[$ActionIndex] | Format-Table -Wrap -AutoSize
-    }
-} 
 function Get-AvServicesStatus{
         <#
     .SYNOPSIS
         Gets information about Installed Avid Services.
     .DESCRIPTION
-        The Get-AvServices function gets Status and StartType of Installed Avid Services on a server.
-    .PARAMETER ComputerName
-        Specifies the computer name.
+        The Get-AvServices function uses Get-Service -Displayname "Avid*" command to gather Status and StartType of Installed Avid Services on a server.
+        Results are sorted by Alias, unless one of the 'SortBy' switches is selected.
+    .PARAMETER ComputerIP
+        Specifies the computer IP.
     .PARAMETER Credentials
         Specifies the credentials used to login.
     .EXAMPLE
-        TODO
+        Get-AvServicesStatus -ComputerIP $all -Credential $cred
+        Get-AvServicesStatus -ComputerIP $all -Credential $cred -SortByStatus
     #>
     Param(
-        [Parameter(Mandatory = $true)] $ComputerName,
-        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential
+        [Parameter(Mandatory = $true)] $ComputerIP,
+        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
+        [Parameter(Mandatory = $false)] [switch]$SortByAlias,
+        [Parameter(Mandatory = $false)] [switch]$SortByHostnameInConfigFile,
+        [Parameter(Mandatory = $false)] [switch]$SortByDisplayName,
+        [Parameter(Mandatory = $false)] [switch]$SortByStatus,
+        [Parameter(Mandatory = $false)] [switch]$SortByStartType
     )
 
-    $AvidServices = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Get-Service -Displayname "Avid*"}
-    Write-Host -ForegroundColor Cyan "`nAvid Services Status "
-    $AvidServices | Select-Object PSComputerName, DisplayName, Status, StartType | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
+    $PropertiesToDisplay = ('Alias', 'HostnameInConfigFile', 'DisplayName', 'Status', 'StartType') 
+
+    $ActionIndex = Test-AvIfExactlyOneSwitchParameterIsTrue $SortByAlias $SortByHostnameInConfigFile $SortByDisplayName $SortByStatus $SortByStartType
+
+    # A message displayed in case empty objects are returned from all remote computers
+    $NullMessage = "`nNO Avid Services running on any of the remote hosts. "
+
+    $ScriptBlock = {Get-Service -Displayname "Avid*"}
+
+    Invoke-AvScriptBlock -ScriptBlock $ScriptBlock -NullMessage $NullMessage -ActionIndex $ActionIndex -PropertiesToDisplay $PropertiesToDisplay -ComputerIP $ComputerIP -Credential $Credential
 }
-#################
-### AVID PREP ###
-#################
-function Invoke-AvAvidPrep{
-}
+
 
 
 

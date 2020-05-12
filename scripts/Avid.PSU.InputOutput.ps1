@@ -36,7 +36,7 @@ function Import-AvSystemConfiguration{
     $aliases = $SysConfigVar.hosts.alias | Sort-Object
 
     #check is aliases are unique
-    if ($aliases -eq ($aliases | Get-Unique)){
+    if ($aliases.length -eq ($aliases | Get-Unique).length){
        #define alises variables
         foreach ($alias in $aliases) {
             $IPforAParticularAlias = ($SysConfigVar.hosts | Where-Object {$_.alias -Like $alias}).IP
@@ -52,8 +52,4 @@ function Import-AvSystemConfiguration{
         return
     }
 }
-
-function New-AvMRemoteNGSessionsConfiguration{}
-
-function New-AvMobaXtermSessionsConfiguration{}
 

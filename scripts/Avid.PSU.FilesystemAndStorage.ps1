@@ -1,13 +1,3 @@
-function Get-AvPartitionInfo{
-}
-function Set-AvPartition{
-    param(
-    [Parameter(Mandatory = $true)] $ComputerName,
-    [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
-    [Parameter(Mandatory = $true)] [switch] $resize,
-    [Parameter(Mandatory = $true)] [switch] $create
-)
-}
 #################################################
 ##### SHOW HIDDEN FILES, FOLDERS AND DRIVES #####
 #################################################

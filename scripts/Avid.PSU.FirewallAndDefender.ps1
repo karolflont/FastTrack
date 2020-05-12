@@ -1,7 +1,7 @@
 ########################
 ### WINDOWS FIREWALL ###
 ########################
-function Get-AvFirewallServiceStatus{
+function Get-AvFirewallStatus{
  <#
     .SYNOPSIS
         Gets the status of Firewall service.
@@ -25,8 +25,10 @@ function Get-AvFirewallServiceStatus{
     $AvidSoftwareVersions | Select-Object PSComputerName, DisplayName, Status, StartType | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 
 }
-function Set-AvFirewallService{
-<#
+
+function Set-AvFirewall{
+
+    <#
 .SYNOPSIS
     Sets Windows Firewall service (MpsSvc) status i startup type .
 .DESCRIPTION
@@ -38,6 +40,7 @@ function Set-AvFirewallService{
 .EXAMPLE
     TODO
 #>
+<#
 Write-Host -ForegroundColor Red "`nThis function is not yet implemented."
 Return
     param(
@@ -50,8 +53,8 @@ Return
     $AvidSoftwareVersions | Select-Object PSComputerName, DisplayName, Status, StartType | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 
 }
-function Set-AvFirewallState{
- <#
+#>
+    <#
     .SYNOPSIS
         Turns the firewall ON or OFF for all profiles: Public, Private and Domain. (Turn ON/OFF!!! - not ENABLE/DISABLE the service)
     .DESCRIPTION

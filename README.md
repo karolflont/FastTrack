@@ -2,7 +2,9 @@
 
 Welcome!
 
-Avid.PSUtilities is a PowerShell module for mass scale deployment/management of Windows based Avid servers.
+Avid.PSUtilities is a PowerShell module for mass scale deployment and management of Avid MediaCentral | Production Management servers.
+
+---
 
 ## Prerequisites
 
@@ -11,6 +13,8 @@ This module is tested with PowerShell 5.1 and Windows Server 2016 OS only. Howev
 - some functions will work fine on lower versions of PowerShell and Windows Server.
 
 There are no other prerequisites for using this module.
+
+---
 
 ## Installing
 
@@ -26,9 +30,13 @@ WARNING: Installing AvidPS.Utilities will add all hosts ("*") to the WSMan:\loca
 
 To uninstall the Avid.PSUtilities module on your computer run Avid.PSU.UNINSTALL.ps1 script from a PowerShell session with elevated privileges.
 
+---
+
 ## Usage
 
 Check Avid.PSU.SAMPLE.ps1 for sample usage of this module.
+
+---
 
 ## List of functions
 
@@ -108,6 +116,8 @@ Windows Update related
 
     Get-AvWindowsUpdateServiceStatus
     Set-AvWindowsUpdateService
+
+---
 
 ## Sample System Configuration files
 
@@ -239,3 +249,12 @@ Windows Update related
     }
 }
 ```
+
+---
+
+## License
+
+[![License](http://img.shields.io/:license-mit-blue.svg?style=flat-square)](http://badges.mit-license.org)
+
+- **[MIT license](http://opensource.org/licenses/mit-license.php)**
+- Copyright 2020 © <a>Karol Flont</a>.
