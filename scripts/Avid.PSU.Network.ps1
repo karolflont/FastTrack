@@ -7,7 +7,7 @@ function Get-AvNetworkInfo{
    TODO
    .DESCRIPTION
    TODO
-   .PARAMETER ComputerName
+   .PARAMETER ComputerIP
    Specifies the computer name.
    .PARAMETER Credentials
    Specifies the credentials used to login.
@@ -15,7 +15,7 @@ function Get-AvNetworkInfo{
    TODO
    #>
    param (
-      [Parameter(Mandatory = $true)] $ComputerName,
+      [Parameter(Mandatory = $true)] $ComputerIP,
       [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
       [Parameter(Mandatory = $false)] [switch]$SortByPSComputerName,
       [Parameter(Mandatory = $false)] [switch]$SortByName,
@@ -44,7 +44,7 @@ function Get-AvNetworkInfo{
       Return
    }
    
-   $NetworkInfo = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Get-NetConnectionProfile}
+   $NetworkInfo = Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Get-NetConnectionProfile}
    $NetworkInfo | Select-Object $PropertiesToDisplay | Sort-Object -Property $SortProperty | Format-Table -Wrap -AutoSize
 
    #Retrieving only IPv4 addresses

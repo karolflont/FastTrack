@@ -37,15 +37,15 @@ function Get-AvHostname{
  
     $HostnamesRaw = $Hostnames | Select-Object -Property @{Name = "ComputerIP" ; Expression = {$_.PSComputerName} },
                                                          HostnameSetOnHost,
-                                                         @{Name = "HostnameInConfigFile" ; Expression = {
+                                                         @{Name = "HostnameInConfig" ; Expression = {
                                                              $CurrentIP = $_.PSComputerName
                                                              ($sc.hosts | Where-object {$_.IP -eq $CurrentIP}).hostname
                                                              }
                                                          }
  
-    $HostnamesRaw = $HostnamesRaw | Select-Object -Property ComputerIP, HostnameSetOnHost, HostnameInConfigFile,
+    $HostnamesRaw = $HostnamesRaw | Select-Object -Property ComputerIP, HostnameSetOnHost, HostnameInConfig,
                                                              @{Name = "HostnamesInSync" ; Expression = {
-                                                                if ($_.HostnameSetOnHost -eq $_.HostnameInConfigFile){"YES"}
+                                                                if ($_.HostnameSetOnHost -eq $_.HostnameInConfig){"YES"}
                                                                 else {"NO"}
                                                              }
                                                              }
@@ -89,7 +89,7 @@ function Get-AvHostname{
        Write-Host -ForegroundColor Yellow "`nWARNING: You're about to change the hostname(-s) of remote computer(-s) according to the below table. This can possibly be a harmful operation. Press Enter to continue or Ctrl+C to quit. "
        $Hostnames | Select-Object -Property ComputerIP,
                                      @{Name = "OldName"; Expression = {$_.HostnameSetOnHost}},
-                                     @{Name = "NewName"; Expression = {$_.HostnameInConfigFile}} `
+                                     @{Name = "NewName"; Expression = {$_.HostnameInConfig}} `
                                       | Sort-Object -Property ComputerIP | Format-Table -Wrap -AutoSize
        [void](Read-Host)
        if ($RebootAfterHostnameChange){
@@ -124,33 +124,43 @@ function Get-AvHostname{
  ### DOMAIN ###
  ##############
  function Get-AvDomain{
-       <#
-       .SYNOPSIS
-          Checks the Active Directory Domain or Workgroup name for a Computer.
-       .DESCRIPTION
-          The Get-Domain checks the Active Directory Domain or Workgroup name for a Computer.
-       .PARAMETER ComputerName
-          Specifies the computer name or IP.
-       .PARAMETER Credentials
-          Specifies the credentials used to login.
-       .EXAMPLE
-          Get-AvDomain -ComputerName $all_hosts_IPs -Credential $Cred
-       #>
-       Param(
-          [Parameter(Mandatory = $true)] $ComputerName,
-          [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential
-       )
-          $DomainMembership = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {(Get-WmiObject -Class Win32_ComputerSystem)}
-          Write-Host -ForegroundColor Cyan "`nDOMAIN MEMBERSHIP "
-          $DomainMembership | Select-Object PSComputerName, Name, PartOfDomain, Domain  | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
-       }
+   <#
+   .SYNOPSIS
+      Checks the Active Directory Domain or Workgroup name for a Computer.
+   .DESCRIPTION
+      The Get-Domain retrieves the Domain information from Win32_ComputerSystem WMI Class.
+   .PARAMETER ComputerIP
+      Specifies the computer IP.
+   .PARAMETER Credentials
+      Specifies the credentials used to login.
+   .EXAMPLE
+      Get-AvDomain -ComputerIP $all -Credential $Cred
+   #>
+   Param(
+      [Parameter(Mandatory = $true)] $ComputerIP,
+      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential
+   )
+
+   $HeaderMessage = "Domain Membership Status"
+
+   $ScriptBlock = {Get-WmiObject -Class Win32_ComputerSystem}
+
+   #A message displayed in case empty objects are returned from all remote computers
+   $NullMessage = "Class Win32_ComputerSystem is not present on any of the remote computers."
+
+   $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'PartOfDomain', 'Domain')
+
+   $ActionIndex = 0
+
+   Invoke-AvScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
+}
  function Join-AvDomain{
  <#
  .SYNOPSIS
     Joins computers to an Active Directory Domain.
  .DESCRIPTION
     The Join-Domain joins computers to an Active Directory Domain.
- .PARAMETER ComputerName
+ .PARAMETER ComputerIP
     Specifies the computer name or IP.
  .PARAMETER Credentials
     Specifies the credentials used to login.
@@ -161,10 +171,10 @@ function Get-AvHostname{
  .PARAMETER NewComputerName
     Specifies the new computer name to be used.
  .EXAMPLE
-    Join-Domain -ComputerName $all_hosts -Credential $Cred -DomainName 'example.domain.com' -DomainAdminCredentials $AaminCred
+    Join-Domain -ComputerIP $all_hosts -Credential $Cred -DomainName 'example.domain.com' -DomainAdminCredentials $AaminCred
  #>
  Param(
-       [Parameter(Mandatory = $true)] $ComputerName,
+       [Parameter(Mandatory = $true)] $ComputerIP,
        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
        [Parameter(Mandatory = $true)] $DomainName,
        [Parameter(Mandatory = $true)] $DomainAdminUsername
@@ -173,7 +183,7 @@ function Get-AvHostname{
  $DomainAdminUserNameFull = $DomainName + "\" + $DomainAdminUsername
  
  #Joining the domain is interactive (will ask for domain admin password) as I did not figure out yet how to pass full credentials
- Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Add-Computer -DomainName $using:DomainName -Credential $using:DomainAdminUsernameFull  -Restart}
+ Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Add-Computer -DomainName $using:DomainName -Credential $using:DomainAdminUsernameFull  -Restart}
  Write-Host -ForegroundColor Cyan "`n ALL COMPUTERS JOINED TO THE $DomainName DOMAIN. "
  Write-Host -ForegroundColor Cyan "Reboot triggered for all remote hosts. "
  }

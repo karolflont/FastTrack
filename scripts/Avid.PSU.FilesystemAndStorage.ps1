@@ -9,7 +9,7 @@ function Get-AvHiddenFilesAndFoldersStatus{
    TODO
 .DESCRIPTION
    TODO
-.PARAMETER ComputerName
+.PARAMETER ComputerIP
    Specifies the computer name.
 .PARAMETER Credentials
    Specifies the credentials used to login.
@@ -17,15 +17,17 @@ function Get-AvHiddenFilesAndFoldersStatus{
    TODO
 #>
 param(
-    [Parameter(Mandatory = $true)] $ComputerName,
+    [Parameter(Mandatory = $true)] $ComputerIP,
     [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential
 )
-    $HiddenFilesAndFoldersStatus = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Get-ItemProperty "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "Hidden"}
+    $HiddenFilesAndFoldersStatus = Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Get-ItemProperty "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "Hidden"}
     Write-Host -ForegroundColor Cyan "`n SHOW HIDDEN FILES, FOLDERS AND DRIVES STATUS"
-    Write-Host -ForegroundColor Cyan "1 - Hidden files, folders and drives SHOWN  "
-    Write-Host -ForegroundColor Cyan "2 - Hidden files, folders and drives HIDDEN "
+    Write-Host -ForegroundColor Cyan " 1 - Hidden files, folders and drives SHOWN  "
+    Write-Host -ForegroundColor Cyan " 2 - Hidden files, folders and drives HIDDEN "
     $HiddenFilesAndFoldersStatus | Select-Object PSComputerName, Hidden | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 }
+
+
 function Set-AvHiddenFilesAndFolders{
     <#
     .SYNOPSIS
@@ -35,7 +37,7 @@ function Set-AvHiddenFilesAndFolders{
 
         The function sets the value of "Hidden" value in "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" key.
         NOTE: This function restarts Explorer process if it is running (server has a GUI and somebody is logged on). This is necessary for this registry settings change to work.
-    .PARAMETER ComputerName
+    .PARAMETER ComputerIP
         Specifies the computer name.
     .PARAMETER Credentials
         Specifies the credentials used to login.
@@ -43,7 +45,7 @@ function Set-AvHiddenFilesAndFolders{
         TODO
     #>
     param(
-    [Parameter(Mandatory = $true)] $ComputerName,
+    [Parameter(Mandatory = $true)] $ComputerIP,
     [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
     [Parameter(Mandatory = $false)] [switch]$Show,
     [Parameter(Mandatory = $false)] [switch]$Hide
@@ -58,7 +60,7 @@ function Set-AvHiddenFilesAndFolders{
             Write-Host -ForegroundColor Red "`nPlease specify ONLY ONE of the -Show/-Hide switch parameters. "
         Return
         }
-        Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {
+        Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {
             Set-ItemProperty "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "Hidden" -Value "1"
             if (Get-Process explorer -ErrorAction SilentlyContinue){
                 Stop-Process -ProcessName explorer -Force
@@ -71,7 +73,7 @@ function Set-AvHiddenFilesAndFolders{
             Write-Host -ForegroundColor Red "`nPlease specify ONLY ONE of the -Show/-Hide switch parameters. "
             Return
         }
-        Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {
+        Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {
             Set-ItemProperty "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "Hidden" -Value "2"
             if (Get-Process explorer -ErrorAction SilentlyContinue){
                 Stop-Process -ProcessName explorer -Force
@@ -84,5 +86,5 @@ function Set-AvHiddenFilesAndFolders{
         Return
     }
 
-    Get-AvHiddenFilesAndFoldersStatus $ComputerName $Credential
+    Get-AvHiddenFilesAndFoldersStatus $ComputerIP $Credential
 }

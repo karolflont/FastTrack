@@ -4,7 +4,7 @@ function Install-AvFailoverClusteringFeature {
    TODO
 .DESCRIPTION
    TODO
-.PARAMETER ComputerName
+.PARAMETER ComputerIP
    Specifies the computer name.
 .PARAMETER Credentials
    Specifies the credentials used to login.
@@ -12,10 +12,10 @@ function Install-AvFailoverClusteringFeature {
    TODO
 #>
 param(
-    [Parameter(Mandatory = $true)] $ComputerName,
+    [Parameter(Mandatory = $true)] $ComputerIP,
     [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential
 )
 
-$ClusterFeature = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Install-WindowsFeature -Name Failover-Clustering -IncludeManagementTools}
+$ClusterFeature = Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Install-WindowsFeature -Name Failover-Clustering -IncludeManagementTools}
 $ClusterFeature | Select-Object PSComputerName, ConsentPromptBehaviorAdmin | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 }

@@ -9,12 +9,12 @@ function Test-AvPowershellRemoting {
        The Test-AvPowershellRemoting function uses:
        - Test-WSMan
        - New-PSSession
-    .PARAMETER ComputerName
+    .PARAMETER ComputerIP
        Specifies the computer name.
     .PARAMETER Credentials
        Specifies the credentials used to login.
     .EXAMPLE
-       Test-AvPowershellRemoting -ComputerName $all
+       Test-AvPowershellRemoting -ComputerIP $all
     #>
     param (
        [Parameter(Mandatory = $true)] $ComputerIP,
@@ -88,7 +88,7 @@ function Get-AvRemoteDesktopStatus{
        2) "fDenyTSConnections" value of "HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server" registry key.
        3) "Remote Desktop" DisplayGroup firewall rule existance
        4) "Network Level Authentication" status
-    .PARAMETER ComputerName
+    .PARAMETER ComputerIP
        Specifies the computer name.
     .PARAMETER Credentials
        Specifies the credentials used to login.
@@ -96,7 +96,7 @@ function Get-AvRemoteDesktopStatus{
        TODO
     #>
     param(
-         [Parameter(Mandatory = $true)] $ComputerName,
+         [Parameter(Mandatory = $true)] $ComputerIP,
          [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential
      )
  
@@ -134,7 +134,7 @@ function Get-AvRemoteDesktopStatus{
     TODO
     .DESCRIPTION
     TODO
-    .PARAMETER ComputerName
+    .PARAMETER ComputerIP
     Specifies the computer name.
     .PARAMETER Credentials
     Specifies the credentials used to login.
@@ -142,7 +142,7 @@ function Get-AvRemoteDesktopStatus{
     TODO
     #>
     param (
-       [Parameter(Mandatory = $true)] $ComputerName,
+       [Parameter(Mandatory = $true)] $ComputerIP,
        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
        [Parameter(Mandatory = $false)] [switch] $EnableWithDisabledNLA,
        [Parameter(Mandatory = $false)] [switch] $EnableWithEnabledNLA,
@@ -154,38 +154,38 @@ function Get-AvRemoteDesktopStatus{
  
     if ($ActionIndex -eq 0){
        #If EnableWithDisabledNLA switch was selected
-       Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-Service -Name TermServiceset-service -Name TermService -Status Running -StartupType Manual}
+       Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Set-Service -Name TermServiceset-service -Name TermService -Status Running -StartupType Manual}
        Write-Host -ForegroundColor Green "`nRemote Desktop Services (TermService) service ENABLED for all hosts. "
-       Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-ItemProperty -Path 'HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0}
+       Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Set-ItemProperty -Path 'HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0}
        Write-Host -ForegroundColor Green "`nRDP ENABLED for all hosts. "
-       Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Enable-NetFirewallRule -DisplayGroup "Remote Desktop"}
+       Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Enable-NetFirewallRule -DisplayGroup "Remote Desktop"}
        Write-Host -ForegroundColor Green "`nRDP firewall rule ADDED for all remote hosts. "
-       Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 0}
+       Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 0}
        Write-Host -ForegroundColor Green "`nNetwork Level Authentication for RDP DISABLED for all remote hosts. "
     }
     elseif ($ActionIndex -eq 1){
        #If EnableWithEnabledNLA switch was selected
-       Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-Service -Name TermServiceset-service -Name TermService -Status Running -StartupType Manual}
+       Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Set-Service -Name TermServiceset-service -Name TermService -Status Running -StartupType Manual}
        Write-Host -ForegroundColor Green "`nRemote Desktop Services (TermService) service ENABLED for all hosts. "
-       Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-ItemProperty -Path 'HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0}
+       Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Set-ItemProperty -Path 'HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0}
        Write-Host -ForegroundColor Green "`nRDP ENABLED for all hosts. "
-       Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Disable-NetFirewallRule -DisplayGroup "Remote Desktop"}
+       Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Disable-NetFirewallRule -DisplayGroup "Remote Desktop"}
        Write-Host -ForegroundColor Green "`nRDP firewall rule ADDED for all remote hosts. "
-       Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1}
+       Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1}
        Write-Host -ForegroundColor Green "`nNetwork Level Authentication for RDP ENABLED for all remote hosts. "
     }
     elseif ($ActionIndex -eq 2){
        #If Disable switch was selected
-       Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-ItemProperty -Path 'HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 1}
+       Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Set-ItemProperty -Path 'HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 1}
        Write-Host -ForegroundColor Green "`nRDP DISABLED for all hosts. "
-       Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Disable-NetFirewallRule -DisplayGroup "Remote Desktop"}
+       Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Disable-NetFirewallRule -DisplayGroup "Remote Desktop"}
        Write-Host -ForegroundColor Green "`nRDP firewall rule REMOVED for all remote hosts. "
-       Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1}
+       Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1}
        Write-Host -ForegroundColor Green "`nNetwork Level Authentication for RDP ENABLED for all remote hosts (default value). "
     }
     elseif ($ActionIndex -eq 3){
        #If DisableRDPService switch was selected
-       Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-Service -Name TermService -Status Stopped -StartupType Disabled}
+       Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Set-Service -Name TermService -Status Stopped -StartupType Disabled}
        Write-Host -ForegroundColor Green "`nRemote Desktop Services (TermService) service STOPPED and DISABLED for all hosts. "
     }
  }

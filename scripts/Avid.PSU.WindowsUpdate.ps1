@@ -8,7 +8,7 @@ function Get-AvWindowsUpdateServiceStatus {
 .DESCRIPTION
    The Get-AvWindowsUpdateServiceStatus function gets the Status and StartType properties of Windows Update Service on a server. 
    The function reads the Status and StartType properties of wuauserv service.
-.PARAMETER ComputerName
+.PARAMETER ComputerIP
    Specifies the computer name.
 .PARAMETER Credentials
    Specifies the credentials used to login.
@@ -16,11 +16,11 @@ function Get-AvWindowsUpdateServiceStatus {
    TODO
 #>
 param(
-        [Parameter(Mandatory = $true)] $ComputerName,
+        [Parameter(Mandatory = $true)] $ComputerIP,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential
     )
 
-    $WindowsUpdateStatus = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Get-Service -Name wuauserv}
+    $WindowsUpdateStatus = Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Get-Service -Name wuauserv}
     Write-Host -ForegroundColor Cyan "`nWindows Update Status "
     $WindowsUpdateStatus | Select-Object PSComputerName, Status, StartType | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 }
@@ -32,7 +32,7 @@ function Set-AvWindowsUpdateService{
         The Set-WindowsUpdateService function does two things, depending on the switch parameter used:
         1) For -Enable parameter it starts Windows Update Service on a server and sets its startup type to Automatic,
         2) For -Disable parameter it stops Windows Update Service on a server and sets its startup type to Disabled.
-    .PARAMETER ComputerName
+    .PARAMETER ComputerIP
         Specifies the computer name.
     .PARAMETER Credentials
         Specifies the credentials used to login.
@@ -40,7 +40,7 @@ function Set-AvWindowsUpdateService{
         TODO
     #>
     param(
-        [Parameter(Mandatory = $true)] $ComputerName,
+        [Parameter(Mandatory = $true)] $ComputerIP,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
         [Parameter(Mandatory = $false)] [switch]$Enable,
         [Parameter(Mandatory = $false)] [switch]$Disable
@@ -51,7 +51,7 @@ function Set-AvWindowsUpdateService{
             Write-Host -ForegroundColor Red "`nPlease specify ONLY ONE of the -Enable/-Disable switch parameters. "
         Return
         }
-        $WindowsUpdateStatus = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-Service -Name wuauserv -StartupType Automatic -Status Running -PassThru}
+        $WindowsUpdateStatus = Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Set-Service -Name wuauserv -StartupType Automatic -Status Running -PassThru}
         Write-Host -ForegroundColor Green "`nWindows Update Service ENABLED. "
     }
     elseif ($Disable) {
@@ -59,8 +59,8 @@ function Set-AvWindowsUpdateService{
             Write-Host -ForegroundColor Red "`nPlease specify ONLY ONE of the -Enable/-Disable switch parameters. "
             Return
         }
-        Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Stop-Service -Name wuauserv -Force}
-        $WindowsUpdateStatus = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-Service -Name wuauserv -StartupType Disabled -PassThru}
+        Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Stop-Service -Name wuauserv -Force}
+        $WindowsUpdateStatus = Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Set-Service -Name wuauserv -StartupType Disabled -PassThru}
         Write-Host -ForegroundColor Green "`nWindows Update Service DISABLED. "
     }
     else {

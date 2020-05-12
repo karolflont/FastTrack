@@ -8,7 +8,7 @@ function Get-AvEventLogErrors{
   TODO
 .DESCRIPTION
   TODO
-.PARAMETER ComputerName
+.PARAMETER ComputerIP
   Specifies the computer name.
 .PARAMETER Credentials
   Specifies the credentials used to login.
@@ -16,7 +16,7 @@ function Get-AvEventLogErrors{
   TODO
 #>
 Param(
-       [Parameter(Mandatory = $true)] $ComputerName,
+       [Parameter(Mandatory = $true)] $ComputerIP,
        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
        [Parameter(Mandatory = $false)] $After,
        [Parameter(Mandatory = $false)] $Before
@@ -27,24 +27,24 @@ Param(
    if ($Before) {$EventLogBefore = Get-Date $Before}
    if ($After){
        if ($Before){
-           $FullEventLogList = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Get-EventLog -LogName System -EntryType Error -After $using:EventLogAfter -Before $using:EventLogBefore}
+           $FullEventLogList = Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Get-EventLog -LogName System -EntryType Error -After $using:EventLogAfter -Before $using:EventLogBefore}
        }
        else {
-           $FullEventLogList = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Get-EventLog -LogName System -EntryType Error -After $using:EventLogAfter}
+           $FullEventLogList = Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Get-EventLog -LogName System -EntryType Error -After $using:EventLogAfter}
        }
    }
    elseif ($Before){
-       $FullEventLogList = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Get-EventLog -LogName System -EntryType Error -Before $using:EventLogBefore}
+       $FullEventLogList = Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Get-EventLog -LogName System -EntryType Error -Before $using:EventLogBefore}
    }
    else {
-      $FullEventLogList = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Get-EventLog -LogName System -EntryType Error} 
+      $FullEventLogList = Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Get-EventLog -LogName System -EntryType Error} 
    }
    
    Write-Host -ForegroundColor Cyan "`nNumber of Error type EventLog entries "
 
-   for ($i=0; $i -lt $ComputerName.Count; $i++){
-       $ServerEventLogList = $FullEventLogList | Where-Object PSComputerName -eq $ComputerName[$i]
-       $message = "`nSummary of Error type EventLog entries for " + $ComputerName[$i]
+   for ($i=0; $i -lt $ComputerIP.Count; $i++){
+       $ServerEventLogList = $FullEventLogList | Where-Object PSComputerName -eq $ComputerIP[$i]
+       $message = "`nSummary of Error type EventLog entries for " + $ComputerIP[$i]
        Write-Host -ForegroundColor Cyan $message
        $ServerEventLogListSummary = $ServerEventLogList | Group-Object Source | Sort-Object Count -Descending | Select-Object Name, Count
        $EventLogSummaryList = @()
@@ -87,6 +87,10 @@ function Get-AvOSVersion{
    Specifies computer IP.
 .PARAMETER Credentials
    Specifies credentials used to login.
+.PARAMETER Credentials
+   Allows sorting by Release ID.
+.PARAMETER Credentials
+   Allows sorting by Install Date.
 .EXAMPLE
    Get-AvOSVersion -ComputerIP $all -Credential $cred
    Get-AvOSVersion -ComputerIP $all -Credential $cred -SortByInstallDate
@@ -96,18 +100,19 @@ param(
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
         [Parameter(Mandatory = $false)] [switch]$SortByReleaseID,
         [Parameter(Mandatory = $false)] [switch]$SortByInstallDate
-    )
+   )
 
-    $PropertiesToDisplay = ('Alias', 'HostnameInConfigFile', 'ProductName', 'BuildBranch', 'CurrentMajorVersionNumber', 'CurrentMinorVersionNumber', 'ReleaseId', 'CurrentBuildNumber', 'UBR', 'InstallDate') 
+   $HeaderMessage = "Operating System Version"
 
-    $ActionIndex = Test-AvIfExactlyOneSwitchParameterIsTrue $SortByAlias $SortByHostnameInConfigFile $SortByReleaseID $SortByInstallDate
+   $ScriptBlock = {Get-ItemProperty -Path "HKLM:SOFTWARE\Microsoft\Windows NT\CurrentVersion" -Name ProductName, BuildBranch, CurrentMajorVersionNumber, CurrentMinorVersionNumber, ReleaseID, CurrentBuildNumber, UBR, InstallDate}
 
-    # A message displayed in case empty objects are returned from all remote computers
-    $NullMessage = "Something went wrong retrieving OS Versions from all remote hosts"
+   $NullMessage = "Something went wrong retrieving OS Versions from all remote hosts"
+   
+   $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'ProductName', 'BuildBranch', 'CurrentMajorVersionNumber', 'CurrentMinorVersionNumber', 'ReleaseId', 'CurrentBuildNumber', 'UBR', 'InstallDate') 
 
-    $ScriptBlock = {Get-ItemProperty -Path "HKLM:SOFTWARE\Microsoft\Windows NT\CurrentVersion" -Name ProductName, BuildBranch, CurrentMajorVersionNumber, CurrentMinorVersionNumber, ReleaseID, CurrentBuildNumber, UBR, InstallDate}
-
-    Invoke-AvScriptBlock -ScriptBlock $ScriptBlock -NullMessage $NullMessage -ActionIndex $ActionIndex -PropertiesToDisplay $PropertiesToDisplay -ComputerIP $ComputerIP -Credential $Credential
+   $ActionIndex = Test-AvIfExactlyOneSwitchParameterIsTrue $SortByAlias $SortByHostnameInConfig $SortByReleaseID $SortByInstallDate
+   
+   Invoke-AvScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
 }
 function Get-AvHWSpecification{
    <#
@@ -162,7 +167,7 @@ function Install-AvBGInfo{
       3) Copy the BGInfo executable and template to the C:\BGInfo folder on remote hosts
       4) Create a BGInfo shortcut in C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp folder
       5) Run BGInfo
-   .PARAMETER ComputerName
+   .PARAMETER ComputerIP
       Specifies the computer name.
    .PARAMETER Credentials
       Specifies the credentials used to login.
@@ -171,11 +176,11 @@ function Install-AvBGInfo{
    .PARAMETER PathToBGInfoTemplate
       Specifies the LOCAL path to the BGInfo template.
    .EXAMPLE
-      Install-BGInfo -ComputerName $all_hosts -Credential $Cred -PathToBGInfoExecutable 'C:\AvidInstallers\BGInfo\BGInfo.exe' -PathToBGInfoTemplate 'C:\AvidInstallers\BGInfo\x64Client.bgi'
+      Install-BGInfo -ComputerIP $all_hosts -Credential $Cred -PathToBGInfoExecutable 'C:\AvidInstallers\BGInfo\BGInfo.exe' -PathToBGInfoTemplate 'C:\AvidInstallers\BGInfo\x64Client.bgi'
    #>
    
    Param(
-       [Parameter(Mandatory = $true)] $ComputerName,
+       [Parameter(Mandatory = $true)] $ComputerIP,
        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
        [Parameter(Mandatory = $true)] $PathToBGInfoExecutable,
        [Parameter(Mandatory = $true)] $PathToBGInfoTemplate
@@ -212,12 +217,12 @@ function Install-AvBGInfo{
    
    #2. Create the C:\BGInfo folders on remote hosts
    Write-Host -ForegroundColor Cyan "`nCreating folder C:\BGInfo on remote hosts. Please wait... "
-   Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {New-Item -ItemType 'directory' -Path 'C:\BGInfo' | Out-Null}
+   Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {New-Item -ItemType 'directory' -Path 'C:\BGInfo' | Out-Null}
    Write-Host -ForegroundColor Green "`nFolder C:\BGInfo SUCCESSFULLY created on all remote hosts. "
    
    #3. Copy the BGInfo executable and template to the local drive of remote hosts
    Write-Host -ForegroundColor Cyan "`nCopying the BGInfo executable and template to remote hosts. Please wait... "
-   $ComputerName | ForEach-Object -Process {
+   $ComputerIP | ForEach-Object -Process {
        $Session = New-PSSession -ComputerName $_ -Credential $Credential
        Copy-Item -LiteralPath $PathToBGInfoExecutable -Destination "C:\BGInfo\" -ToSession $Session
        Copy-Item -LiteralPath $PathToBGInfoTemplate -Destination "C:\BGInfo\" -ToSession $Session
@@ -226,12 +231,12 @@ function Install-AvBGInfo{
    
    #4. Unblock the copied installer (so no "Do you want to run this file?" pop-out hangs the installation in the next step)
    #Write-Host -ForegroundColor Cyan "`nUnblocking copied files. Please wait... "
-   #Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Unblock-File -Path $using:PathToInstallerRemote}
+   #Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Unblock-File -Path $using:PathToInstallerRemote}
    #Write-Host -ForegroundColor Green "`nall files SUCCESSFULLY unblocked. "
    
    #5. Create the GBInfo shortcut in common startup folder
    Write-Host -ForegroundColor Cyan "`nCreating BGInfo autostart and desktop shortcuts on remote hosts. Please wait... "
-   Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock{
+   Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock{
       $WshShell = New-Object -comObject WScript.Shell
       $Shortcut = $WshShell.CreateShortcut($using:PathToShortcut)
       $Shortcut.TargetPath = $using:PathToBGInfoExecutableRemote
@@ -248,7 +253,7 @@ function Install-AvBGInfo{
 function Get-AvUptime{
 <#
 .SYNOPSIS
-Outputs ptime for a list of computers.
+Outputs uptime for a list of computers.
 .DESCRIPTION
 The Get-AvUptime function uses:
 - Get-WmiObject -Class Win32_Processor

@@ -14,7 +14,7 @@ function Install-AvNexisClient{
    5) Run the installer on remote hosts
    6) Remove folder C:\NexisTempDir from remote hosts
    7) [OPTIONAL] Reboot the remote hosts
-.PARAMETER ComputerName
+.PARAMETER ComputerIP
    Specifies the computer name.
 .PARAMETER Credentials
    Specifies the credentials used to login.
@@ -23,7 +23,7 @@ function Install-AvNexisClient{
 .PARAMETER RebootAfterInstallation
    Specifies if remote hosts shuld be rebooted after the installation.
 .EXAMPLE
-   Install-NexisClient -ComputerName $all_hosts -Credential $Cred -PathToInstaller 'C:\AvidInstallers\AvidNEXISClient_Win64_18.11.0.9.msi' -RebootAfterInstallation
+   Install-NexisClient -ComputerIP $all_hosts -Credential $Cred -PathToInstaller 'C:\AvidInstallers\AvidNEXISClient_Win64_18.11.0.9.msi' -RebootAfterInstallation
 #>
 
 <#
@@ -32,7 +32,7 @@ Wait for rebooted hosts to come back.
 #>
 
 Param(
-    [Parameter(Mandatory = $true)] $ComputerName,
+    [Parameter(Mandatory = $true)] $ComputerIP,
     [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
     [Parameter(Mandatory = $true)] $PathToInstaller,
     [Parameter(Mandatory = $false)] [switch]$RebootAfterInstallation
@@ -59,12 +59,12 @@ else {
 
 #2. Create the NexisTempDir on remote hosts
 Write-Host -ForegroundColor Cyan "`nCreating folder C:\NexisTempDir on remote hosts. Please wait... "
-Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {New-Item -ItemType 'directory' -Path 'C:\NexisTempDir' | Out-Null}
+Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {New-Item -ItemType 'directory' -Path 'C:\NexisTempDir' | Out-Null}
 Write-Host -ForegroundColor Green "`nFolder C:\NexisTempDir SUCCESSFULLY created on all remote hosts. "
 
 #3. Copy the AvidNEXIS installer to the local drive of remote hosts
 Write-Host -ForegroundColor Cyan "`nCopying the installer to remote hosts. Please wait... "
-$ComputerName | ForEach-Object -Process {
+$ComputerIP | ForEach-Object -Process {
     $Session = New-PSSession -ComputerName $_ -Credential $Credential
     Copy-Item -LiteralPath $PathToInstaller -Destination "C:\NexisTempDir\" -ToSession $Session
 }
@@ -72,22 +72,23 @@ Write-Host -ForegroundColor Green "`nInstaller SUCCESSFULLY copied to all remote
 
 #4. Unblock the copied installer (so no "Do you want to run this file?" pop-out hangs the installation in the next step)
 Write-Host -ForegroundColor Cyan "`nUnblocking copied files. Please wait... "
-Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Unblock-File -Path $using:PathToInstallerRemote}
+Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Unblock-File -Path $using:PathToInstallerRemote}
 Write-Host -ForegroundColor Green "`nAll files SUCCESSFULLY unblocked. "
 
 #5. Run the installer on remote hosts
 Write-Host -ForegroundColor Cyan "`nInstallation in progress. This should take up to a minute. Please wait... "
-Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Start-Process -FilePath $using:PathToInstallerRemote -ArgumentList '/quiet /norestart' -Wait}
+Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Start-Process -FilePath $using:PathToInstallerRemote -ArgumentList '/quiet /norestart' -Wait}
 
 #6. Remove folder C:\NexisTempDir from remote hosts
 Write-Host -ForegroundColor Cyan "`nInstallation of AvidNEXIS Client on all remote hosts DONE. Cleaning up..."
-Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Remove-Item -Path "C:\NexisTempDir\" -Recurse}
+Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Remove-Item -Path "C:\NexisTempDir\" -Recurse}
 
 #7. Reboot remote hosts if $RebootAfterInstallation switch present
 if ($RebootAfterInstallation) 
     {
-        Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Restart-Computer -Force}
-        Write-Host -ForegroundColor Red "`nReboot triggered for all remote hosts. "
+        Write-Host -ForegroundColor Cyan "`nWaiting for all remote hosts to reboot (We'll not wait more than 5 minutes though.)... "
+        Restart-Computer -ComputerName $ComputerIP -Credential $Credential -Wait -For PowerShell -Timeout 300 -WsmanAuthentication Default -Force
+        Write-Host -ForegroundColor Cyan "`nall remote hosts rebooted and available for PowerShell Remoting again. "
     }
 else
     {
@@ -102,18 +103,18 @@ function Uninstall-AvNexisClient{
    Silently uninstalls AvidNEXIS Client on remote hosts.
 .DESCRIPTION
    The Uninstall-NexisClient
-.PARAMETER ComputerName
+.PARAMETER ComputerIP
    Specifies the computer name.
 .PARAMETER Credentials
    Specifies the credentials used to login.
 .EXAMPLE
-   Uninstall-NexisClient -ComputerName $all_hosts -Credential $Cred -RebootAfterUninstallation
+   Uninstall-NexisClient -ComputerIP $all_hosts -Credential $Cred -RebootAfterUninstallation
 #>
 
 Param(
-[Parameter(Mandatory = $true)] $ComputerName,
+[Parameter(Mandatory = $true)] $ComputerIP,
 [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
-[Parameter(Mandatory = $false)] [System.Diagnostics.Switch]$RebootAfterUninstallation
+[Parameter(Mandatory = $false)] [switch]$RebootAfterUninstallation
 )
 
 if ($RebootAfterUninstallation)
@@ -124,8 +125,7 @@ if ($RebootAfterUninstallation)
 
 #1. Uninstall AvidNEXIS Client on remote hosts
 Write-Host -ForegroundColor Cyan "`nUninstallation in progress. This can take a while. Please wait... "
-Invoke-Command -ComputerName $ComputerName -Credential $Cred -ScriptBlock
-    {
+Invoke-Command -ComputerName $ComputerIP -Credential $Cred -ScriptBlock {
         $app = Get-WmiObject -Class Win32_Product | Where-Object {$_.Name -match "Avid NEXIS Client"}
         $app.Uninstall()
     }
@@ -134,12 +134,13 @@ Write-Host -ForegroundColor Green "`nUninstallation of AvidNEXIS Client on all r
 #2. Reboot remote hosts if $reboot switch present
 if ($RebootAfterUninstallation) 
     {
-        Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Restart-Computer -Force}
-        Write-Host -ForegroundColor Red "`nReboot triggered for all remote hosts. "
+        Write-Host -ForegroundColor Cyan "`nWaiting for all remote hosts to reboot (We'll not wait more than 5 minutes though.)... "
+        Restart-Computer -ComputerName $ComputerIP -Credential $Credential -Wait -For PowerShell -Timeout 300 -WsmanAuthentication Default -Force
+        Write-Host -ForegroundColor Cyan "`nall remote hosts rebooted and available for PowerShell Remoting again. "
     }
 else
     {
-        Write-Host -ForegroundColor Red "`nRemote hosts were NOT REBOOTED after uninstallation of AvidNEXISClient. "
+        Write-Host -ForegroundColor Red "`nRemote hosts were NOT REBOOTED after uninstallation of AvidNEXIS Client. "
     }
 
 }
@@ -159,6 +160,16 @@ function Get-AvSoftwareVersions{
         Specifies computer IP.
     .PARAMETER Credentials
         Specifies credentials used to login.
+    .PARAMETER SortByAlias
+        Allows sorting by Alias. This is the default sort property, if none of the sort parameters are selected.
+    .PARAMETER SortByHostnameInConfig
+        Allows sorting by Hostname in $SysConfig variable.
+    .PARAMETER SortByDisplayName
+        Allows sorting by Application Name.
+    .PARAMETER SortByDisplayVersion
+        Allows sorting by Application Version.
+    .PARAMETER SortByInstallDate
+        Allows sortign by Application Install Date.
     .EXAMPLE
         Get-AvSoftwareVersions -ComputerIP $all -Credential $cred
         Get-AvSoftwareVersions -ComputerIP $all -Credential $cred -SortByDisplayVersion
@@ -169,22 +180,23 @@ function Get-AvSoftwareVersions{
         [Parameter(Mandatory = $true)] $ComputerIP,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
         [Parameter(Mandatory = $false)] [switch]$SortByAlias,
-        [Parameter(Mandatory = $false)] [switch]$SortByHostnameInConfigFile,
+        [Parameter(Mandatory = $false)] [switch]$SortByHostnameInConfig,
         [Parameter(Mandatory = $false)] [switch]$SortByDisplayName,
         [Parameter(Mandatory = $false)] [switch]$SortByDisplayVersion,
         [Parameter(Mandatory = $false)] [switch]$SortByInstallDate
     )
 
-    $PropertiesToDisplay = ('Alias', 'HostnameInConfigFile', 'DisplayName', 'DisplayVersion', 'InstallDate') 
-
-    $ActionIndex = Test-AvIfExactlyOneSwitchParameterIsTrue $SortByAlias $SortByHostnameInConfigFile $SortByDisplayName $SortByDisplayVersion $SortByInstallDate
-
-    # A message displayed in case empty objects are returned from all remote computers
-    $NullMessage = "`nNO Avid Software installed on any of the remote hosts. "
+    $HeaderMessage = "Installed Avid Software Versions"
 
     $ScriptBlock = {Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* | Select-Object DisplayName, DisplayVersion, Publisher, InstallDate | Where-Object {($_.Publisher -like "*Avid*") -or ($_.DisplayName -like "*Avid*") -or ($_.DisplayName -like "*Isis*") -or ($_.DisplayName -like "*Nexis*")}}
 
-    Invoke-AvScriptBlock -ScriptBlock $ScriptBlock -NullMessage $NullMessage -ActionIndex $ActionIndex -PropertiesToDisplay $PropertiesToDisplay -ComputerIP $ComputerIP -Credential $Credential
+    $NullMessage = "NO Avid Software installed on any of the remote hosts."
+
+    $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'DisplayName', 'DisplayVersion', 'InstallDate') 
+
+    $ActionIndex = Test-AvIfExactlyOneSwitchParameterIsTrue $SortByAlias $SortByHostnameInConfig $SortByDisplayName $SortByDisplayVersion $SortByInstallDate
+    
+    Invoke-AvScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
 }
 
 function Get-AvServicesStatus{
@@ -198,6 +210,16 @@ function Get-AvServicesStatus{
         Specifies the computer IP.
     .PARAMETER Credentials
         Specifies the credentials used to login.
+    .PARAMETER SortByAlias
+        Allows sorting by Alias. This is the default sort property, if none of the sort parameters are selected.
+    .PARAMETER SortByHostnameInConfig
+        Allows sorting by Hostname in $SysConfig variable.
+    .PARAMETER SortByDisplayName
+        Allows sorting by Service Display Name.
+    .PARAMETER SortByStatus
+        Allows sorting by Service Status.
+    .PARAMETER SortByStartType
+        Allows sorting by Service Start Type.
     .EXAMPLE
         Get-AvServicesStatus -ComputerIP $all -Credential $cred
         Get-AvServicesStatus -ComputerIP $all -Credential $cred -SortByStatus
@@ -206,22 +228,23 @@ function Get-AvServicesStatus{
         [Parameter(Mandatory = $true)] $ComputerIP,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
         [Parameter(Mandatory = $false)] [switch]$SortByAlias,
-        [Parameter(Mandatory = $false)] [switch]$SortByHostnameInConfigFile,
+        [Parameter(Mandatory = $false)] [switch]$SortByHostnameInConfig,
         [Parameter(Mandatory = $false)] [switch]$SortByDisplayName,
         [Parameter(Mandatory = $false)] [switch]$SortByStatus,
         [Parameter(Mandatory = $false)] [switch]$SortByStartType
     )
 
-    $PropertiesToDisplay = ('Alias', 'HostnameInConfigFile', 'DisplayName', 'Status', 'StartType') 
-
-    $ActionIndex = Test-AvIfExactlyOneSwitchParameterIsTrue $SortByAlias $SortByHostnameInConfigFile $SortByDisplayName $SortByStatus $SortByStartType
-
-    # A message displayed in case empty objects are returned from all remote computers
-    $NullMessage = "`nNO Avid Services running on any of the remote hosts. "
+    $HeaderMessage = "Avid Services Status"
 
     $ScriptBlock = {Get-Service -Displayname "Avid*"}
 
-    Invoke-AvScriptBlock -ScriptBlock $ScriptBlock -NullMessage $NullMessage -ActionIndex $ActionIndex -PropertiesToDisplay $PropertiesToDisplay -ComputerIP $ComputerIP -Credential $Credential
+    $NullMessage = "`nNO Avid Services running on any of the remote hosts. "
+
+    $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'DisplayName', 'Status', 'StartType') 
+
+    $ActionIndex = Test-AvIfExactlyOneSwitchParameterIsTrue $SortByAlias $SortByHostnameInConfig $SortByDisplayName $SortByStatus $SortByStartType
+    
+    Invoke-AvScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
 }
 
 

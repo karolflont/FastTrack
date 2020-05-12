@@ -8,7 +8,7 @@ function Get-AvFirewallStatus{
     .DESCRIPTION
         The Get-AvFirewallServiceStatus uses:
         - Get-Service -Name MpsSvc
-    .PARAMETER ComputerName
+    .PARAMETER ComputerIP
         Specifies the computer name.
     .PARAMETER Credentials
         Specifies the credentials used to login.
@@ -17,11 +17,11 @@ function Get-AvFirewallStatus{
     #>
 
     param(
-        [Parameter(Mandatory = $true)] $ComputerName,
+        [Parameter(Mandatory = $true)] $ComputerIP,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential
     )
 
-    $AvidSoftwareVersions = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Get-Service -Name "MpsSvc"}
+    $AvidSoftwareVersions = Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Get-Service -Name "MpsSvc"}
     $AvidSoftwareVersions | Select-Object PSComputerName, DisplayName, Status, StartType | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 
 }
@@ -33,7 +33,7 @@ function Set-AvFirewall{
     Sets Windows Firewall service (MpsSvc) status i startup type .
 .DESCRIPTION
     The Get-AvSoftwareVersions function retrieves the
-.PARAMETER ComputerName
+.PARAMETER ComputerIP
     Specifies the computer name.
 .PARAMETER Credentials
     Specifies the credentials used to login.
@@ -44,12 +44,12 @@ function Set-AvFirewall{
 Write-Host -ForegroundColor Red "`nThis function is not yet implemented."
 Return
     param(
-        [Parameter(Mandatory = $true)] $ComputerName,
+        [Parameter(Mandatory = $true)] $ComputerIP,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential
     )
-    $ComputerName = $YLEHKI_servers
+    $ComputerIP = $YLEHKI_servers
     $Credential = $Cred
-    $AvidSoftwareVersions = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Get-Service -Name "MpsSvc"}
+    $AvidSoftwareVersions = Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Get-Service -Name "MpsSvc"}
     $AvidSoftwareVersions | Select-Object PSComputerName, DisplayName, Status, StartType | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 
 }
@@ -61,16 +61,16 @@ Return
         The Set-Firewall function uses:
         1) "NetSh Advfirewall set allprofiles state on" to turn the firewall on
         2) "NetSh Advfirewall set allprofiles state off" to turn the firewall off
-    .PARAMETER ComputerName
+    .PARAMETER ComputerIP
         Specifies the computer name.
     .PARAMETER Credentials
         Specifies the credentials used to login.
     .EXAMPLE
-        Set-Firewall -ComputerName $srv_IP -Credential $cred -On
+        Set-Firewall -ComputerIP $srv_IP -Credential $cred -On
     #>
 
     param(
-        [Parameter(Mandatory = $true)] $ComputerName,
+        [Parameter(Mandatory = $true)] $ComputerIP,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
         [Parameter(Mandatory = $false)] [switch]$On,
         [Parameter(Mandatory = $false)] [switch]$Off
@@ -80,7 +80,7 @@ Return
     
     if ($ActionIndex -eq 0){
         #If On switch was selected
-        $result = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {
+        $result = Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {
             NetSh Advfirewall set allprofiles state on
             }
         Write-Host -ForegroundColor Green "`nFirewall on all hosts turned ON for all profiles: Domain networks, Private networks and Guest or Public networks. "
@@ -88,7 +88,7 @@ Return
     }
     elseif ($ActionIndex -eq 1){
         #If Off switch was selected
-        $result = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {
+        $result = Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {
             NetSh Advfirewall set allprofiles state off
             }
         Write-Host -ForegroundColor Green "`nFirewall on all hosts turned OFF for all profiles: Domain networks, Private networks and Guest or Public networks. "
@@ -104,7 +104,7 @@ function Get-AvDefenderStatus{
        Gets the status of Windows Defender Realtime Monitoring.
     .DESCRIPTION
        The AvDefenderStatus function gets the Status of Windows Defender Realtime Monitoring on a server. 
-    .PARAMETER ComputerName
+    .PARAMETER ComputerIP
        Specifies the computer name.
     .PARAMETER Credentials
        Specifies the credentials used to login.
@@ -118,11 +118,11 @@ function Get-AvDefenderStatus{
     #Get-Service -Name mpssvc
     #https://docs.microsoft.com/en-us/windows/security/threat-protection/windows-defender-antivirus/windows-defender-antivirus-on-windows-server-2016
     param(
-        [Parameter(Mandatory = $true)] $ComputerName,
+        [Parameter(Mandatory = $true)] $ComputerIP,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential
     )
 
-        $WindowsDefenderRealtimeMonitoringStatus = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Get-MpPreference}
+        $WindowsDefenderRealtimeMonitoringStatus = Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Get-MpPreference}
         Write-Host -ForegroundColor Cyan "`nWindows Defender Realtime Monitoring Status "
         $WindowsDefenderRealtimeMonitoringStatus | Select-Object PSComputerName, DisableRealTimeMonitoring | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
     }
@@ -132,7 +132,7 @@ function Install-AvDefender{
     Installs Windows Defender Feature.
 .DESCRIPTION
     The Install-Defender function installs Windows Defender Windows Feature. 
-.PARAMETER ComputerName
+.PARAMETER ComputerIP
     Specifies the computer name.
 .PARAMETER Credentials
     Specifies the credentials used to login.
@@ -142,11 +142,11 @@ function Install-AvDefender{
 Write-Host -ForegroundColor Red "`nThis function is not yet implemented."
 Return
     param(
-        [Parameter(Mandatory = $true)] $ComputerName,
+        [Parameter(Mandatory = $true)] $ComputerIP,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential
     )
 
-    Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Install-WindowsFeature -Name Windows-Defender}
+    Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Install-WindowsFeature -Name Windows-Defender}
     Write-Host -ForegroundColor Green "`nWindows Defender INSTALLED on all remote hosts. "
 }
 function Uninstall-AvDefender{
@@ -155,7 +155,7 @@ function Uninstall-AvDefender{
         Uninstalls Windows Defender Feature.
     .DESCRIPTION
         The Unnstall-Defender function uninstalls Windows Defender Windows Feature. 
-    .PARAMETER ComputerName
+    .PARAMETER ComputerIP
         Specifies the computer name.
     .PARAMETER Credentials
         Specifies the credentials used to login.
@@ -165,11 +165,11 @@ function Uninstall-AvDefender{
     Write-Host -ForegroundColor Red "`nThis function is not yet implemented."
 Return
         param(
-            [Parameter(Mandatory = $true)] $ComputerName,
+            [Parameter(Mandatory = $true)] $ComputerIP,
             [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential
         )
     
-        Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Uninstall-WindowsFeature -Name Windows-Defender}
+        Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Uninstall-WindowsFeature -Name Windows-Defender}
         Write-Host -ForegroundColor Green "`nWindows Defender UNINSTALLED on all remote hosts. "
     }
 function Set-AvDefender{
@@ -178,7 +178,7 @@ function Set-AvDefender{
     Enables or disables Windows Defender Realtime Monitoring.
 .DESCRIPTION
     The Set-Defender function enables or disables Windows Defender Realtime Monitoring using Set-MpPreference cmdlet. 
-.PARAMETER ComputerName
+.PARAMETER ComputerIP
     Specifies the computer name.
 .PARAMETER Credentials
     Specifies the credentials used to login.
@@ -188,7 +188,7 @@ function Set-AvDefender{
 Write-Host -ForegroundColor Red "`nThis function is not yet implemented."
 Return
 param(
-    [Parameter(Mandatory = $true)] $ComputerName,
+    [Parameter(Mandatory = $true)] $ComputerIP,
     [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
     [Parameter(Mandatory = $false)] [switch]$Enable,
     [Parameter(Mandatory = $false)] [switch]$Disable
@@ -199,7 +199,7 @@ if ($Enable) {
         Write-Host -ForegroundColor Red "`nPlease specify ONLY ONE of the -Enable/-Disable switch parameters. "
     Return
     }
-    Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-MpPreference -DisableRealtimeMonitoring $false}
+    Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Set-MpPreference -DisableRealtimeMonitoring $false}
     Write-Host -ForegroundColor Green "`nWindows Defender Realtime Monitoring ENABLED. "
 }
 elseif ($Disable) {
@@ -207,7 +207,7 @@ elseif ($Disable) {
         Write-Host -ForegroundColor Red "`nPlease specify ONLY ONE of the -Enable/-Disable switch parameters. "
         Return
     }
-    Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {Set-MpPreference -DisableRealtimeMonitoring $true}
+    Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Set-MpPreference -DisableRealtimeMonitoring $true}
     Write-Host -ForegroundColor Green "`nWindows Defender Realtime Monitoring DISABLED. "
 }
 else {
@@ -215,7 +215,7 @@ else {
     Return
 }
 
-Get-AvWindowsDefenderRealtimeMonitoringStatus $ComputerName $Credential
+Get-AvWindowsDefenderRealtimeMonitoringStatus $ComputerIP $Credential
 }
 
 

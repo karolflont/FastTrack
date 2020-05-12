@@ -22,7 +22,7 @@ function Invoke-AvCMDExpression{
     )
 
     # Run command
-    $Result = Invoke-Command -ComputerName $ComputerName -Credential $Credential -ScriptBlock {
+    $Result = Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {
         $result = Invoke-Expression $using:CMDExpression
         [pscustomobject]@{CMDExpressionValue=$result}
     }

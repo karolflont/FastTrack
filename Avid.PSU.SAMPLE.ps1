@@ -45,4 +45,4 @@ Set-AvHostname
 Let it be Get-AvUptime.
 
 #>
-Get-Uptime -ComputerName $All -Credential $cred
+Get-Uptime -ComputerIP $All -Credential $cred
