@@ -42,7 +42,7 @@ Check Avid.PSU.SAMPLE.ps1 for sample usage of this module.
 
 3rd Party Software Related
 
-    Invoke-AvCustomScript
+    Invoke-AvCMDExpression
 
 Avid Software related
 
@@ -51,14 +51,13 @@ Avid Software related
     Get-AvSoftwareVersions
     Get-AvServicesStatus
 
-Domain and Users related
+Diagnostics related
 
-    Get-AvHostname
-    Set-AvHostname
-    Get-AvDomain
-    Join-AvDomain
-    Get-AvPSGUserAccount
-    Set-AvPSGUserAccount
+    Get-AvEventLogErrors
+    Get-AvOSVersion
+    Get-AvHWSpecification
+    Install-AvBGInfo
+    Get-AvUptime 
 
 Filesystem and Storage realated
 
@@ -67,12 +66,19 @@ Filesystem and Storage realated
 
 Firewall and Defender related
 
-    Get-AvFirewallServiceStatus
-    Set-AvFirewallState
+    Get-AvFirewallStatus
+    Set-AvFirewall
     Get-AvDefenderStatus
     Set-AvDefender
     Install-AvDefender
     Uninstall-AvDefender
+
+Hostname and Domain related
+
+    Get-AvHostname
+    Set-AvHostname
+    Get-AvDomain
+    Join-AvDomain
 
 Module Input/Output related
 
@@ -80,18 +86,7 @@ Module Input/Output related
 
 Network related
 
-    Test-AvPowershellRemoting
     Get-AvNetworkInfo
-    Get-AvRemoteDesktopStatus
-    Set-AvRemoteDesktop
-
-OS Diagnostics related
-
-    Get-AvEventLogErrors
-    Get-AvOSVersion
-    Get-AvHWSpecification
-    Install-AvBGInfo
-    Get-AvUptime
 
 OS Tweaks related
 
@@ -104,9 +99,15 @@ OS Tweaks related
     Get-AvPowerPlan
     Set-AvPowerPlan
 
-Avid Server Setup and Upgrade related
+Remote Access related
 
-    Initialize-AvPAMServer
+    Test-AvPowershellRemoting
+    Get-AvRemoteDesktopStatus
+    Set-AvRemoteDesktop
+
+Windows Server Roles and Features related
+
+    Install-AvFailoverClusteringFeature
 
 Time related
 
