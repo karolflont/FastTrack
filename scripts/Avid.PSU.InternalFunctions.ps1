@@ -95,7 +95,7 @@ function Add-AvAliasAndHostnameProperties {
     .DESCRIPTION
     The Add-AliasAndHostnameProperties function adds two properites to a given object:
     - Alias
-    - HostnameInConfigFile
+    - HostnameInConfig
     These properties are derived from the $SysConfig global variable based on the IPs from PSCopmuterName property of the object
     .EXAMPLE
     $AvidSoftwareVersionsLabeled = Add-AliasAndHostnameProperties $AvidSoftwareVersionsRaw
@@ -120,9 +120,9 @@ function Add-AvAliasAndHostnameProperties {
             $AliasValue = ($sc.hosts | Where-object {$_.IP -eq $CurrentIP}).alias
             $LabeledElement | Add-Member -MemberType NoteProperty -Name "Alias" -Value $AliasValue
 
-            # Add HostnameInConfigFile property
-            $HostnameInConfigFileValue = ($sc.hosts | Where-object {$_.IP -eq $CurrentIP}).hostname
-            $LabeledElement | Add-Member -MemberType NoteProperty -Name "HostnameInConfigFile" -Value $HostnameInConfigFileValue
+            # Add HostnameInConfig property
+            $HostnameInConfigValue = ($sc.hosts | Where-object {$_.IP -eq $CurrentIP}).hostname
+            $LabeledElement | Add-Member -MemberType NoteProperty -Name "HostnameInConfig" -Value $HostnameInConfigValue
 
         $OutputObject += $LabeledElement
     }
@@ -142,16 +142,28 @@ function Invoke-AvScriptBlock {
         Specifies the computer IP.
     .PARAMETER Credentials
         Specifies the credentials used to login.
+    .PARAMETER HeaderMessage 
+        Specifies a message displayed as a header in the output.
+    .PARAMETER ScriptBlock
+        Specifies the script block to invoke on the remote computers.
+    .PARAMETER NullMessage
+        Specifies a message displayed in case empty objects are returned from all remote computers
+    .PARAMETER PropertiesToDisplay
+        Specifies the properties of the objects, returned from the remote computers, to display.
+    .PARAMETER ActionIndex
+        Specifies which property of the objects, returned from the remote computers, should be used to sort the object on output.
+
     .EXAMPLE
         Invoke-AvScriptBlock -ScriptBlock $ScriptBlock -NullMessage $NullMessage -ActionIndex $ActionIndex -PropertiesToDisplay $PropertiesToDisplay -ComputerIP $ComputerIP -Credential $Credential
     #>
     Param(
         [Parameter(Mandatory = $true)] $ComputerIP,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
+        [Parameter(Mandatory = $true)] $HeaderMessage,
         [Parameter(Mandatory = $true)] $ScriptBlock,
         [Parameter(Mandatory = $true)] $NullMessage,
-        [Parameter(Mandatory = $true)] $ActionIndex,
-        [Parameter(Mandatory = $true)] $PropertiesToDisplay
+        [Parameter(Mandatory = $true)] $PropertiesToDisplay,
+        [Parameter(Mandatory = $true)] $ActionIndex
     )
 
     # If more than one 'SortBy' property is selected, return
@@ -170,15 +182,16 @@ function Invoke-AvScriptBlock {
 
         # If empty objects are returned from all remote computers, display info and quit
         if ($null -eq $ReturnedObjectRaw){
-            Write-Host -ForegroundColor Cyan $NullMessage
+            Write-Host -ForegroundColor Cyan "$NullMessage`n"
             Return
         }
-        # Label returned object with Alias and HostnameInConfigFile properties
+        # Label returned object with Alias and HostnameInConfig properties
         $ReturnedObjectLabeled = Add-AvAliasAndHostnameProperties $ReturnedObjectRaw
 
         #Format output
+        Write-Output $HeaderMessage
         $ReturnedObjectLabeled | Select-Object $PropertiesToDisplay | Sort-Object -Property $PropertiesToDisplay[$ActionIndex] | Format-Table -Wrap -AutoSize
-        }
+    }
 }
 
 
