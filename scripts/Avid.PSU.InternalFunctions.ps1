@@ -178,7 +178,8 @@ function Invoke-AvScriptBlock {
         }
 
         #Run Script Block on remote computers
-        $ReturnedObjectRaw = Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock $ScriptBlock
+        $ReturnedObjectRaw = @()
+        $ReturnedObjectRaw += Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock $ScriptBlock
 
         # If empty objects are returned from all remote computers, display info and quit
         if ($null -eq $ReturnedObjectRaw){
