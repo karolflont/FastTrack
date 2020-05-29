@@ -1,5 +1,5 @@
-function Invoke-AvCMDExpression{
-   <#
+function Invoke-AvCMDExpression {
+    <#
    .SYNOPSIS
    Outputs the results of any given Windows Commandline (CMD) expression for a list of computers.
    .DESCRIPTION
@@ -24,18 +24,18 @@ function Invoke-AvCMDExpression{
     # Run command
     $Result = Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {
         $result = Invoke-Expression $using:CMDExpression
-        [pscustomobject]@{CMDExpressionValue=$result}
+        [pscustomobject]@{CMDExpressionValue = $result }
     }
 
     # Import configuration variable
     $sc = $global:SysConfig | ConvertFrom-Json
 
     # Format and print results for each computer
-    foreach ($ResultLine in $Result){
+    foreach ($ResultLine in $Result) {
         Write-Host -ForegroundColor Green "`n-----------------------------------------------------------"
         $CurrentIP = [string]$ResultLine.PSComputerName
-        $RemoteHostName = ($sc.hosts | Where-object {$_.IP -eq $CurrentIP}).hostname
-        $RemoteHostAlias = ($sc.hosts | Where-object {$_.IP -eq $CurrentIP}).alias
+        $RemoteHostName = ($sc.hosts | Where-object { $_.IP -eq $CurrentIP }).hostname
+        $RemoteHostAlias = ($sc.hosts | Where-object { $_.IP -eq $CurrentIP }).alias
         Write-Host "Alias / Hostname: $RemoteHostAlias / $RemoteHostName"
         Write-Host "CMD Expression: $CMDExpression"
         Write-Host -ForegroundColor Green "-----------------------------------------------------------"

@@ -1,4 +1,4 @@
-function Import-AvSystemConfiguration{
+function Import-AvSystemConfiguration {
 
     param(
         [Parameter(Mandatory = $true)] [string] $path
@@ -25,7 +25,7 @@ function Import-AvSystemConfiguration{
 
     #define role variables
     foreach ($role in $roles) {
-        $roleServers = ($SysConfigVar.hosts | Where-Object {$_.role -Like $role}).IP
+        $roleServers = ($SysConfigVar.hosts | Where-Object { $_.role -Like $role }).IP
         Set-Variable -Name "all$role" -Value $roleServers -Scope "global"
         $varName = Get-Variable "all$role" | Select-Object -ExpandProperty Name
         $varValue = Get-Variable "all$role" -ValueOnly
@@ -36,19 +36,19 @@ function Import-AvSystemConfiguration{
     $aliases = $SysConfigVar.hosts.alias | Sort-Object
 
     #check is aliases are unique
-    if ($aliases.length -eq ($aliases | Get-Unique).length){
-       #define alises variables
+    if ($aliases.length -eq ($aliases | Get-Unique).length) {
+        #define alises variables
         foreach ($alias in $aliases) {
-            $IPforAParticularAlias = ($SysConfigVar.hosts | Where-Object {$_.alias -Like $alias}).IP
+            $IPforAParticularAlias = ($SysConfigVar.hosts | Where-Object { $_.alias -Like $alias }).IP
             Set-Variable -Name "$alias" -Value $IPforAParticularAlias -Scope "global"
             $varName = Get-Variable "$alias" | Select-Object -ExpandProperty Name
             $varValue = Get-Variable "$alias" -ValueOnly
             Write-Host "`$$varName = $varValue"
         }
-        Write-Host -ForegroundColor Green "`nThe whole System Configuration is kept in json format in `$SysConfig variable. "
+        Write-Host -ForegroundColor Green "`nThe whole System Configuration is kept in json format in `$SysConfig variable."
     }
     else {
-        Write-Host -ForegroundColor Red "`nAliases used for hosts defined in the $path are not unique. Please modify your configuration file. "
+        Write-Host -ForegroundColor Red "`nAliases used for hosts defined in the $path are not unique. Please modify your configuration file."
         return
     }
 }

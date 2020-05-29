@@ -24,11 +24,11 @@ You can istall Avid.PSUtilities on either:
 
 First option is the PREFERRED one, as some of the functions of this module trigger a mass reboot of managed hosts. Using these functions with Avid.PSUtilities module installed on one of the mnaged hosts can give undetermined results.
 
-To install the Avid.PSUtilities module on your computer run Avid.PSU.INSTALL.ps1 script from a PowerShell session with elevated privileges.
+To install the Avid.PSUtilities module on your computer run Avid.PSU.INSTALL.ps1 script from an elevated PowerShell prompt (Run as administrator).
 
-WARNING: Installing AvidPS.Utilities will add all hosts ("*") to the WSMan:\localhost\Client\TrustedHosts. If you already have some hosts defined as WSMan trusted hosts, you have to backup the WSMan:\localhost\Client\TrustedHosts configuration and restore it manually later.
+WARNING: Installing AvidPS.Utilities will add all hosts ("*") to the WSMan:\localhost\Client\TrustedHosts. If you already have some hosts defined as WSMan trusted hosts, you have to backup the WSMan:\localhost\Client\TrustedHosts configuration and restore it manually later, as uninstall srtipt will clear the WSMan:\localhost\Client\TrustedHosts. 
 
-To uninstall the Avid.PSUtilities module on your computer run Avid.PSU.UNINSTALL.ps1 script from a PowerShell session with elevated privileges.
+To uninstall the Avid.PSUtilities module on your computer run Avid.PSU.UNINSTALL.ps1 script from an elevated PowerShell prompt (Run as administrator).
 
 ---
 
@@ -107,7 +107,9 @@ Remote Access related
 
 Windows Server Roles and Features related
 
+    Get-AvFailoverClusteringFeature
     Install-AvFailoverClusteringFeature
+    Uninstall-AvFailoverClusteringFeature
 
 Time related
 

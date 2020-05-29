@@ -1,4 +1,4 @@
-function Test-AvIfExactlyOneSwitchParameterIsTrue{
+function Test-AvIfExactlyOneSwitchParameterIsTrue {
     <#
     .SYNOPSIS
         Tests if exactly one switch parameter from a given set is true.
@@ -32,53 +32,53 @@ function Test-AvIfExactlyOneSwitchParameterIsTrue{
     #Defining switch count to check if no more than 1 switch parameter is defined
     $SwitchCount = 0
 
-    if ($Param0)  {
+    if ($Param0) {
         $SwitchCount = $SwitchCount + 1
         $index = 0
     }
-    if ($Param1)  {
+    if ($Param1) {
         $SwitchCount = $SwitchCount + 1
         $index = 1
     }
-    if ($Param2)  {
+    if ($Param2) {
         $SwitchCount = $SwitchCount + 1
         $index = 2
     }
-    if ($Param3)  {
+    if ($Param3) {
         $SwitchCount = $SwitchCount + 1
         $index = 3
     }
-    if ($Param4)  {
+    if ($Param4) {
         $SwitchCount = $SwitchCount + 1
         $index = 4
     }
-    if ($Param5)  {
+    if ($Param5) {
         $SwitchCount = $SwitchCount + 1
         $index = 5
     }
-    if ($Param6)  {
+    if ($Param6) {
         $SwitchCount = $SwitchCount + 1
         $index = 6
     }
-    if ($Param7)  {
+    if ($Param7) {
         $SwitchCount = $SwitchCount + 1
         $index = 7
     }
-    if ($Param8)  {
+    if ($Param8) {
         $SwitchCount = $SwitchCount + 1
         $index = 8
     }
-    if ($Param9)  {
+    if ($Param9) {
         $SwitchCount = $SwitchCount + 1
         $index = 9
     }
 
-    if ($SwitchCount -gt 1){
+    if ($SwitchCount -gt 1) {
         #If more than one switch was selected, write info message and return -1
-        Write-Host -ForegroundColor Red "`nPlease specify just ONE switch parameter. "
+        Write-Host -ForegroundColor Red "`nPlease specify just ONE switch parameter."
         Return -1
     }
-    elseif ($SwitchCount -eq 1){
+    elseif ($SwitchCount -eq 1) {
         #If exactly one switch was selected, return the index of selected switch (Remember, it's 0 based!)
         Return $index
     }
@@ -112,17 +112,17 @@ function Add-AvAliasAndHostnameProperties {
     # For every element in $InputObject...
     for ($i = 0; $i -lt $InputObject.length; $i++) {
 
-            # Retrieve IP of the current element
-            $LabeledElement = $InputObject[$i]
-            $CurrentIP = $LabeledElement.PSComputerName
+        # Retrieve IP of the current element
+        $LabeledElement = $InputObject[$i]
+        $CurrentIP = $LabeledElement.PSComputerName
 
-            # Add Alias property
-            $AliasValue = ($sc.hosts | Where-object {$_.IP -eq $CurrentIP}).alias
-            $LabeledElement | Add-Member -MemberType NoteProperty -Name "Alias" -Value $AliasValue
+        # Add Alias property
+        $AliasValue = ($sc.hosts | Where-object { $_.IP -eq $CurrentIP }).alias
+        $LabeledElement | Add-Member -MemberType NoteProperty -Name "Alias" -Value $AliasValue
 
-            # Add HostnameInConfig property
-            $HostnameInConfigValue = ($sc.hosts | Where-object {$_.IP -eq $CurrentIP}).hostname
-            $LabeledElement | Add-Member -MemberType NoteProperty -Name "HostnameInConfig" -Value $HostnameInConfigValue
+        # Add HostnameInConfig property
+        $HostnameInConfigValue = ($sc.hosts | Where-object { $_.IP -eq $CurrentIP }).hostname
+        $LabeledElement | Add-Member -MemberType NoteProperty -Name "HostnameInConfig" -Value $HostnameInConfigValue
 
         $OutputObject += $LabeledElement
     }
@@ -152,7 +152,8 @@ function Invoke-AvScriptBlock {
         Specifies the properties of the objects, returned from the remote computers, to display.
     .PARAMETER ActionIndex
         Specifies which property of the objects, returned from the remote computers, should be used to sort the object on output.
-
+    .PARAMETER RawOutput
+        Specifies if the output should be formatted (human friendly output) or not (Powershell pipeline friendly output)
     .EXAMPLE
         Invoke-AvScriptBlock -ScriptBlock $ScriptBlock -NullMessage $NullMessage -ActionIndex $ActionIndex -PropertiesToDisplay $PropertiesToDisplay -ComputerIP $ComputerIP -Credential $Credential
     #>
@@ -163,26 +164,31 @@ function Invoke-AvScriptBlock {
         [Parameter(Mandatory = $true)] $ScriptBlock,
         [Parameter(Mandatory = $true)] $NullMessage,
         [Parameter(Mandatory = $true)] $PropertiesToDisplay,
-        [Parameter(Mandatory = $true)] $ActionIndex
+        [Parameter(Mandatory = $true)] $ActionIndex,
+        [Parameter(Mandatory = $false)] [switch]$RawOutput
     )
 
     # If more than one 'SortBy' property is selected, return
-    if ($ActionIndex -eq -1) 
-    {
+    if ($ActionIndex -eq -1) {
         Return
     }
     else {
         # If no 'SortBy' property is selected, set Alias as the default sort property
-        if ($ActionIndex -eq -2){
+        if ($ActionIndex -eq -2) {
             $ActionIndex = 0
         }
 
         #Run Script Block on remote computers
         $ReturnedObjectRaw = @()
+        Write-Host -ForegroundColor Cyan "Retrieving data... " -NoNewline
+        $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
         $ReturnedObjectRaw += Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock $ScriptBlock
+        $StopWatch.Stop()
+        $ElapsedSeconds = $StopWatch.Elapsed.TotalSeconds 
+        Write-Host -ForegroundColor Cyan "Done in $ElapsedSeconds sec."
 
         # If empty objects are returned from all remote computers, display info and quit
-        if ($null -eq $ReturnedObjectRaw){
+        if ($null -eq $ReturnedObjectRaw) {
             Write-Host -ForegroundColor Cyan "$NullMessage`n"
             Return
         }
@@ -190,8 +196,13 @@ function Invoke-AvScriptBlock {
         $ReturnedObjectLabeled = Add-AvAliasAndHostnameProperties $ReturnedObjectRaw
 
         #Format output
-        Write-Output $HeaderMessage
-        $ReturnedObjectLabeled | Select-Object $PropertiesToDisplay | Sort-Object -Property $PropertiesToDisplay[$ActionIndex] | Format-Table -Wrap -AutoSize
+        if($RawOutput){
+            $ReturnedObjectLabeled
+        }
+        else{
+            Write-Output "`n$HeaderMessage"
+            $ReturnedObjectLabeled | Select-Object $PropertiesToDisplay | Sort-Object -Property $PropertiesToDisplay[$ActionIndex] | Format-Table -Wrap -AutoSize
+        }
     }
 }
 

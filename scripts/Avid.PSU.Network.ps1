@@ -1,14 +1,14 @@
 ###############
 ### NETWORK ###
 ###############
-function Get-AvNetworkInfo{
+function Get-AvNetworkInfo {
    <#
    .SYNOPSIS
    TODO
    .DESCRIPTION
    TODO
    .PARAMETER ComputerIP
-   Specifies the computer name.
+   Specifies the computer IP.
    .PARAMETER Credentials
    Specifies the credentials used to login.
    .EXAMPLE
@@ -27,24 +27,24 @@ function Get-AvNetworkInfo{
    
    #Default sort property
    $DefaultSortProperty = "PSComputerName"
-   $PropertiesToDisplay = ('PSComputerName','Name','InterfaceAlias','InterfaceIndex','IPv4Connectivity','NetworkCategory') 
+   $PropertiesToDisplay = ('PSComputerName', 'Name', 'InterfaceAlias', 'InterfaceIndex', 'IPv4Connectivity', 'NetworkCategory') 
    
    $SortPropertyIndex = Test-AvIfExactlyOneSwitchParameterIsTrue $SortByPSComputerName $SortByName $SortByInterfaceAlias $SortByInterfaceIndex $SortByIPv4Connectivity $SortByNetworkCategory
    
-   if ($null -eq $SortPropertyIndex){
+   if ($null -eq $SortPropertyIndex) {
       #If none of the switches is selected, use the DafaultSortProperty
       $SortProperty = $DefaultSortProperty
    }
-   elseif ($SortPropertyIndex -ge 0){
+   elseif ($SortPropertyIndex -ge 0) {
       #If one switch is selected, use it as SortProperty
       $SortProperty = $PropertiesToDisplay[$SortPropertyIndex]
    }
-   else{
+   else {
       #If more than one switch is selected, return
       Return
    }
    
-   $NetworkInfo = Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Get-NetConnectionProfile}
+   $NetworkInfo = Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock { Get-NetConnectionProfile }
    $NetworkInfo | Select-Object $PropertiesToDisplay | Sort-Object -Property $SortProperty | Format-Table -Wrap -AutoSize
 
    #Retrieving only IPv4 addresses
