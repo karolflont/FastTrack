@@ -1,0 +1,44 @@
+{
+    "systemName":"LopDEV",
+    "hosts": [
+        {
+            "IP":"192.168.137.31",
+            "hostname":"lop-ie",
+            "alias":"ie",
+            "role":["PAM","IE"]
+        },
+        {
+            "IP":"192.168.137.32",
+            "hostname":"lop-tc-01",
+            "alias":"tc1",
+            "role":["PAM","TC"]
+        },
+        {
+            "IP":"192.168.137.33",
+            "hostname":"lop-tm-02",
+            "alias":"tc2",
+            "role":["PAM","TC"]
+        }
+    ],
+    "domain":{
+        "mainSuffix":"lop.prm",
+        "additionalSuffixes":[],
+        "DNSServers":[
+            {
+                "IP":"192.168.30.71",
+                "alias":"dc1",
+                "role":["DC"]
+            },
+            {
+                "IP":"192.168.30.72",
+                "alias":"dc2",
+                "role":["DC"]
+            }
+        ]
+    },
+    "timesync":{
+        "inhouseSources": ["192.168.30.71"],
+        "AvidSystemPrimaryMaster": "",
+        "AvidSystemSecondaryMaster": ""
+    }
+}

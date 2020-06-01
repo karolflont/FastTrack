@@ -1,1 +1,3 @@
 scripts/CoffeeBreak.Sandbox.ps1
+/*.json
+!/CoffeeBreak.SystemConfiguration.DevEnv.json
