@@ -1,4 +1,4 @@
-function Import-AvSystemConfiguration {
+function Import-CbSystemConfiguration {
 
     param(
         [Parameter(Mandatory = $true)] [string] $path

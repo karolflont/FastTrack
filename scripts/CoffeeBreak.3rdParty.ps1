@@ -1,9 +1,9 @@
-function Invoke-AvCMDExpression {
+function Invoke-CbCMDExpression {
     <#
    .SYNOPSIS
    Outputs the results of any given Windows Commandline (CMD) expression for a list of computers.
    .DESCRIPTION
-   The Invoke-AvCMDExpression function uses:
+   The Invoke-CbCMDExpression function uses:
    - Invoke-Expression cmdlet
    .PARAMETER ComputerIP
    Specifies computer IP.
@@ -12,7 +12,7 @@ function Invoke-AvCMDExpression {
    .PARAMETER CMDExpression
    Specifies the CMD expression to run on remote computers.
    .EXAMPLE
-   Invoke-AVCMDExpression -ComputerIP $all -Credential $cred -CMDExpression 'w32tm /query /status'
+   Invoke-CbCMDExpression -ComputerIP $all -Credential $cred -CMDExpression 'w32tm /query /status'
    #>
 
     Param(

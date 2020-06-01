@@ -1,18 +1,18 @@
 #################################################
 ##### SHOW HIDDEN FILES, FOLDERS AND DRIVES #####
 #################################################
-function Get-AvHiddenFilesAndFoldersStatus {
+function Get-CbHiddenFilesAndFoldersStatus {
     <#
 .SYNOPSIS
    Displays the "Show hidden files, folders and drives" option status.
 .DESCRIPTION
-   The Get-AvHiddenFilesAndFoldersStatus function check the "Hidden" value of "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" key. This key is set in GUI by Folder Menu -> Tools -> Folder Options -> View -> Advanced settings -> Show hidden files checkbox.
+   The Get-CbHiddenFilesAndFoldersStatus function check the "Hidden" value of "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" key. This key is set in GUI by Folder Menu -> Tools -> Folder Options -> View -> Advanced settings -> Show hidden files checkbox.
 .PARAMETER ComputerIP
    Specifies the computer IP.
 .PARAMETER Credentials
    Specifies the credentials used to login.
 .EXAMPLE
-   Get-AvHiddenFilesAndFoldersStatus -ComputerIP $all -Credential $cred
+   Get-CbHiddenFilesAndFoldersStatus -ComputerIP $all -Credential $cred
 #>
     param(
         [Parameter(Mandatory = $true)] $ComputerIP,
@@ -45,15 +45,15 @@ function Get-AvHiddenFilesAndFoldersStatus {
     $ActionIndex = 0
    
     if ($RawOutput) {
-        Invoke-AvScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
+        Invoke-CbScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
     }
     else {
-        Invoke-AvScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
+        Invoke-CbScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
     }
 }
 
 
-function Set-AvHiddenFilesAndFolders {
+function Set-CbHiddenFilesAndFolders {
     <#
     .SYNOPSIS
         Shows or hides hidden files and folders.
@@ -111,5 +111,5 @@ function Set-AvHiddenFilesAndFolders {
         Return
     }
 
-    Get-AvHiddenFilesAndFoldersStatus $ComputerIP $Credential
+    Get-CbHiddenFilesAndFoldersStatus $ComputerIP $Credential
 }

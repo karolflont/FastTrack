@@ -1,18 +1,18 @@
 ###################################
 ### FAILOVER CLUSTERING FEATURE ###
 #####################################
-function Get-AvFailoverClusteringFeature {
+function Get-CbFailoverClusteringFeature {
    <#
    .SYNOPSIS
       Checks if Failover Clustering Feature is installed on selected hosts.
    .DESCRIPTION
-      The Get-AvFailoverClusteringFeature function uses "Get-WindowsFeature -Name Failover-Clustering" cmdlet to check the presence of Failover Clustering Feature on selected hosts.
+      The Get-CbFailoverClusteringFeature function uses "Get-WindowsFeature -Name Failover-Clustering" cmdlet to check the presence of Failover Clustering Feature on selected hosts.
    .PARAMETER ComputerIP
       Specifies the computer IP.
    .PARAMETER Credentials
       Specifies the credentials used to login.
    .EXAMPLE
-      Get-AvFailoverClusteringFeature -ComputerIP $all -Credential $cred
+      Get-CbFailoverClusteringFeature -ComputerIP $all -Credential $cred
    #>
    param(
       [Parameter(Mandatory = $true)] $ComputerIP,
@@ -31,25 +31,25 @@ function Get-AvFailoverClusteringFeature {
    $ActionIndex = 0
    
    if ($RawOutput) {
-        Invoke-AvScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
+        Invoke-CbScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
     }
     else {
-        Invoke-AvScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
+        Invoke-CbScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
     }
 }
 
-function Install-AvFailoverClusteringFeature {
+function Install-CbFailoverClusteringFeature {
    <#
 .SYNOPSIS
    Installs Failover Clustering Feature on selected hosts.
 .DESCRIPTION
-   The Install-AvFailoverClusteringFeature function uses "Install-WindowsFeature -Name Failover-Clustering -IncludeAllSubFeature -IncludeManagementTools" cmdlet to install Failover Clustering Feature.
+   The Install-CbFailoverClusteringFeature function uses "Install-WindowsFeature -Name Failover-Clustering -IncludeAllSubFeature -IncludeManagementTools" cmdlet to install Failover Clustering Feature.
 .PARAMETER ComputerIP
    Specifies the computer IP.
 .PARAMETER Credentials
    Specifies the credentials used to login.
 .EXAMPLE
-   Install-AvFailoverClusteringFeature -ComputerIP $all -Credential $cred
+   Install-CbFailoverClusteringFeature -ComputerIP $all -Credential $cred
 #>
    param(
       [Parameter(Mandatory = $true)] $ComputerIP,
@@ -70,23 +70,23 @@ function Install-AvFailoverClusteringFeature {
       Return
    }
    Write-Host -ForegroundColor Green "Failover Clustering Feature installed on selected remote hosts."
-   Write-Host -ForegroundColor Cyan "Checking the status with Get-AvFailoverClusteringFeature."
+   Write-Host -ForegroundColor Cyan "Checking the status with Get-CbFailoverClusteringFeature."
 
-   Get-AvFailoverClusteringFeature -ComputerIP $ComputerIP -Credential $Credential
+   Get-CbFailoverClusteringFeature -ComputerIP $ComputerIP -Credential $Credential
 }
 
-function Uninstall-AvFailoverClusteringFeature {
+function Uninstall-CbFailoverClusteringFeature {
    <#
    .SYNOPSIS
       Uninstalls Failover Clustering Feature on selected hosts.
    .DESCRIPTION
-      The Uninstall-AvFailoverClusteringFeature function uses "Uninstall-WindowsFeature -Name Failover-Clustering -IncludeManagementTools" cmdlet to install Failover Clustering Feature.
+      The Uninstall-CbFailoverClusteringFeature function uses "Uninstall-WindowsFeature -Name Failover-Clustering -IncludeManagementTools" cmdlet to install Failover Clustering Feature.
    .PARAMETER ComputerIP
       Specifies the computer IP.
    .PARAMETER Credentials
       Specifies the credentials used to login.
    .EXAMPLE
-      Uninstall-AvFailoverClusteringFeature -ComputerIP $all -Credential $cred
+      Uninstall-CbFailoverClusteringFeature -ComputerIP $all -Credential $cred
    #>
    param(
       [Parameter(Mandatory = $true)] $ComputerIP,
@@ -110,7 +110,7 @@ function Uninstall-AvFailoverClusteringFeature {
 
 
    Write-Host -ForegroundColor Green "`nFailover Clustering Feature installed on selected remote hosts."
-   Write-Host -ForegroundColor Cyan "`Checking the status with Get-AvFailoverClusteringFeature."
+   Write-Host -ForegroundColor Cyan "`Checking the status with Get-CbFailoverClusteringFeature."
    
-   Get-AvFailoverClusteringFeature -ComputerIP $ComputerIP -Credential $Credential
+   Get-CbFailoverClusteringFeature -ComputerIP $ComputerIP -Credential $Credential
 }

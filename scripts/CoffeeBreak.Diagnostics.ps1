@@ -1,7 +1,7 @@
 ####################
 ##### EVENTLOG #####
 ####################
-function Get-AvEventLogErrors {
+function Get-CbEventLogErrors {
    ### Get Error events from servers' EventLog
    <#
 .SYNOPSIS
@@ -75,12 +75,12 @@ function Get-AvEventLogErrors {
 ######################
 ##### SW/HW SPEC #####
 ######################
-function Get-AvOSVersion {
+function Get-CbOSVersion {
    <#
 .SYNOPSIS
    Gets detailed OS Version for a server.
 .DESCRIPTION
-   The Get-AvOSVersion function gets the detailed information about OS Version of a server.
+   The Get-CbOSVersion function gets the detailed information about OS Version of a server.
    The function reads specific values from "HKLM:SOFTWARE\Microsoft\Windows NT\CurrentVersion" registry key. The read values are: 
    ProductName, BuildBranch, CurrentMajorVersionNumber, CurrentMinorVersionNumber, ReleaseID, CurrentBuildNumber, UBR and InstallDate.
    Results are sorted by Alias, unless one of the 'SortBy' switches is selected.
@@ -93,8 +93,8 @@ function Get-AvOSVersion {
 .PARAMETER Credentials
    Allows sorting by Install Date.
 .EXAMPLE
-   Get-AvOSVersion -ComputerIP $all -Credential $cred
-   Get-AvOSVersion -ComputerIP $all -Credential $cred -SortByInstallDate
+   Get-CbOSVersion -ComputerIP $all -Credential $cred
+   Get-CbOSVersion -ComputerIP $all -Credential $cred -SortByInstallDate
 #>
    param(
       [Parameter(Mandatory = $true)] $ComputerIP,
@@ -112,21 +112,21 @@ function Get-AvOSVersion {
    
    $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'ProductName', 'BuildBranch', 'CurrentMajorVersionNumber', 'CurrentMinorVersionNumber', 'ReleaseId', 'CurrentBuildNumber', 'UBR', 'InstallDate') 
 
-   $ActionIndex = Test-AvIfExactlyOneSwitchParameterIsTrue $SortByAlias $SortByHostnameInConfig $SortByReleaseID $SortByInstallDate
+   $ActionIndex = Test-CbIfExactlyOneSwitchParameterIsTrue $SortByAlias $SortByHostnameInConfig $SortByReleaseID $SortByInstallDate
    
    if ($RawOutput) {
-        Invoke-AvScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
+        Invoke-CbScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
     }
     else {
-        Invoke-AvScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
+        Invoke-CbScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
     }
 }
-function Get-AvHWSpecification {
+function Get-CbHWSpecification {
    <#
    .SYNOPSIS
    Outputs a table summarizing CPU, RAM, C: drive and D: drive (if exists) sizes for a selected hosts.
    .DESCRIPTION
-   The Get-AvHWSpecification function uses:
+   The Get-CbHWSpecification function uses:
    - Get-WmiObject -Class Win32_Processor
    - Get-WmiObject -Class Win32_physicalmemory
    - Get-Partition -DriveLetter C
@@ -136,7 +136,7 @@ function Get-AvHWSpecification {
    .PARAMETER Credentials
    Specifies the credentials used to login.
    .EXAMPLE
-   Get-AVHWSpecification -ComputerIP $All -Credential $cred
+   Get-CbHWSpecification -ComputerIP $All -Credential $cred
    #>
    Param(
       [Parameter(Mandatory = $true)] $ComputerIP,
@@ -168,13 +168,13 @@ function Get-AvHWSpecification {
    $ActionIndex = 0
    
    if ($RawOutput) {
-        Invoke-AvScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
+        Invoke-CbScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
     }
     else {
-        Invoke-AvScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
+        Invoke-CbScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
     }
 }
-function Install-AvBGInfo {
+function Install-CbBGInfo {
    <#
    .SYNOPSIS
       Installs and configures BGInfo on remote hosts.
@@ -268,20 +268,20 @@ function Install-AvBGInfo {
    Write-Host -ForegroundColor Red "`nPlease use the desktop shortcut on remote hosts to run BGInfo for the first time."
    Write-Host -ForegroundColor Red "Also, remember to add the right BGInfo fields on appropriate hosts."
 }
-function Get-AvUptime {
+function Get-CbUptime {
    <#
 .SYNOPSIS
 Outputs uptime for a list of computers.
 .DESCRIPTION
-The Get-AvUptime function uses "(get-date) - (Get-CimInstance Win32_OperatingSystem).LastBootUpTime" expression to retrieve uptime of selected hosts.
+The Get-CbUptime function uses "(get-date) - (Get-CimInstance Win32_OperatingSystem).LastBootUpTime" expression to retrieve uptime of selected hosts.
 Timezone set on remote host is irrelevant to uptime calculation.
-LastBootUpTime is ALWAYS displayed in the timezone of the machine which is runs Get-AvUptime function.
+LastBootUpTime is ALWAYS displayed in the timezone of the machine which is runs Get-CbUptime function.
 .PARAMETER ComputerIP
 Specifies the computer IP.
 .PARAMETER Credentials
 Specifies the credentials used to login.
 .EXAMPLE
-Get-AvUptime -ComputerIP $All -Credential $cred
+Get-CbUptime -ComputerIP $All -Credential $cred
 #>
    Param(
       [Parameter(Mandatory = $true)] $ComputerIP,
@@ -306,9 +306,9 @@ Get-AvUptime -ComputerIP $All -Credential $cred
    $ActionIndex = 0
    
    if ($RawOutput) {
-        Invoke-AvScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
+        Invoke-CbScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
     }
     else {
-        Invoke-AvScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
+        Invoke-CbScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
     }
 }

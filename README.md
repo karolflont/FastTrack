@@ -1,8 +1,9 @@
-# Avid.PSUtilities
+# Coffee Break
 
 Welcome!
 
-Avid.PSUtilities is a PowerShell module for mass scale deployment and management of Avid MediaCentral | Production Management servers.
+Coffee Break is a PowerShell module for parallel software installation and servers diagnositcs for Avid MediaCentral | Production Management servers.
+The aim of the project is to enable installation of an Avid MediaCentral | Production Management system in a time comparable to a coffee break. Despite the fact we're not quite there yet, it's already a very handy and easy to use tool, that can save you a lot of time.
 
 ---
 
@@ -18,23 +19,23 @@ There are no other prerequisites for using this module.
 
 ## Installing
 
-You can istall Avid.PSUtilities on either:
+You can istall CoffeeBreak on either:
 - a dedicated Windows based computer with PowerShell 5.1 installed
 - one of the servers, you're going to configure/manage using this module
 
-First option is the PREFERRED one, as some of the functions of this module trigger a mass reboot of managed hosts. Using these functions with Avid.PSUtilities module installed on one of the mnaged hosts can give undetermined results.
+First option is the PREFERRED one, as some of the functions of this module trigger a mass reboot of managed hosts. Using these functions with CoffeeBreak module installed on one of the managed hosts can give undetermined results.
 
-To install the Avid.PSUtilities module on your computer run Avid.PSU.INSTALL.ps1 script from an elevated PowerShell prompt (Run as administrator).
+To install the CoffeeBreak module on your computer run CoffeeBreak.INSTALL.ps1 script from an elevated PowerShell prompt (Run as administrator).
 
-WARNING: Installing AvidPS.Utilities will add all hosts ("*") to the WSMan:\localhost\Client\TrustedHosts. If you already have some hosts defined as WSMan trusted hosts, you have to backup the WSMan:\localhost\Client\TrustedHosts configuration and restore it manually later, as uninstall srtipt will clear the WSMan:\localhost\Client\TrustedHosts. 
+WARNING: Installing CoffeeBreak will add all hosts ("*") to the WSMan:\localhost\Client\TrustedHosts. If you already have some hosts defined as WSMan trusted hosts, you have to backup the WSMan:\localhost\Client\TrustedHosts configuration and restore it manually later, as uninstall srtipt will clear the WSMan:\localhost\Client\TrustedHosts. 
 
-To uninstall the Avid.PSUtilities module on your computer run Avid.PSU.UNINSTALL.ps1 script from an elevated PowerShell prompt (Run as administrator).
+To uninstall the CoffeeBreak module on your computer run CoffeeBreak.UNINSTALL.ps1 script from an elevated PowerShell prompt (Run as administrator).
 
 ---
 
 ## Usage
 
-Check Avid.PSU.SAMPLE.ps1 for sample usage of this module.
+Check CoffeeBreak.SAMPLE.ps1 for sample usage of this module.
 
 ---
 
@@ -42,83 +43,83 @@ Check Avid.PSU.SAMPLE.ps1 for sample usage of this module.
 
 3rd Party Software Related
 
-    Invoke-AvCMDExpression
+    Invoke-CbCMDExpression
 
 Avid Software related
 
-    Install-AvNexisClient
-    Uninstall-AvNexisClient
-    Get-AvSoftwareVersions
-    Get-AvServicesStatus
+    Install-CbNexisClient
+    Uninstall-CbNexisClient
+    Get-CbSoftwareVersions
+    Get-CbServicesStatus
 
 Diagnostics related
 
-    Get-AvEventLogErrors
-    Get-AvOSVersion
-    Get-AvHWSpecification
-    Install-AvBGInfo
-    Get-AvUptime 
+    Get-CbEventLogErrors
+    Get-CbOSVersion
+    Get-CbHWSpecification
+    Install-CbBGInfo
+    Get-CbUptime 
 
 Filesystem and Storage realated
 
-    Get-AvHiddenFilesAndFoldersStatus
-    Set-AvHiddenFilesAndFolders
+    Get-CbHiddenFilesAndFoldersStatus
+    Set-CbHiddenFilesAndFolders
 
 Firewall and Defender related
 
-    Get-AvFirewallStatus
-    Set-AvFirewall
-    Get-AvDefenderStatus
-    Set-AvDefender
-    Install-AvDefender
-    Uninstall-AvDefender
+    Get-CbFirewallStatus
+    Set-CbFirewall
+    Get-CbDefenderStatus
+    Set-CbDefender
+    Install-CbDefender
+    Uninstall-CbDefender
 
 Hostname and Domain related
 
-    Get-AvHostname
-    Set-AvHostname
-    Get-AvDomain
-    Join-AvDomain
+    Get-CbHostname
+    Set-CbHostname
+    Get-CbDomain
+    Join-CbDomain
 
 Module Input/Output related
 
-    Import-AvSystemConfiguration
+    Import-CbSystemConfiguration
 
 Network related
 
-    Get-AvNetworkInfo
+    Get-CbNetworkInfo
 
 OS Tweaks related
 
-    Get-AvServerManagerBehaviorAtLogon
-    Set-AvServerManagerBehaviorAtLogon
-    Get-AvUACLevel
-    Set-AvUACLevel
-    Get-AvProcessorScheduling
-    Set-AvProcessorScheduling
-    Get-AvPowerPlan
-    Set-AvPowerPlan
+    Get-CbServerManagerBehaviorAtLogon
+    Set-CbServerManagerBehaviorAtLogon
+    Get-CbUACLevel
+    Set-CbUACLevel
+    Get-CbProcessorScheduling
+    Set-CbProcessorScheduling
+    Get-CbPowerPlan
+    Set-CbPowerPlan
 
 Remote Access related
 
-    Test-AvPowershellRemoting
-    Get-AvRemoteDesktopStatus
-    Set-AvRemoteDesktop
+    Test-CbPowershellRemoting
+    Get-CbRemoteDesktopStatus
+    Set-CbRemoteDesktop
 
 Windows Server Roles and Features related
 
-    Get-AvFailoverClusteringFeature
-    Install-AvFailoverClusteringFeature
-    Uninstall-AvFailoverClusteringFeature
+    Get-CbFailoverClusteringFeature
+    Install-CbFailoverClusteringFeature
+    Uninstall-CbFailoverClusteringFeature
 
 Time related
 
-    Get-AvTimeAndTimeZone
+    Get-CbTimeAndTimeZone
 
 Windows Update related
 
-    Get-AvWindowsUpdateServiceStatus
-    Set-AvWindowsUpdateService
+    Get-CbWindowsUpdateServiceStatus
+    Set-CbWindowsUpdateService
 
 ---
 

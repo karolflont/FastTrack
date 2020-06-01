@@ -1,6 +1,6 @@
 ﻿#Requires -RunAsAdministrator
 
-Write-Host -ForegroundColor Green "`nUninstalling Avid.PSUtilities module..."
+Write-Host -ForegroundColor Green "`nUninstalling CoffeeBreak module..."
 
 # Getting the module's destination - using user's PSModulePath
 $PSMPaths = $env:PSModulePath -split ';'
@@ -11,12 +11,12 @@ foreach ($PSMPAth in $PSMPaths) {
 }
 
 # Removing the module form user's PSModulePath
-Remove-Item -LiteralPath ($destination + "\" + "Avid.PSUtilities") -Recurse -Force -ErrorAction SilentlyContinue
-Write-Host -ForegroundColor Green "`nModule Avid.PSUtilites uninstalled."
+Remove-Item -LiteralPath ($destination + "\" + "CoffeeBreak") -Recurse -Force -ErrorAction SilentlyContinue
+Write-Host -ForegroundColor Green "`nModule CoffeeBreak uninstalled."
 
 # Unloading the module from the active memory
-Remove-Module Avid.PSUtilities -Force -ErrorAction SilentlyContinue
-Write-Host -ForegroundColor Green "`nModule Avid.PSUtilites unloaded from the active memory."
+Remove-Module CoffeeBreak -Force -ErrorAction SilentlyContinue
+Write-Host -ForegroundColor Green "`nModule CoffeeBreak unloaded from the active memory."
 
 # Clearing "all hosts" from trusted hosts
 Set-Item WSMan:\localhost\Client\TrustedHosts -Value "" -Force

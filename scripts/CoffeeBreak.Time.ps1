@@ -1,12 +1,12 @@
 #########################
 ##### TIME SETTINGS #####
 #########################
-function Get-AvTimeAndTimeZone {
+function Get-CbTimeAndTimeZone {
    <#
 .SYNOPSIS
    Gets current time and time zone from servers.
 .DESCRIPTION
-   The Get-AvTime function gets current Date, Time, Time Zone and Daylight Saving Time information from a server.
+   The Get-CbTime function gets current Date, Time, Time Zone and Daylight Saving Time information from a server.
    
    The function uses Get-Date and Get-TimeZone cmdlet.
 .PARAMETER ComputerIP
