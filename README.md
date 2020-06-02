@@ -2,9 +2,7 @@
 
 Welcome!
 
-CoffeeBreak is a PowerShell module for parallel software installation and servers diagnositcs for Avid MediaCentral | Production Management servers.
-The aim of the project is to speed up the process Avid MediaCentral | Production Management system installation and diagnostics.
-
+CoffeeBreak is a PowerShell module for speeding up the process of Avid MediaCentral | Production Management system installation and diagnostics. It heavily leverages parallel commands execution on Windows Servers using WinRM and comes with a lot of MC|PM specific predefined functions, like Get-CbAvidSoftwareVersions or Install-CbAvidNexisClient.
 
 ---
 
