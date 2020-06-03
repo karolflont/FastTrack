@@ -1,18 +1,18 @@
-function Test-CbIfExactlyOneSwitchParameterIsTrue {
+function Test-FtIfExactlyOneSwitchParameterIsTrue {
     <#
     .SYNOPSIS
         Tests if exactly one switch parameter from a given set is true.
     .DESCRIPTION
-        The Test-CbIfExactlyOneSwitchParameterIsTrue function does two things:
+        The Test-FtIfExactlyOneSwitchParameterIsTrue function does two things:
         1) Checks if exactly one parameter is passed to the parent function
         2) Returns:
         - the index of this parameter in the input array (Remember it's 0 based!) if exactly one switch is selcted
         - -2 if none of the switches is $true
         - -1 if more than one switch is $true
-        NOTE: Test-CbIfExactlyOneSwitchParameterIsTrue handles up to 10 parameters
+        NOTE: Test-FtIfExactlyOneSwitchParameterIsTrue handles up to 10 parameters
     .EXAMPLE
-        Test-CbIfExactlyOneSwitchParameterIsTrue $Enable $Disable
-        Test-CbIfExactlyOneSwitchParameterIsTrue $SortByPSComputerName $SortByName $SortByInterfaceAlias $SortByInterfaceIndex
+        Test-FtIfExactlyOneSwitchParameterIsTrue $Enable $Disable
+        Test-FtIfExactlyOneSwitchParameterIsTrue $SortByPSComputerName $SortByName $SortByInterfaceAlias $SortByInterfaceIndex
     #>
     param(
         [Parameter(Mandatory = $false)] $Param0,
@@ -88,7 +88,7 @@ function Test-CbIfExactlyOneSwitchParameterIsTrue {
     }
 }
 
-function Add-CbAliasAndHostnameProperties {
+function Add-FtAliasAndHostnameProperties {
     <#
     .SYNOPSIS
     Adds Alias and Hostname properties to the given object.
@@ -129,14 +129,14 @@ function Add-CbAliasAndHostnameProperties {
     Return $OutputObject
 }
 
-function Invoke-CbScriptBlock {
+function Invoke-FtScriptBlock {
     <#
     .SYNOPSIS
         Runs a script block on remote computers, formats the returned object and prints the output.
     .DESCRIPTION
-        The Invoke-CbScriptBlock function:
+        The Invoke-FtScriptBlock function:
         - invokes a script block on remote computers
-        - calls Add-CbAliasAndHostnameProperties to properly label the returned object
+        - calls Add-FtAliasAndHostnameProperties to properly label the returned object
         - formats and prints the object
     .PARAMETER ComputerIP
         Specifies the computer IP.
@@ -155,7 +155,7 @@ function Invoke-CbScriptBlock {
     .PARAMETER RawOutput
         Specifies if the output should be formatted (human friendly output) or not (Powershell pipeline friendly output)
     .EXAMPLE
-        Invoke-CbScriptBlock -ScriptBlock $ScriptBlock -NullMessage $NullMessage -ActionIndex $ActionIndex -PropertiesToDisplay $PropertiesToDisplay -ComputerIP $ComputerIP -Credential $Credential
+        Invoke-FtScriptBlock -ScriptBlock $ScriptBlock -NullMessage $NullMessage -ActionIndex $ActionIndex -PropertiesToDisplay $PropertiesToDisplay -ComputerIP $ComputerIP -Credential $Credential
     #>
     Param(
         [Parameter(Mandatory = $true)] $ComputerIP,
@@ -193,7 +193,7 @@ function Invoke-CbScriptBlock {
             Return
         }
         # Label returned object with Alias and HostnameInConfig properties
-        $ReturnedObjectLabeled = Add-CbAliasAndHostnameProperties $ReturnedObjectRaw
+        $ReturnedObjectLabeled = Add-FtAliasAndHostnameProperties $ReturnedObjectRaw
 
         #Format output
         if($RawOutput){

@@ -1,4 +1,4 @@
-function Import-CbSystemConfiguration {
+function Import-FtSystemConfiguration {
 
     param(
         [Parameter(Mandatory = $true)] [string] $path

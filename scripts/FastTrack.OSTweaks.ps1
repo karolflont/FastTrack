@@ -1,18 +1,18 @@
 #############################################
 ### DISABLE SERVER MANAGER START AT LOGON ###
 #############################################
-function Get-CbServerManagerBehaviorAtLogon {
+function Get-FtServerManagerBehaviorAtLogon {
     <#
 .SYNOPSIS
    Checks if Server Manager starts automatically on system startup.
 .DESCRIPTION
-   The Get-CbServerManagerBehaviorAtLogon function uses "Get-ScheduledTask -TaskName ServerManager" to check if Server Manager starts automatically on system startup.
+   The Get-FtServerManagerBehaviorAtLogon function uses "Get-ScheduledTask -TaskName ServerManager" to check if Server Manager starts automatically on system startup.
 .PARAMETER ComputerIP
    Specifies the computer IP.
 .PARAMETER Credentials
    Specifies the credentials used to login.
 .EXAMPLE
-   Get-CbServerManagerBehaviorAtLogon -ComputerIP $all -Credential $cred
+   Get-FtServerManagerBehaviorAtLogon -ComputerIP $all -Credential $cred
 #>
     param(
         [Parameter(Mandatory = $true)] $ComputerIP,
@@ -31,18 +31,18 @@ function Get-CbServerManagerBehaviorAtLogon {
     $ActionIndex = 0
    
     if ($RawOutput) {
-        Invoke-CbScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
+        Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
     }
     else {
-        Invoke-CbScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
+        Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
     }
 }
-function Set-CbServerManagerBehaviorAtLogon {
+function Set-FtServerManagerBehaviorAtLogon {
     <#
 .SYNOPSIS
     Enables or disables Server Manager start at logon.
 .DESCRIPTION
-    Set-CbServerManagerBehaviorAtLogon function enables or disables a scheduled task of starting Server Manager at user logon.
+    Set-FtServerManagerBehaviorAtLogon function enables or disables a scheduled task of starting Server Manager at user logon.
 .PARAMETER ComputerIP
     Specifies the computer IP.
 .PARAMETER Credentials
@@ -52,7 +52,7 @@ function Set-CbServerManagerBehaviorAtLogon {
 .PARAMETER Disable
     A switch disabling Server Manager start at logon.
 .EXAMPLE
-    Set-CbServerManagerBehaviorAtLogon -ComputerName $all -Credential $cred -Disable
+    Set-FtServerManagerBehaviorAtLogon -ComputerName $all -Credential $cred -Disable
 #>
     param(
         [Parameter(Mandatory = $true)] $ComputerIP,
@@ -61,7 +61,7 @@ function Set-CbServerManagerBehaviorAtLogon {
         [Parameter(Mandatory = $false)] [switch] $Disable
     )
 
-    $ActionIndex = Test-CbIfExactlyOneSwitchParameterIsTrue $Enable $Disable
+    $ActionIndex = Test-FtIfExactlyOneSwitchParameterIsTrue $Enable $Disable
 
     if ($ActionIndex -eq 0) {
         #If Enable switch was selected
@@ -73,20 +73,20 @@ function Set-CbServerManagerBehaviorAtLogon {
         Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock { Get-ScheduledTask -TaskName ServerManager | Disable-ScheduledTask } | Out-Null
         Write-Host -ForegroundColor Green "Server Manager start at Logon DISABLED for selected remote hosts."
     }
-    Write-Host -ForegroundColor Cyan "Checking the status with Get-CbServerManagerBehaviorAtLogon."
+    Write-Host -ForegroundColor Cyan "Checking the status with Get-FtServerManagerBehaviorAtLogon."
 
-    Get-CbServerManagerBehaviorAtLogon -ComputerIP $ComputerIP -Credential $Credential
+    Get-FtServerManagerBehaviorAtLogon -ComputerIP $ComputerIP -Credential $Credential
 }
 
 ###############
 ##### UAC #####
 ###############
-function Get-CbUACLevel {
+function Get-FtUACLevel {
     <#
 .SYNOPSIS
    Checks the User Access Control level on selected remote hosts.
 .DESCRIPTION
-   The Get-CbUACLevel function checks the "ConsentPromptBehaviorAdmin" value of the "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" key.
+   The Get-FtUACLevel function checks the "ConsentPromptBehaviorAdmin" value of the "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" key.
    Specific ConsentPromptBehaviorAdmin values represents the following UAC Levels:
    - ConsentPromptBehaviorAdmin = 2 - Always notify me
    - ConsentPromptBehaviorAdmin = 5 - Notify me only when apps try to make changes to my computer
@@ -96,7 +96,7 @@ function Get-CbUACLevel {
 .PARAMETER Credentials
    Specifies the credentials used to login.
 .EXAMPLE
-   Get-CbUACLevel -ComputerIP $all -Credential $cred
+   Get-FtUACLevel -ComputerIP $all -Credential $cred
 #>
     param(
         [Parameter(Mandatory = $true)] $ComputerIP,
@@ -117,14 +117,14 @@ function Get-CbUACLevel {
     $ActionIndex = 0
    
     if ($RawOutput) {
-        Invoke-CbScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
+        Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
     }
     else {
-        Invoke-CbScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
+        Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
     }
 }
 
-function Set-CbUACLevel {
+function Set-FtUACLevel {
     <#
 .SYNOPSIS
    TODO
@@ -145,31 +145,31 @@ function Set-CbUACLevel {
         [Parameter(Mandatory = $false)] [switch] $NeverNotify
     )
 
-    $ActionIndex = Test-CbIfExactlyOneSwitchParameterIsTrue $AlwaysNotify $NotifyWhenAppsMakeChangesToComputer $NeverNotify
+    $ActionIndex = Test-FtIfExactlyOneSwitchParameterIsTrue $AlwaysNotify $NotifyWhenAppsMakeChangesToComputer $NeverNotify
     
     if ($ActionIndex -eq 0) {
         #If AlwaysNotify switch was selected
         Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock { Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "ConsentPromptBehaviorAdmin" -Value "2" }
         Write-Host -ForegroundColor Green "`nUAC Level changed to `"Always notify me`" for all hosts."
-        Get-CbUACLevel $ComputerIP $Credential
+        Get-FtUACLevel $ComputerIP $Credential
     }
     elseif ($ActionIndex -eq 1) {
         #If NotifyWhenAppsMakeChangesToComputer switch was selected
         Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock { Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "ConsentPromptBehaviorAdmin" -Value "5" }
         Write-Host -ForegroundColor Green "`nUAC Level changed to `"Notify me only when apps try to make changes to my computer`" for all hosts."
-        Get-CbUACLevel $ComputerIP $Credential
+        Get-FtUACLevel $ComputerIP $Credential
     }
     elseif ($ActionIndex -eq 2) {
         #If NeverNotify switch was selected
         Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock { Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "ConsentPromptBehaviorAdmin" -Value "0" }
         Write-Host -ForegroundColor Green "`nUAC Level changed to `"Never notify me`" for all hosts."
-        Get-CbUACLevel $ComputerIP $Credential
+        Get-FtUACLevel $ComputerIP $Credential
     }
 }
 ################################
 ##### PROCESSOR SCHEDULING #####
 ################################
-function Get-CbProcessorScheduling {
+function Get-FtProcessorScheduling {
     <#
     .SYNOPSIS
         Gets the Processor Scheduling setting: programs or background services
@@ -199,7 +199,7 @@ function Get-CbProcessorScheduling {
 
     $ProcesorSchedulingStatus | Select-Object PSComputerName, Win32PrioritySeparation | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 }
-function Set-CbProcessorScheduling {
+function Set-FtProcessorScheduling {
     <#
     .SYNOPSIS
         Sets processor schedulling to Programs or Background Services.
@@ -219,7 +219,7 @@ function Set-CbProcessorScheduling {
         [Parameter(Mandatory = $false)] [switch]$BackgroundServices
     )
 
-    $ActionIndex = Test-CbIfExactlyOneSwitchParameterIsTrue $Programs $BackgroundService
+    $ActionIndex = Test-FtIfExactlyOneSwitchParameterIsTrue $Programs $BackgroundService
     
     if ($ActionIndex -eq 0) {
         #If Programs switch was selected
@@ -227,7 +227,7 @@ function Set-CbProcessorScheduling {
             Set-ItemProperty HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl -Name Win32PrioritySeparation -Value 38
         }
         Write-Host -ForegroundColor Green "`nProcessor scheduling set to PROGRAMS."
-        Get-CbProcessorScheduling $ComputerIP $Credential
+        Get-FtProcessorScheduling $ComputerIP $Credential
     }
     elseif ($ActionIndex -eq 1) {
         #If BackgroundService switch was selected
@@ -235,26 +235,26 @@ function Set-CbProcessorScheduling {
             Set-ItemProperty HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl -Name Win32PrioritySeparation -Value 24
         }
         Write-Host -ForegroundColor Green "`nProcessor scheduling set to BACKGROUND SERVICES."
-        Get-CbProcessorScheduling $ComputerIP $Credential
+        Get-FtProcessorScheduling $ComputerIP $Credential
     }
 }
 
 ######################
 ##### POWER PLAN #####
 ######################
-function Get-CbPowerPlan {
+function Get-FtPowerPlan {
     <#
     .SYNOPSIS
        Gets the ACTIVE Power Plan of the server.
     .DESCRIPTION
-       The Get-CbPowerPlan function checks the ACTIVE Power Plan of the server.
+       The Get-FtPowerPlan function checks the ACTIVE Power Plan of the server.
        The function uses "Get-CimInstance -Namespace root\cimv2\power -ClassName win32_PowerPlan" command.
     .PARAMETER ComputerIP
        Specifies the computer IP.
     .PARAMETER Credentials
        Specifies the credentials used to login.
     .EXAMPLE
-       Get-CbPowerPlan -ComputerIP $all -Credential $cred
+       Get-FtPowerPlan -ComputerIP $all -Credential $cred
     #>
     param(
         [Parameter(Mandatory = $true)] $ComputerIP,
@@ -279,13 +279,13 @@ function Get-CbPowerPlan {
     $ActionIndex = 0
     
     if ($RawOutput) {
-        Invoke-CbScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
+        Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
     }
     else {
-        Invoke-CbScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
+        Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
     }
 }
-function Set-CbPowerPlan {
+function Set-FtPowerPlan {
     <#
 .SYNOPSIS
     Sets the ACTIVE Power Plan of the server.
@@ -311,7 +311,7 @@ function Set-CbPowerPlan {
         [Parameter(Mandatory = $false)] [switch] $PowerSaver,
         [Parameter(Mandatory = $false)] [switch] $AvidOptimized
     )
-    $ActionIndex = Test-CbIfExactlyOneSwitchParameterIsTrue $HighPerformance $Balanced $PowerSaver $AvidOptimized 
+    $ActionIndex = Test-FtIfExactlyOneSwitchParameterIsTrue $HighPerformance $Balanced $PowerSaver $AvidOptimized 
     
     if ($ActionIndex -eq 0) {
         #If HighPerformance switch was selected
@@ -320,7 +320,7 @@ function Set-CbPowerPlan {
             Invoke-CimMethod -InputObject $HighPerformancePowerPlan -MethodName Activate | Out-Null
         }
         Write-Host -ForegroundColor Green "`nPower Plan SET to HIGH PERFORMANCE."
-        Get-CbPowerPlan $ComputerIP $Credential
+        Get-FtPowerPlan $ComputerIP $Credential
     }
     elseif ($ActionIndex -eq 1) {
         #If Balanced switch was selected
@@ -329,7 +329,7 @@ function Set-CbPowerPlan {
             Invoke-CimMethod -InputObject $BalancedPowerPlan -MethodName Activate | Out-Null
         }
         Write-Host -ForegroundColor Green "`nPower Plan SET to BALANCED."
-        Get-CbPowerPlan $ComputerIP $Credential
+        Get-FtPowerPlan $ComputerIP $Credential
     }
     elseif ($ActionIndex -eq 2) {
         #If PowerSaver switch was selected
@@ -338,7 +338,7 @@ function Set-CbPowerPlan {
             Invoke-CimMethod -InputObject $PowerSaverPowerPlan -MethodName Activate | Out-Null
         }
         Write-Host -ForegroundColor Green "`nPower Plan SET to POWER SAVER."
-        Get-CbPowerPlan $ComputerIP $Credential
+        Get-FtPowerPlan $ComputerIP $Credential
     }
     elseif ($ActionIndex -eq 3) {
         #If AvidOptimized switch was selected

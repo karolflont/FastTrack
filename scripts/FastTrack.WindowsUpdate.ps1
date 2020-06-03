@@ -1,12 +1,12 @@
 ##########################
 ##### WINDOWS UPDATE #####
 ##########################
-function Get-CbWindowsUpdateServiceStatus {
+function Get-FtWindowsUpdateServiceStatus {
     <#
 .SYNOPSIS
    Gets the information about Windows Update Service on a server.
 .DESCRIPTION
-   The Get-CbWindowsUpdateServiceStatus function gets the Status and StartType properties of Windows Update Service on a server. 
+   The Get-FtWindowsUpdateServiceStatus function gets the Status and StartType properties of Windows Update Service on a server. 
    The function reads the Status and StartType properties of wuauserv service.
 .PARAMETER ComputerIP
    Specifies the computer IP.
@@ -25,7 +25,7 @@ function Get-CbWindowsUpdateServiceStatus {
     Write-Host -ForegroundColor Cyan "`nWindows Update Status "
     $WindowsUpdateStatus | Select-Object PSComputerName, Status, StartType | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 }
-function Set-CbWindowsUpdateService {
+function Set-FtWindowsUpdateService {
     <#
     .SYNOPSIS
         Enables or disables Windows Update Service on a server.

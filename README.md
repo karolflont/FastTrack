@@ -1,16 +1,16 @@
-# Coffee Break
+# FastTrack
 
 Welcome!
 
-CoffeeBreak is a PowerShell module for speeding up the process of Avid MediaCentral | Production Management system installation and diagnostics. It heavily leverages parallel commands execution on Windows Servers using WinRM and comes with a lot of MC|PM specific predefined functions, like Get-CbAvidSoftwareVersions or Install-CbAvidNexisClient.
+FastTrack is a PowerShell module for speeding up the installation and diagnostics process of Avid Windows based systems, i.e. MediaCentral | Production Management and MediaCentral | Asset Management. It heavily leverages parallel commands execution on Windows Servers using WinRM.
 
 ---
 
 ## Prerequisites
 
 This module is tested with PowerShell 5.1 and Windows Server 2016 OS only. However:
-- most functions should work on higher versions of PowerShell and Windows Server,
-- some functions will work fine on lower versions of PowerShell and Windows Server.
+- most functions should work properly on higher versions of PowerShell and Windows Server,
+- some functions should work properly on lower versions of PowerShell and Windows Server.
 
 There are no other prerequisites for using this module.
 
@@ -18,23 +18,23 @@ There are no other prerequisites for using this module.
 
 ## Installing
 
-You can istall CoffeeBreak on either:
+You can istall FastTrack on either:
 - a dedicated Windows based computer with PowerShell 5.1 installed
 - one of the servers, you're going to configure/manage using this module
 
-First option is the PREFERRED one, as some of the functions of this module trigger a mass reboot of managed hosts. Using these functions with CoffeeBreak module installed on one of the managed hosts can give undetermined results.
+First option is the PREFERRED one, as some of the functions of this module trigger a mass reboot of managed hosts. Using these functions with FastTrack module installed on one of the managed hosts can give undetermined results.
 
-To install the CoffeeBreak module on your computer run CoffeeBreak.INSTALL.ps1 script from an elevated PowerShell prompt (Run as administrator).
+To install the FastTrack module on your computer run FastTrack.INSTALL.ps1 script from an elevated PowerShell prompt (Run as administrator).
 
-WARNING: Installing CoffeeBreak will add all hosts ("*") to the WSMan:\localhost\Client\TrustedHosts. If you already have some hosts defined as WSMan trusted hosts, you have to backup the WSMan:\localhost\Client\TrustedHosts configuration and restore it manually later, as uninstall srtipt will clear the WSMan:\localhost\Client\TrustedHosts. 
+WARNING: Installing FastTrack will add all hosts ("*") to the WSMan:\localhost\Client\TrustedHosts. If you already have some hosts defined as WSMan trusted hosts, you have to backup the WSMan:\localhost\Client\TrustedHosts configuration and restore it manually later, as uninstall srtipt will clear the WSMan:\localhost\Client\TrustedHosts. 
 
-To uninstall the CoffeeBreak module on your computer run CoffeeBreak.UNINSTALL.ps1 script from an elevated PowerShell prompt (Run as administrator).
+To uninstall the FastTrack module on your computer run FastTrack.UNINSTALL.ps1 script from an elevated PowerShell prompt (Run as administrator).
 
 ---
 
 ## Usage
 
-Check CoffeeBreak.SAMPLE.ps1 for sample usage of this module.
+Check FastTrack.SAMPLE.ps1 for sample usage of this module.
 
 ---
 
@@ -42,116 +42,88 @@ Check CoffeeBreak.SAMPLE.ps1 for sample usage of this module.
 
 3rd Party Software Related
 
-    Invoke-CbCMDExpression
+    Invoke-FtCMDExpression
 
 Avid Software related
 
-    Install-CbNexisClient
-    Uninstall-CbNexisClient
-    Get-CbSoftwareVersions
-    Get-CbServicesStatus
+    Install-FtAvidNexisClient
+    Uninstall-FtAvidNexisClient
+    Get-FtAvidSoftwareVersions
+    Get-FtAvidServicesStatus
 
 Diagnostics related
 
-    Get-CbEventLogErrors
-    Get-CbOSVersion
-    Get-CbHWSpecification
-    Install-CbBGInfo
-    Get-CbUptime 
+    Get-FtEventLogErrors
+    Get-FtOSVersion
+    Get-FtHWSpecification
+    Install-FtBGInfo
+    Get-FtUptime 
 
 Filesystem and Storage realated
 
-    Get-CbHiddenFilesAndFoldersStatus
-    Set-CbHiddenFilesAndFolders
+    Get-FtHiddenFilesAndFoldersStatus
+    Set-FtHiddenFilesAndFolders
 
 Firewall and Defender related
 
-    Get-CbFirewallStatus
-    Set-CbFirewall
-    Get-CbDefenderStatus
-    Set-CbDefender
-    Install-CbDefender
-    Uninstall-CbDefender
+    Get-FtFirewallStatus
+    Set-FtFirewall
+    Get-FtDefenderStatus
+    Set-FtDefender
+    Install-FtDefender
+    Uninstall-FtDefender
 
 Hostname and Domain related
 
-    Get-CbHostname
-    Set-CbHostname
-    Get-CbDomain
-    Join-CbDomain
+    Get-FtHostname
+    Set-FtHostname
+    Get-FtDomain
+    Join-FtDomain
 
 Module Input/Output related
 
-    Import-CbSystemConfiguration
+    Import-FtSystemConfiguration
 
 Network related
 
-    Get-CbNetworkInfo
+    Get-FtNetworkInfo
 
 OS Tweaks related
 
-    Get-CbServerManagerBehaviorAtLogon
-    Set-CbServerManagerBehaviorAtLogon
-    Get-CbUACLevel
-    Set-CbUACLevel
-    Get-CbProcessorScheduling
-    Set-CbProcessorScheduling
-    Get-CbPowerPlan
-    Set-CbPowerPlan
+    Get-FtServerManagerBehaviorAtLogon
+    Set-FtServerManagerBehaviorAtLogon
+    Get-FtUACLevel
+    Set-FtUACLevel
+    Get-FtProcessorScheduling
+    Set-FtProcessorScheduling
+    Get-FtPowerPlan
+    Set-FtPowerPlan
 
 Remote Access related
 
-    Test-CbPowershellRemoting
-    Get-CbRemoteDesktopStatus
-    Set-CbRemoteDesktop
+    Test-FtPowershellRemoting
+    Get-FtRemoteDesktopStatus
+    Set-FtRemoteDesktop
 
 Windows Server Roles and Features related
 
-    Get-CbFailoverClusteringFeature
-    Install-CbFailoverClusteringFeature
-    Uninstall-CbFailoverClusteringFeature
+    Get-FtFailoverClusteringFeature
+    Install-FtFailoverClusteringFeature
+    Uninstall-FtFailoverClusteringFeature
 
 Time related
 
-    Get-CbTimeAndTimeZone
+    Get-FtTimeAndTimeZone
 
 Windows Update related
 
-    Get-CbWindowsUpdateServiceStatus
-    Set-CbWindowsUpdateService
+    Get-FtWindowsUpdateServiceStatus
+    Set-FtWindowsUpdateService
 
 ---
 
-## Sample System Configuration files
+## Sample System Configuration file
 
-### Basic configuration file
-```json
-{
-    "systemName":"DEV",
-    "hosts": [
-        {
-            "IP":"192.168.30.31",
-            "hostname":"lop-ie2",
-            "alias":"ie",
-            "role":["PAM","IE"]
-        },
-        {
-            "IP":"192.168.30.32",
-            "hostname":"lop-tc-01",
-            "alias":"tc1",
-            "role":["PAM","TRC"]
-        },
-        {
-            "IP":"192.168.30.33",
-            "hostname":"lop-tc-02",
-            "alias":"tc2",
-            "role":["PAM","TRC"]
-        }
-    ]
-}
-```
-
-### Advanced configuration file
 ```json
 {
     "systemName":"LopDEV",
@@ -227,29 +199,26 @@ Windows Update related
             "hostname":"lop-cap-02",
             "alias":"cap2",
             "role":["CAP"]
+        },
+        {
+            "IP":"192.168.30.43",
+            "hostname":"lop-sql",
+            "alias":"sql",
+            "role":["MAM"]
+        },
+        {
+            "IP":"192.168.30.44",
+            "hostname":"lop-app-01",
+            "alias":"app1",
+            "role":["MAM","APP"]
+        },
+        {
+            "IP":"192.168.30.45",
+            "hostname":"lop-app-02",
+            "alias":"app2",
+            "role":["MAM","APP"]
         }
-    ],
-    "domain":{
-        "mainSuffix":"lop.prm",
-        "additionalSuffixes":[],
-        "DNSServers":[
-            {
-                "IP":"192.168.30.71",
-                "alias":"dc1",
-                "role":["DC"]
-            },
-            {
-                "IP":"192.168.30.72",
-                "alias":"dc2",
-                "role":["DC"]
-            }
-        ]
-    },
-    "timesync":{
-        "inhouseSources": ["192.168.30.71"],
-        "AvidSystemPrimaryMaster": "",
-        "AvidSystemSecondaryMaster": ""
-    }
+    ]
 }
 ```
 

@@ -1,12 +1,12 @@
 ###########################
 ### POWERSHELL REMOTING ###
 ###########################
-function Test-CbPowershellRemoting {
+function Test-FtPowershellRemoting {
    <#
     .SYNOPSIS
        Test if Powershell Remoting to a list of hosts is possible.
     .DESCRIPTION
-       The Test-CbPowershellRemoting function uses:
+       The Test-FtPowershellRemoting function uses:
        - Test-WSMan
        - New-PSSession
     .PARAMETER ComputerIP
@@ -14,7 +14,7 @@ function Test-CbPowershellRemoting {
     .PARAMETER Credentials
        Specifies the credentials used to login.
     .EXAMPLE
-       Test-CbPowershellRemoting -ComputerIP $all
+       Test-FtPowershellRemoting -ComputerIP $all
     #>
    param (
       [Parameter(Mandatory = $true)] $ComputerIP,
@@ -78,12 +78,12 @@ function Test-CbPowershellRemoting {
 ##### RDP #####
 ###############
 #IN PROGRESS
-function Get-CbRemoteDesktopStatus {
+function Get-FtRemoteDesktopStatus {
    <#
     .SYNOPSIS
        Checks if Remote Desktop connection to a specific computer is possible.
     .DESCRIPTION
-       The Get-CbRemoteDesktopStatus function checks four parameters determining if Remote Desktop to a computer is possible. These are:
+       The Get-FtRemoteDesktopStatus function checks four parameters determining if Remote Desktop to a computer is possible. These are:
        1) "Remote Desktop Services" service status
        2) "fDenyTSConnections" value of "HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server" registry key.
        3) "Remote Desktop" DisplayGroup firewall rule existance
@@ -129,7 +129,7 @@ function Get-CbRemoteDesktopStatus {
    Write-Host -ForegroundColor Cyan "`nRemote Desktop access status summary "
    $StatusTable | Select-Object PSComputerName, RDPServices, RemoteDesktop, RDPFirewallRule, NetworkLevelAuthentication | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 }   
-function Set-CbRemoteDesktop {
+function Set-FtRemoteDesktop {
    <#
     .SYNOPSIS
     TODO
@@ -151,7 +151,7 @@ function Set-CbRemoteDesktop {
       [Parameter(Mandatory = $false)] [switch] $DisableRDPService
    ) 
  
-   $ActionIndex = Test-CbIfExactlyOneSwitchParameterIsTrue $EnableWithDisabledNLA $EnableWithEnabledNLA $Disable $DisableRDPService
+   $ActionIndex = Test-FtIfExactlyOneSwitchParameterIsTrue $EnableWithDisabledNLA $EnableWithEnabledNLA $Disable $DisableRDPService
  
    if ($ActionIndex -eq 0) {
       #If EnableWithDisabledNLA switch was selected

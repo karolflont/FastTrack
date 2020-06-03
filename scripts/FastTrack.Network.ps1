@@ -1,7 +1,7 @@
 ###############
 ### NETWORK ###
 ###############
-function Get-CbNetworkInfo {
+function Get-FtNetworkInfo {
    <#
    .SYNOPSIS
    TODO
@@ -29,7 +29,7 @@ function Get-CbNetworkInfo {
    $DefaultSortProperty = "PSComputerName"
    $PropertiesToDisplay = ('PSComputerName', 'Name', 'InterfaceAlias', 'InterfaceIndex', 'IPv4Connectivity', 'NetworkCategory') 
    
-   $SortPropertyIndex = Test-CbIfExactlyOneSwitchParameterIsTrue $SortByPSComputerName $SortByName $SortByInterfaceAlias $SortByInterfaceIndex $SortByIPv4Connectivity $SortByNetworkCategory
+   $SortPropertyIndex = Test-FtIfExactlyOneSwitchParameterIsTrue $SortByPSComputerName $SortByName $SortByInterfaceAlias $SortByInterfaceIndex $SortByIPv4Connectivity $SortByNetworkCategory
    
    if ($null -eq $SortPropertyIndex) {
       #If none of the switches is selected, use the DafaultSortProperty

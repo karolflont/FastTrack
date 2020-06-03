@@ -1,7 +1,7 @@
 #################
 ##### NEXIS #####
 #################
-function Install-CbNexisClient {
+function Install-FtAvidNexisClient {
     <#
 .SYNOPSIS
    Silently installs AvidNEXIS Client on remote hosts.
@@ -94,7 +94,7 @@ Wait for rebooted hosts to come back.
     }
 }
 
-function Uninstall-CbNexisClient {
+function Uninstall-FtAvidNexisClient {
     <#
 .SYNOPSIS
    Silently uninstalls AvidNEXIS Client on remote hosts.
@@ -141,12 +141,12 @@ function Uninstall-CbNexisClient {
 ###############################
 ##### AVID SOFTWARE CHECK #####
 ###############################
-function Get-CbSoftwareVersions {
+function Get-FtAvidSoftwareVersions {
     <#
     .SYNOPSIS
         Gets installed Avid Software versions.
     .DESCRIPTION
-        The Get-CbSoftwareVersions function retrieves all the keys from "HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\" containing words:
+        The Get-FtAvidSoftwareVersions function retrieves all the keys from "HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\" containing words:
         - Avid in the "Publishers" value
         - {Avid|Isis|Nexis} in "DisplayName" value
         Results are sorted by Alias, unless one of the 'SortBy' switches is selected.
@@ -165,8 +165,8 @@ function Get-CbSoftwareVersions {
     .PARAMETER SortByInstallDate
         Allows sortign by Application Install Date.
     .EXAMPLE
-        Get-CbSoftwareVersions -ComputerIP $all -Credential $cred
-        Get-CbSoftwareVersions -ComputerIP $all -Credential $cred -SortByDisplayVersion
+        Get-FtAvidSoftwareVersions -ComputerIP $all -Credential $cred
+        Get-FtAvidSoftwareVersions -ComputerIP $all -Credential $cred -SortByDisplayVersion
 
     #>
     
@@ -189,22 +189,22 @@ function Get-CbSoftwareVersions {
 
     $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'DisplayName', 'DisplayVersion', 'InstallDate') 
 
-    $ActionIndex = Test-CbIfExactlyOneSwitchParameterIsTrue $SortByAlias $SortByHostnameInConfig $SortByDisplayName $SortByDisplayVersion $SortByInstallDate
+    $ActionIndex = Test-FtIfExactlyOneSwitchParameterIsTrue $SortByAlias $SortByHostnameInConfig $SortByDisplayName $SortByDisplayVersion $SortByInstallDate
     
     if ($RawOutput) {
-        Invoke-CbScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
+        Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
     }
     else {
-        Invoke-CbScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
+        Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
     }
 }
 
-function Get-CbServicesStatus {
+function Get-FtAvidServicesStatus {
     <#
     .SYNOPSIS
         Gets information about Installed Avid Services.
     .DESCRIPTION
-        The Get-CbServices function uses Get-Service -Displayname "Avid*" command to gather Status and StartType of Installed Avid Services on a server.
+        The Get-FtServices function uses Get-Service -Displayname "Avid*" command to gather Status and StartType of Installed Avid Services on a server.
         Results are sorted by Alias, unless one of the 'SortBy' switches is selected.
     .PARAMETER ComputerIP
         Specifies the computer IP.
@@ -221,8 +221,8 @@ function Get-CbServicesStatus {
     .PARAMETER SortByStartType
         Allows sorting by Service Start Type.
     .EXAMPLE
-        Get-CbServicesStatus -ComputerIP $all -Credential $cred
-        Get-CbServicesStatus -ComputerIP $all -Credential $cred -SortByStatus
+        Get-FtAvidServicesStatus -ComputerIP $all -Credential $cred
+        Get-FtAvidServicesStatus -ComputerIP $all -Credential $cred -SortByStatus
     #>
     Param(
         [Parameter(Mandatory = $true)] $ComputerIP,
@@ -243,13 +243,13 @@ function Get-CbServicesStatus {
 
     $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'DisplayName', 'Status', 'StartType') 
 
-    $ActionIndex = Test-CbIfExactlyOneSwitchParameterIsTrue $SortByAlias $SortByHostnameInConfig $SortByDisplayName $SortByStatus $SortByStartType
+    $ActionIndex = Test-FtIfExactlyOneSwitchParameterIsTrue $SortByAlias $SortByHostnameInConfig $SortByDisplayName $SortByStatus $SortByStartType
     
     if ($RawOutput) {
-        Invoke-CbScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
+        Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
     }
     else {
-        Invoke-CbScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
+        Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
     }
 }
 

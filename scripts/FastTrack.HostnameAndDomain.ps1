@@ -1,12 +1,12 @@
 ####################
 ##### HOSTNAME #####
 ####################
-function Get-CbHostname {
+function Get-FtHostname {
    <#
     .SYNOPSIS
     Outputs a table comparing current hostnames and hostnames defined in $sysConfig variable for a list of computers.
     .DESCRIPTION
-    The Get-CbHostname function uses:
+    The Get-FtHostname function uses:
     - $env:computername variable on remote hosts
     - "IP" and "hostname" fields from $sysConfig global variable
     .PARAMETER ComputerIP
@@ -16,7 +16,7 @@ function Get-CbHostname {
     .PARAMETER RawOutput
     Specifies if the output should be formatted or not.
     .EXAMPLE
-    Get-CbHostname -ComputerIP $all -Credential $cred
+    Get-FtHostname -ComputerIP $all -Credential $cred
     #>
  
    <# TODO
@@ -57,13 +57,13 @@ function Get-CbHostname {
       $HostnamesRaw | Sort-Object -Property ComputerIP | Format-Table -Wrap -AutoSize
    }
 }
-function Set-CbHostname {
+function Set-FtHostname {
    <#
     .SYNOPSIS
        Changes the hostnames of remote computers with values defined in $sysConfig variable.
     .DESCRIPTION
-       The Set-CbHostname function uses:
-       - Get-CbHostname
+       The Set-FtHostname function uses:
+       - Get-FtHostname
        - Rename-Computer
        - Restart-Computer
     .PARAMETER ComputerIP
@@ -75,7 +75,7 @@ function Set-CbHostname {
     .PARAMETER Force
        If Force switch is used, no questions are asked during the execution of this function.
     .EXAMPLE
-       Set-CbHostname -ComputerIP $all -Credential $Cred
+       Set-FtHostname -ComputerIP $all -Credential $Cred
     #>
    Param(
       [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
@@ -85,7 +85,7 @@ function Set-CbHostname {
    )
  
    if (-not $Force) {
-      $hostnames = Get-CbHostname -ComputerIP $ComputerIP -Credential $Credential -RawOutput
+      $hostnames = Get-FtHostname -ComputerIP $ComputerIP -Credential $Credential -RawOutput
       Write-Warning "You're about to change the hostname(-s) of remote computer(-s) according to the below table. This can possibly be a harmful operation. Press Enter to continue or Ctrl+C to quit."
       $Hostnames | Select-Object -Property ComputerIP,
       @{Name = "OldName"; Expression = { $_.HostnameSetOnHost } },
@@ -122,7 +122,7 @@ function Set-CbHostname {
 ##############
 ### DOMAIN ###
 ##############
-function Get-CbDomain {
+function Get-FtDomain {
    <#
    .SYNOPSIS
       Checks the Active Directory Domain or Workgroup name for a Computer.
@@ -133,7 +133,7 @@ function Get-CbDomain {
    .PARAMETER Credentials
       Specifies the credentials used to login.
    .EXAMPLE
-      Get-CbDomain -ComputerIP $all -Credential $Cred
+      Get-FtDomain -ComputerIP $all -Credential $Cred
    #>
    Param(
       [Parameter(Mandatory = $true)] $ComputerIP,
@@ -153,13 +153,13 @@ function Get-CbDomain {
    $ActionIndex = 0
 
    if ($RawOutput) {
-        Invoke-CbScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
+        Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
     }
     else {
-        Invoke-CbScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
+        Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
     }
 }
-function Join-CbDomain {
+function Join-FtDomain {
    <#
  .SYNOPSIS
     Joins computers to an Active Directory Domain.

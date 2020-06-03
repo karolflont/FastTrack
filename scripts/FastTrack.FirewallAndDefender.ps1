@@ -1,12 +1,12 @@
 ########################
 ### WINDOWS FIREWALL ###
 ########################
-function Get-CbFirewallStatus {
+function Get-FtFirewallStatus {
     <#
     .SYNOPSIS
         Gets the status of Firewall service.
     .DESCRIPTION
-        The Get-CbFirewallServiceStatus uses:
+        The Get-FtFirewallServiceStatus uses:
         - Get-Service -Name MpsSvc
     .PARAMETER ComputerIP
         Specifies the computer IP.
@@ -27,13 +27,13 @@ function Get-CbFirewallStatus {
 
 }
 
-function Set-CbFirewall {
+function Set-FtFirewall {
 
     <#
 .SYNOPSIS
     Sets Windows Firewall service (MpsSvc) status i startup type .
 .DESCRIPTION
-    The Get-CbSoftwareVersions function retrieves the
+    The Get-FtAvidSoftwareVersions function retrieves the
 .PARAMETER ComputerIP
     Specifies the computer IP.
 .PARAMETER Credentials
@@ -77,7 +77,7 @@ Return
         [Parameter(Mandatory = $false)] [switch]$Off
     )
 
-    $ActionIndex = Test-CbIfExactlyOneSwitchParameterIsTrue $On $Off
+    $ActionIndex = Test-FtIfExactlyOneSwitchParameterIsTrue $On $Off
     
     if ($ActionIndex -eq 0) {
         #If On switch was selected
@@ -99,7 +99,7 @@ Return
 ########################
 ### WINDOWS DEFENDER ###
 ########################
-function Get-CbDefenderStatus {
+function Get-FtDefenderStatus {
     <#
     .SYNOPSIS
        Gets the status of Windows Defender Realtime Monitoring.
@@ -110,7 +110,7 @@ function Get-CbDefenderStatus {
     .PARAMETER Credentials
        Specifies the credentials used to login.
     .EXAMPLE
-       Get-CbHostname -ComputerIP $all -Credential $cred
+       Get-FtHostname -ComputerIP $all -Credential $cred
     #>
 
     #TODO:
@@ -128,7 +128,7 @@ function Get-CbDefenderStatus {
     Write-Host -ForegroundColor Cyan "`nWindows Defender Realtime Monitoring Status "
     $WindowsDefenderRealtimeMonitoringStatus | Select-Object PSComputerName, DisableRealTimeMonitoring | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
 }
-function Install-CbDefender {
+function Install-FtDefender {
     <#
 .SYNOPSIS
     Installs Windows Defender Feature.
@@ -151,7 +151,7 @@ function Install-CbDefender {
     Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock { Install-WindowsFeature -Name Windows-Defender }
     Write-Host -ForegroundColor Green "`nWindows Defender INSTALLED on selected remote hosts."
 }
-function Uninstall-CbDefender {
+function Uninstall-FtDefender {
     <#
     .SYNOPSIS
         Uninstalls Windows Defender Feature.
@@ -174,7 +174,7 @@ function Uninstall-CbDefender {
     Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock { Uninstall-WindowsFeature -Name Windows-Defender }
     Write-Host -ForegroundColor Green "`nWindows Defender UNINSTALLED on selected remote hosts."
 }
-function Set-CbDefender {
+function Set-FtDefender {
     <#
 .SYNOPSIS
     Enables or disables Windows Defender Realtime Monitoring.
@@ -217,7 +217,7 @@ function Set-CbDefender {
         Return
     }
 
-    Get-CbWindowsDefenderRealtimeMonitoringStatus $ComputerIP $Credential
+    Get-FtWindowsDefenderRealtimeMonitoringStatus $ComputerIP $Credential
 }
 
 

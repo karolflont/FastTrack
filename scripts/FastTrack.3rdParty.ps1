@@ -1,9 +1,9 @@
-function Invoke-CbCMDExpression {
+function Invoke-FtCMDExpression {
     <#
    .SYNOPSIS
    Outputs the results of any given Windows Commandline (CMD) expression for a list of computers.
    .DESCRIPTION
-   The Invoke-CbCMDExpression function uses:
+   The Invoke-FtCMDExpression function uses:
    - Invoke-Expression cmdlet
    .PARAMETER ComputerIP
    Specifies computer IP.
@@ -12,7 +12,7 @@ function Invoke-CbCMDExpression {
    .PARAMETER CMDExpression
    Specifies the CMD expression to run on remote computers.
    .EXAMPLE
-   Invoke-CbCMDExpression -ComputerIP $all -Credential $cred -CMDExpression 'w32tm /query /status'
+   Invoke-FtCMDExpression -ComputerIP $all -Credential $cred -CMDExpression 'w32tm /query /status'
    #>
 
     Param(
