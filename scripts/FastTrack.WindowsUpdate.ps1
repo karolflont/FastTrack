@@ -6,14 +6,13 @@ function Get-FtWindowsUpdateServiceStatus {
 .SYNOPSIS
    Gets the information about Windows Update Service on a server.
 .DESCRIPTION
-   The Get-FtWindowsUpdateServiceStatus function gets the Status and StartType properties of Windows Update Service on a server. 
-   The function reads the Status and StartType properties of wuauserv service.
+   The Get-FtWindowsUpdateServiceStatus function retrieves the Status and StartType properties of Windows Update Service on a server using "Get-Service -Name wuauserv" cmdlet.
 .PARAMETER ComputerIP
    Specifies the computer IP.
 .PARAMETER Credentials
    Specifies the credentials used to login.
 .EXAMPLE
-   TODO
+   Get-FtWindowsUpdateServiceStatus -ComputerIP $all -Credential $cred
 #>
     param(
         [Parameter(Mandatory = $true)] $ComputerIP,
@@ -21,10 +20,32 @@ function Get-FtWindowsUpdateServiceStatus {
         [Parameter(Mandatory = $false)] [switch]$RawOutput
     )
 
-    $WindowsUpdateStatus = Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock { Get-Service -Name wuauserv }
-    Write-Host -ForegroundColor Cyan "`nWindows Update Status "
-    $WindowsUpdateStatus | Select-Object PSComputerName, Status, StartType | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
+    $HeaderMessage = "----- Windows Update service status -----"
+
+   $ScriptBlock = {
+      $WinUpdSrv = Get-Service -Name wuauserv
+
+      [pscustomobject]@{
+         ServiceDisplayName = $WinUpdSrv.DisplayName
+         Status = $WinUpdSrv.Status
+         StartType = $WinUpdSrv.StartType
+      }
+   }
+
+   $NullMessage = "Something went wrong retrieving Windows Update service status from selected remote hosts"
+  
+   $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'ServiceDisplayName','Status','StartType') 
+
+   $ActionIndex = 0
+  
+   if ($RawOutput) {
+       Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
+   }
+   else {
+       Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
+   }
 }
+
 function Set-FtWindowsUpdateService {
     <#
     .SYNOPSIS

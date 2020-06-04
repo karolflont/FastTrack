@@ -4,9 +4,13 @@
 function Get-FtTimeAndTimeZone {
    <#
 .SYNOPSIS
-   Gets current time and time zone from servers.
+   Gets current date, time, time zone and DST information from selected hosts.
 .DESCRIPTION
-   The Get-FtTime function gets current Date, Time, Time Zone and Daylight Saving Time information from a server.
+   The Get-FtTime function retrieves current Date, Time, Time Zone and Daylight Saving Time information from selected servers using:
+    - Date - (Get-Date).ToLongDateString()
+    - Time - (Get-Date).ToLongTimeString() 
+    - TimeZone - Get-TimeZone
+    - DST - (Get-Date).IsDaylightSavingTime()
    
    The function uses Get-Date and Get-TimeZone cmdlet.
 .PARAMETER ComputerIP
@@ -14,7 +18,7 @@ function Get-FtTimeAndTimeZone {
 .PARAMETER Credentials
    Specifies the credentials used to login.
 .EXAMPLE
-   TODO
+   Get-FtTimeAndTimeZone -ComputerIP $all -Credential $cred
 #>
    param(
       [Parameter(Mandatory = $true)] $ComputerIP,
@@ -22,15 +26,29 @@ function Get-FtTimeAndTimeZone {
       [Parameter(Mandatory = $false)] [switch]$RawOutput
    )
 
-   Write-Host "This funciton does not work when the computer from which you run the function has a different timezone set than"
-   Write-Host "the computers you provide in the -ComputerIP parameter. It displays time in your computer timezone and not the remote hosts one."
-   Write-Host "This needs to be corrected."
+   $HeaderMessage = "----- Current time and timezone -----"
 
-   $TimeZone = Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock { Get-TimeZone }
-   Write-Host -ForegroundColor Cyan "`nCurrent TIMEZONE on servers "
-   $TimeZone | Select-Object PSComputerName, StandardName, BaseUtcOffset, SupportsDaylightSavingTime | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
+   $ScriptBlock = {
+      $DateTime = Get-Date
 
-   #$Time = Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock{Get-Date | Out-String}
-   #Write-Host -ForegroundColor Cyan "`nCurrent TIME on servers "
-   #$Time | Select-Object PSComputerName, DateTime | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
+      [pscustomobject]@{
+         Date = $DateTime.ToLongDateString() 
+         Time = $DateTime.ToLongTimeString() 
+         TimeZone = Get-TimeZone
+         IsDST = $DateTime.IsDaylightSavingTime()
+      }
+   }
+
+   $NullMessage = "Something went wrong retrieving Current time and timezone from selected remote hosts"
+  
+   $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'Date','Time','TimeZone','IsDST') 
+
+   $ActionIndex = 0
+  
+   if ($RawOutput) {
+       Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
+   }
+   else {
+       Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
+   }
 }
