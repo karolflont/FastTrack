@@ -79,55 +79,86 @@ function Test-FtPowershellRemoting {
 ###############
 #IN PROGRESS
 function Get-FtRemoteDesktopStatus {
-   <#
-    .SYNOPSIS
-       Checks if Remote Desktop connection to a specific computer is possible.
-    .DESCRIPTION
-       The Get-FtRemoteDesktopStatus function checks four parameters determining if Remote Desktop to a computer is possible. These are:
-       1) "Remote Desktop Services" service status
-       2) "fDenyTSConnections" value of "HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server" registry key.
-       3) "Remote Desktop" DisplayGroup firewall rule existance
-       4) "Network Level Authentication" status
-    .PARAMETER ComputerIP
-       Specifies the computer IP.
-    .PARAMETER Credentials
-       Specifies the credentials used to login.
-    .EXAMPLE
-       TODO
-    #>
+<#
+   .SYNOPSIS
+      Checks if Remote Desktop connection to a specific computer is possible.
+   .DESCRIPTION
+      The Get-FtRemoteDesktopStatus function checks four parameters determining if Remote Desktop to a computer is possible. These are:
+      1) "Remote Desktop Services" service status
+      2) "fDenyTSConnections" value of "HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server" registry key.
+      3) "Remote Desktop" DisplayGroup firewall rule existance
+      4) "Network Level Authentication" setting status
+   .PARAMETER ComputerIP
+      Specifies the computer IP.
+   .PARAMETER Credentials
+      Specifies the credentials used to login.
+   .EXAMPLE
+      Get-FtRemoteDesktopStatus -ComputerIP $all -Credential $cred
+   #>
    param(
       [Parameter(Mandatory = $true)] $ComputerIP,
       [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
       [Parameter(Mandatory = $false)] [switch]$RawOutput
    )
- 
-   $StatusTable = Invoke-Command -ComputerName $srv_IP -Credential $Cred -ScriptBlock {
-      $RDPServicesStatus = (Get-Service -Name TermService).Status
-      $RDPStatus = (Get-ItemProperty -Path 'HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections").fDenyTSConnections
-      $RDPFirewallRuleStatus = (Get-NetFirewallRule -Name "RemoteDesktop-UserMode-In-TCP").Enabled
-      $NLAStatus = (Get-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication").UserAuthentication
-    
-      $HostStatus = New-Object -TypeName psobject
-      $HostStatus | Add-Member -MemberType NoteProperty -Name "RDPServices" -Value $RDPServicesStatus
-      $HostStatus | Add-Member -MemberType NoteProperty -Name "RemoteDesktop" -Value $RDPStatus
-      $HostStatus | Add-Member -MemberType NoteProperty -Name "RDPFirewallRule" -Value $RDPFirewallRuleStatus
-      $HostStatus | Add-Member -MemberType NoteProperty -Name "NetworkLevelAuthentication" -Value $NLAStatus
-      $HostStatus
+
+   $HeaderMessage = "----- Remote Desktop status -----"
+
+   $ScriptBlock = {
+      $RDPServiceStatus = (Get-Service -Name TermService).Status
+
+      $RDPStatusNum = (Get-ItemProperty -Path 'HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections").fDenyTSConnections
+      if ($RDPStatusNum -eq 0) {
+         $RDPStatus = "ENABLED"
+      }
+      elseif ($RDPStatusNum -eq 1) {
+         $RDPStatus = "DISABLED"
+      }
+      else {
+         $RDPStatus = "UNKNOWN"
+      }
+
+      $RDPFirewallRuleStatusNum = (Get-NetFirewallRule -Name "RemoteDesktop-UserMode-In-TCP").Enabled
+      if ($RDPFirewallRuleStatusNum -eq "True") {
+         $RDPFirewallRuleStatus = "ENABLED"
+      }
+      elseif ($RDPFirewallRuleStatusNum -eq "False") {
+         $RDPFirewallRuleStatus = "DISABLED"
+      }
+      else {
+         $RDPFirewallRuleStatus = "UNKNOWN"
+      }
+
+      $NLAStatusNum = (Get-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication").UserAuthentication
+      if ($NLAStatusNum -eq 1) {
+         $NLAStatus = "ENABLED"
+      }
+      elseif ($NLAStatusNum -eq 0) {
+         $NLAStatus = "DISABLED"
+      }
+      else {
+         $NLAStatus = "UNKNOWN"
+      }
+
+      [pscustomobject]@{
+         RDPServiceStatus = $RDPServiceStatus
+         RDPStatus = $RDPStatus
+         RDPFirewallRuleStatus = $RDPFirewallRuleStatus
+         NLAStatus = $NLAStatus
+      }
    }
-    
-   for ($i = 0; $i -lt $StatusTable.Length; $i++) {
-      if ($StatusTable[$i].RemoteDesktop -eq 0) { $StatusTable[$i].RemoteDesktop = "Enabled" }
-      elseif ($StatusTable[$i].RemoteDesktop -eq 1) { $StatusTable[$i].RemoteDesktop = "Disabled" }
- 
-      if ($StatusTable[$i].RDPFirewallRule -eq $false) { $StatusTable[$i].RDPFirewallRule = "Disabled" }
-      elseif ($StatusTable[$i].RDPFirewallRule -eq $true) { $StatusTable[$i].RDPFirewallRule = "Enabled" }
- 
-      if ($StatusTable[$i].NetworkLevelAuthentication -eq 0) { $StatusTable[$i].NetworkLevelAuthentication = "Disabled" }
-      elseif ($StatusTable[$i].NetworkLevelAuthentication -eq 1) { $StatusTable[$i].NetworkLevelAuthentication = "Enabled" }      
+
+   $NullMessage = "Something went wrong retrieving Remote Desktop status from selected remote hosts"
+  
+   $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'RDPServiceStatus','RDPStatus','RDPFirewallRuleStatus','NLAStatus') 
+
+   $ActionIndex = 0
+  
+   if ($RawOutput) {
+       Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
    }
- 
-   Write-Host -ForegroundColor Cyan "`nRemote Desktop access status summary "
-   $StatusTable | Select-Object PSComputerName, RDPServices, RemoteDesktop, RDPFirewallRule, NetworkLevelAuthentication | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
+   else {
+       Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
+   }
 }   
 function Set-FtRemoteDesktop {
    <#
