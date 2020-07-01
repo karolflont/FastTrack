@@ -9,32 +9,32 @@ function Get-FtFailoverClusteringFeature {
       The Get-FtFailoverClusteringFeature function uses "Get-WindowsFeature -Name Failover-Clustering" cmdlet to check the presence of Failover Clustering Feature on selected hosts.
    .PARAMETER ComputerIP
       Specifies the computer IP.
-   .PARAMETER Credentials
+   .PARAMETER Credential
       Specifies the credentials used to login.
+   .PARAMETER RawOutput
+      Specifies if the output should be formatted (human friendly output) or not (Powershell pipeline friendly output)
    .EXAMPLE
       Get-FtFailoverClusteringFeature -ComputerIP $all -Credential $cred
    #>
    param(
       [Parameter(Mandatory = $true)] $ComputerIP,
-      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
+      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
       [Parameter(Mandatory = $false)] [switch]$RawOutput
    )
 
-   $HeaderMessage = "----- Failover Clustering Feature status -----"
+   $HeaderMessage = "Failover Clustering Feature status"
 
    $ScriptBlock = { Get-WindowsFeature -Name Failover-Clustering }
-
-   $NullMessage = "Something went wrong retrieving Failover Clustering Feature status from selected remote hosts"
    
    $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'Name', 'Installed') 
 
    $ActionIndex = 0
    
    if ($RawOutput) {
-        Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
+        Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
     }
     else {
-        Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
+        Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
     }
 }
 
@@ -46,14 +46,14 @@ function Install-FtFailoverClusteringFeature {
    The Install-FtFailoverClusteringFeature function uses "Install-WindowsFeature -Name Failover-Clustering -IncludeAllSubFeature -IncludeManagementTools" cmdlet to install Failover Clustering Feature.
 .PARAMETER ComputerIP
    Specifies the computer IP.
-.PARAMETER Credentials
+.PARAMETER Credential
    Specifies the credentials used to login.
 .EXAMPLE
    Install-FtFailoverClusteringFeature -ComputerIP $all -Credential $cred
 #>
    param(
       [Parameter(Mandatory = $true)] $ComputerIP,
-      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential
+      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential
    )
 
    Write-Warning "All the remote hosts will be automatically rebooted after the installation. Press Enter to continue or Ctrl+C to quit."
@@ -83,14 +83,14 @@ function Uninstall-FtFailoverClusteringFeature {
       The Uninstall-FtFailoverClusteringFeature function uses "Uninstall-WindowsFeature -Name Failover-Clustering -IncludeManagementTools" cmdlet to install Failover Clustering Feature.
    .PARAMETER ComputerIP
       Specifies the computer IP.
-   .PARAMETER Credentials
+   .PARAMETER Credential
       Specifies the credentials used to login.
    .EXAMPLE
       Uninstall-FtFailoverClusteringFeature -ComputerIP $all -Credential $cred
    #>
    param(
       [Parameter(Mandatory = $true)] $ComputerIP,
-      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential
+      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential
    )
 
    Write-Warning "All the remote hosts will be automatically rebooted after the installation. Press Enter to continue or Ctrl+C to quit."

@@ -48,8 +48,8 @@ Avid Software related
 
     Install-FtAvidNexisClient
     Uninstall-FtAvidNexisClient
-    Get-FtAvidSoftwareVersions
-    Get-FtAvidServicesStatus
+    Get-FtAvidSoftware
+    Get-FtAvidServices
 
 Diagnostics related
 
@@ -61,17 +61,8 @@ Diagnostics related
 
 Filesystem and Storage realated
 
-    Get-FtHiddenFilesAndFoldersStatus
+    Get-FtHiddenFilesAndFolders
     Set-FtHiddenFilesAndFolders
-
-Firewall and Defender related
-
-    Get-FtFirewallStatus
-    Set-FtFirewall
-    Get-FtDefenderStatus
-    Set-FtDefender
-    Install-FtDefender
-    Uninstall-FtDefender
 
 Hostname and Domain related
 
@@ -86,14 +77,18 @@ Module Input/Output related
 
 Network related
 
-    Get-FtNetworkInfo
+    Get-FtNetworkConfiguration
+    Get-FtFirewallService
+    Start-FtFirewallService
+    Get-FtFirewallState
+    Set-FtFirewallState
 
 OS Tweaks related
 
     Get-FtServerManagerBehaviorAtLogon
     Set-FtServerManagerBehaviorAtLogon
-    Get-FtUACLevel
-    Set-FtUACLevel
+    Get-FtUACLevelForAdmins
+    Set-FtUACLevelForAdmins
     Get-FtProcessorScheduling
     Set-FtProcessorScheduling
     Get-FtPowerPlan
@@ -102,7 +97,7 @@ OS Tweaks related
 Remote Access related
 
     Test-FtPowershellRemoting
-    Get-FtRemoteDesktopStatus
+    Get-FtRemoteDesktop
     Set-FtRemoteDesktop
 
 Windows Server Roles and Features related
@@ -117,7 +112,7 @@ Time related
 
 Windows Update related
 
-    Get-FtWindowsUpdateServiceStatus
+    Get-FtWindowsUpdateService
     Set-FtWindowsUpdateService
 
 ---

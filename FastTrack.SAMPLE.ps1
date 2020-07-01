@@ -7,9 +7,10 @@ Here's an example of how to import the SystemConfiguration.json file.
 #>
 Import-FtSystemConfiguration -Path 'F:\Avid\LocalDrive - Avid\_POWERSHELL\FastTrack\FastTrack.SystemConfiguration.DevEnv.json'
 <#
-As you can see, if your .json file had no errors, Import-FtSystemConfiguration creates for you some predefined variables:
+As you can see, if your .json file had no errors, Import-FtSystemConfiguration creates for you some predefined global variables:
  - $All variable - an array of IPs of all hosts defined in SystemConfiguration.json
- - Set of $All[<roleName>] variables, to let you easy address all servers of the same role
+ - Set of $All[<roleName>] variables, to enable addressing easily all servers of the same role
+ - Set of $[<alias>] variables, to enable addressing easily remote servers by their alias
 #>
 
 <# 2.

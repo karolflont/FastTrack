@@ -9,32 +9,32 @@ function Get-FtServerManagerBehaviorAtLogon {
    The Get-FtServerManagerBehaviorAtLogon function uses "Get-ScheduledTask -TaskName ServerManager" to check if Server Manager starts automatically on system startup.
 .PARAMETER ComputerIP
    Specifies the computer IP.
-.PARAMETER Credentials
+.PARAMETER Credential
    Specifies the credentials used to login.
+.PARAMETER RawOutput
+   Specifies if the output should be formatted (human friendly output) or not (Powershell pipeline friendly output)
 .EXAMPLE
    Get-FtServerManagerBehaviorAtLogon -ComputerIP $all -Credential $cred
 #>
     param(
         [Parameter(Mandatory = $true)] $ComputerIP,
-        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
+        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
         [Parameter(Mandatory = $false)] [switch]$RawOutput
     )
 
-    $HeaderMessage = "----- Server Manager behavior at logon -----"
+    $HeaderMessage = "Server Manager behavior at logon"
 
     $ScriptBlock = { Get-ScheduledTask -TaskName ServerManager }
-
-    $NullMessage = "Something went wrong retrieving Server Manager behavior at logon status from selected remote hosts"
    
     $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'TaskName', 'State') 
 
     $ActionIndex = 0
    
     if ($RawOutput) {
-        Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
+        Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
     }
     else {
-        Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
+        Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
     }
 }
 function Set-FtServerManagerBehaviorAtLogon {
@@ -45,125 +45,180 @@ function Set-FtServerManagerBehaviorAtLogon {
     Set-FtServerManagerBehaviorAtLogon function enables or disables a scheduled task of starting Server Manager at user logon.
 .PARAMETER ComputerIP
     Specifies the computer IP.
-.PARAMETER Credentials
+.PARAMETER Credential
     Specifies the credentials used to login.
 .PARAMETER Enable
     A switch enabling Server Manager start at logon.
 .PARAMETER Disable
     A switch disabling Server Manager start at logon.
+.PARAMETER DontCheck
+    A switch disabling checking the set configuration with a correstponding 'get' function.
 .EXAMPLE
-    Set-FtServerManagerBehaviorAtLogon -ComputerName $all -Credential $cred -Disable
+    Set-FtServerManagerBehaviorAtLogon -ComputerIP $all -Credential $cred -Disable
 #>
     param(
         [Parameter(Mandatory = $true)] $ComputerIP,
-        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
+        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
         [Parameter(Mandatory = $false)] [switch] $Enable,
-        [Parameter(Mandatory = $false)] [switch] $Disable
+        [Parameter(Mandatory = $false)] [switch] $Disable,
+        [Parameter(Mandatory = $false)] [switch] $DontCheck
     )
 
     $ActionIndex = Test-FtIfExactlyOneSwitchParameterIsTrue $Enable $Disable
+    $ScriptBlock = @()
 
     if ($ActionIndex -eq 0) {
         #If Enable switch was selected
-        Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock { Get-ScheduledTask -TaskName ServerManager | Enable-ScheduledTask } | Out-Null
-        Write-Host -ForegroundColor Green "Server Manager start at Logon ENABLED for selected remote hosts."
+        $ScriptBlock = { Get-ScheduledTask -TaskName ServerManager | Enable-ScheduledTask }
     }
     elseif ($ActionIndex -eq 1) {
         #If Disable switch was selected
-        Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock { Get-ScheduledTask -TaskName ServerManager | Disable-ScheduledTask } | Out-Null
-        Write-Host -ForegroundColor Green "Server Manager start at Logon DISABLED for selected remote hosts."
+        $ScriptBlock = { Get-ScheduledTask -TaskName ServerManager | Disable-ScheduledTask }
     }
-    Write-Host -ForegroundColor Cyan "Checking the status with Get-FtServerManagerBehaviorAtLogon."
 
-    Get-FtServerManagerBehaviorAtLogon -ComputerIP $ComputerIP -Credential $Credential
+    Invoke-FtSetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
+
+    if (!$DontCheck -and (($ActionIndex -ne -2) -and ($ActionIndex -ne -1))) {
+        Write-Host -ForegroundColor Cyan "Let's check the configuration with Get-FtServerManagerBehaviorAtLogon."
+        Get-FtServerManagerBehaviorAtLogon -ComputerIP $all -Credential $cred
+    }
 }
-
 ###############
 ##### UAC #####
 ###############
-function Get-FtUACLevel {
+function Get-FtUACLevelForAdmins {
     <#
 .SYNOPSIS
-   Checks the User Access Control level on selected remote hosts.
+   Checks the User Access Control behavior for administrators on selected remote hosts.
 .DESCRIPTION
-   The Get-FtUACLevel function checks the "ConsentPromptBehaviorAdmin" value of the "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" key.
+   The Get-FtUACLevelForAdmins function checks the "ConsentPromptBehaviorAdmin" value of the "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" key.
    Specific ConsentPromptBehaviorAdmin values represents the following UAC Levels:
-   - ConsentPromptBehaviorAdmin = 2 - Always notify me
-   - ConsentPromptBehaviorAdmin = 5 - Notify me only when apps try to make changes to my computer
    - ConsentPromptBehaviorAdmin = 0 - Never notify me
+   - ConsentPromptBehaviorAdmin = 1 - Always prompt for credentials (in secure desktop mode)
+   - ConsentPromptBehaviorAdmin = 2 - Always prompt for Permit/Deny (in secure desktop mode)
+   - ConsentPromptBehaviorAdmin = 3 - Always prompt for credentials
+   - ConsentPromptBehaviorAdmin = 4 - Always prompt for Permit/Deny
+   - ConsentPromptBehaviorAdmin = 5 - Prompt for Permit/Deny only when apps try to make changes to my computer (in secure desktop mode)
+   
+   For more information visit https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-gpsb/341747f5-6b5d-4d30-85fc-fa1cc04038d4.
 .PARAMETER ComputerIP
    Specifies the computer IP.
-.PARAMETER Credentials
+.PARAMETER Credential
    Specifies the credentials used to login.
+.PARAMETER RawOutput
+   Specifies if the output should be formatted (human friendly output) or not (Powershell pipeline friendly output)
 .EXAMPLE
-   Get-FtUACLevel -ComputerIP $all -Credential $cred
+   Get-FtUACLevelForAdmins -ComputerIP $all -Credential $cred
 #>
     param(
         [Parameter(Mandatory = $true)] $ComputerIP,
-        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
+        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
         [Parameter(Mandatory = $false)] [switch]$RawOutput
     )
 
     ### Check UAC level - Windows Server 2016 only!!!
-    # https://gallery.technet.microsoft.com/scriptcenter/Disable-UAC-using-730b6ecd#content
-    $HeaderMessage = "----- UAC Level -----`nConsentPromptBehaviorAdmin = 2 - Always notify me`nConsentPromptBehaviorAdmin = 5 - Notify me only when apps try to make changes to my computer`nConsentPromptBehaviorAdmin = 0 - Never notify me"
+    $HeaderMessage = "UAC Level"
 
-    $ScriptBlock = { Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "ConsentPromptBehaviorAdmin" }
+    $ScriptBlock = {
+        $ConsentPromptBehaviorAdmin = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "ConsentPromptBehaviorAdmin").ConsentPromptBehaviorAdmin
+        
+        if ($ConsentPromptBehaviorAdmin -eq 0) {$UACLevel = "Never notify me"}
+        elseif ($ConsentPromptBehaviorAdmin -eq 1) {$UACLevel = "Always prompt for credentials (in secure desktop mode)"}
+        elseif ($ConsentPromptBehaviorAdmin -eq 2) {$UACLevel = "Always prompt for Permit/Deny (in secure desktop mode)"}
+        elseif ($ConsentPromptBehaviorAdmin -eq 3) {$UACLevel = "Always prompt for credentials"}
+        elseif ($ConsentPromptBehaviorAdmin -eq 4) {$UACLevel = "Always prompt for Permit/Deny"}
+        elseif ($ConsentPromptBehaviorAdmin -eq 5) {$UACLevel = "Prompt for Permit/Deny only when apps try to make changes to my computer (in secure desktop mode)"}
+        else {$UACLevel = "UNKNOWN"}
 
-    $NullMessage = "Something went wrong retrieving UAC level from selected remote hosts"
+        [pscustomobject]@{
+            UACLevel = $UACLevel
+        }
+
+         }
    
-    $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'ConsentPromptBehaviorAdmin') 
+    $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'UACLevel') 
 
     $ActionIndex = 0
    
     if ($RawOutput) {
-        Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
+        Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
     }
     else {
-        Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
+        Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
     }
+
+    Write-Host -ForegroundColor Cyan "https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-gpsb/341747f5-6b5d-4d30-85fc-fa1cc04038d4`n"
 }
 
-function Set-FtUACLevel {
+function Set-FtUACLevelForAdmins {
     <#
 .SYNOPSIS
-   TODO
+   Sets the User Access Control behavior for administrators on selected remote hosts.
 .DESCRIPTION
-   TODO
+   The Get-FtUACLevelForAdmins function sets the "ConsentPromptBehaviorAdmin" value of the "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" key.
+   Specific ConsentPromptBehaviorAdmin values represents the following UAC Levels:
+   - ConsentPromptBehaviorAdmin = 0 - Never notify me
+   - ConsentPromptBehaviorAdmin = 1 - Always prompt for credentials (in secure desktop mode)
+   - ConsentPromptBehaviorAdmin = 2 - Always prompt for Permit/Deny (in secure desktop mode)
+   - ConsentPromptBehaviorAdmin = 3 - Always prompt for credentials
+   - ConsentPromptBehaviorAdmin = 4 - Always prompt for Permit/Deny
+   - ConsentPromptBehaviorAdmin = 5 - Prompt for Permit/Deny only when apps try to make changes to my computer (in secure desktop mode)
+   
+   For more information visit https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-gpsb/341747f5-6b5d-4d30-85fc-fa1cc04038d4.
 .PARAMETER ComputerIP
    Specifies the computer IP.
-.PARAMETER Credentials
+.PARAMETER Credential
    Specifies the credentials used to login.
+.PARAMETER DontCheck
+    A switch disabling checking the set configuration with a correstponding 'get' function.
 .EXAMPLE
-   TODO
+   Set-FtUACLevelForAdmins -ComputerIP $all -Credential $cred -NeverNotify
 #>
     param(
         [Parameter(Mandatory = $true)] $ComputerIP,
-        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
-        [Parameter(Mandatory = $false)] [switch] $AlwaysNotify,
-        [Parameter(Mandatory = $false)] [switch] $NotifyWhenAppsMakeChangesToComputer,
-        [Parameter(Mandatory = $false)] [switch] $NeverNotify
+        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
+        [Parameter(Mandatory = $false)] [switch] $NeverNotify,
+        [Parameter(Mandatory = $false)] [switch] $AlwaysPromptForCredInSecureDesktopMode,
+        [Parameter(Mandatory = $false)] [switch] $AlwaysPromptForPermitDenyInSecureDesktopMode,
+        [Parameter(Mandatory = $false)] [switch] $AlwaysPromptForCred,
+        [Parameter(Mandatory = $false)] [switch] $AlwaysPromptForPermitDeny,
+        [Parameter(Mandatory = $false)] [switch] $PromptForPermitDenyOnlyWnenAppsTryToMakeChangesToMyComputer,
+        [Parameter(Mandatory = $false)] [switch] $DontCheck
     )
 
-    $ActionIndex = Test-FtIfExactlyOneSwitchParameterIsTrue $AlwaysNotify $NotifyWhenAppsMakeChangesToComputer $NeverNotify
-    
+    $ActionIndex = Test-FtIfExactlyOneSwitchParameterIsTrue $NeverNotify $AlwaysPromptForCredInSecureDesktopMode $AlwaysPromptForPermitDenyInSecureDesktopMode $AlwaysPromptForCred $AlwaysPromptForPermitDeny $PromptForPermitDenyOnlyWnenAppsTryToMakeChangesToMyComputer
+    $ScriptBlock = @()
+
     if ($ActionIndex -eq 0) {
         #If AlwaysNotify switch was selected
-        Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock { Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "ConsentPromptBehaviorAdmin" -Value "2" }
-        Write-Host -ForegroundColor Green "`nUAC Level changed to `"Always notify me`" for all hosts."
-        Get-FtUACLevel $ComputerIP $Credential
+        $ScriptBlock = { Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "ConsentPromptBehaviorAdmin" -Value "0" }
     }
     elseif ($ActionIndex -eq 1) {
         #If NotifyWhenAppsMakeChangesToComputer switch was selected
-        Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock { Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "ConsentPromptBehaviorAdmin" -Value "5" }
-        Write-Host -ForegroundColor Green "`nUAC Level changed to `"Notify me only when apps try to make changes to my computer`" for all hosts."
-        Get-FtUACLevel $ComputerIP $Credential
+        $ScriptBlock = { Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "ConsentPromptBehaviorAdmin" -Value "1" }
     }
     elseif ($ActionIndex -eq 2) {
         #If NeverNotify switch was selected
-        Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock { Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "ConsentPromptBehaviorAdmin" -Value "0" }
-        Write-Host -ForegroundColor Green "`nUAC Level changed to `"Never notify me`" for all hosts."
-        Get-FtUACLevel $ComputerIP $Credential
+        $ScriptBlock = { Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "ConsentPromptBehaviorAdmin" -Value "2" }
+    }
+    elseif ($ActionIndex -eq 3) {
+        #If NotifyWhenAppsMakeChangesToComputer switch was selected
+        $ScriptBlock = { Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "ConsentPromptBehaviorAdmin" -Value "3" }
+    }
+    elseif ($ActionIndex -eq 4) {
+        #If NeverNotify switch was selected
+        $ScriptBlock = { Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "ConsentPromptBehaviorAdmin" -Value "4" }
+    }
+    elseif ($ActionIndex -eq 5) {
+        #If NeverNotify switch was selected
+        $ScriptBlock = { Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "ConsentPromptBehaviorAdmin" -Value "5" }
+    }
+    
+    Invoke-FtSetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
+
+    if (!$DontCheck -and (($ActionIndex -ne -2) -and ($ActionIndex -ne -1))) {
+        Write-Host -ForegroundColor Cyan "Let's check the configuration with Get-FtUACLevelForAdmins."
+        Get-FtUACLevelForAdmins -ComputerIP $all -Credential $cred
     }
 }
 ################################
@@ -174,68 +229,109 @@ function Get-FtProcessorScheduling {
     .SYNOPSIS
         Gets the Processor Scheduling setting: programs or background services
     .DESCRIPTION
-        TODO
+        The Get-FtProcessorScheduling function:
+        - retrieves the Win32PrioritySeparation value of HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl key,
+        - checks the edition of the OS
+        Based on these two factors if evaluates the Processor Scheduling setting.
+        For more information visit https://docs.microsoft.com/en-us/previous-versions//cc976120(v=technet.10)?redirectedfrom=MSDN.
     .PARAMETER ComputerIP
         Specifies the computer IP.
-    .PARAMETER Credentials
+    .PARAMETER Credential
         Specifies the credentials used to login.
+    .PARAMETER RawOutput
+        Specifies if the output should be formatted (human friendly output) or not (Powershell pipeline friendly output)
     .EXAMPLE
-        TODO
+        Get-FtProcessorScheduling -ComputerIP $all -Credential $cred
     #>
     param(
         [Parameter(Mandatory = $true)] $ComputerIP,
-        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
+        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
         [Parameter(Mandatory = $false)] [switch]$RawOutput
     )
 
-    $ProcesorSchedulingStatus = Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {
-        Get-ItemProperty HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl -Name Win32PrioritySeparation
-    }
-    Write-Host -ForegroundColor Cyan "`nProcessor scheduling status:"
-    Write-Host -ForegroundColor Cyan "2 - Default value. Optimized for background services on Windows Server and for programs on Windows Workstation (e.g. Win10)"
-    Write-Host -ForegroundColor Cyan "24 - Optimized for background services (longer, fixed-length processor intervals in which foreground processes and background processes get equal processor priority)"
-    Write-Host -ForegroundColor Cyan "38 - Optimized for programs (short, variable length processor intervals in which foreground processes get three times as much processor time as do background processes)"
-    Write-Host -ForegroundColor Cyan "https://docs.microsoft.com/en-us/previous-versions//cc976120(v=technet.10)?redirectedfrom=MSDN"
+    $HeaderMessage = "Processor scheduling"
 
-    $ProcesorSchedulingStatus | Select-Object PSComputerName, Win32PrioritySeparation | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
+    $ScriptBlock = { Get-ItemProperty HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl -Name Win32PrioritySeparation }
+
+    $ScriptBlock = {
+        $ProcessorSchedulingRaw = (Get-ItemProperty HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl -Name Win32PrioritySeparation).Win32PrioritySeparation
+        $WindowsEdition = Get-WindowsEdition -Online
+        if ($ProcessorSchedulingRaw -eq 2) {
+            if ($WindowsEdition.Edition -like "*Server*") {$ProcessorScheduling = "Optimized for background services"}
+            else {$ProcessorScheduling = "Optimized for programs"}
+            
+        }
+        elseif ($ProcessorSchedulingRaw -eq 24) { $ProcessorScheduling = "Optimized for background services" }
+        elseif ($ProcessorSchedulingRaw -eq 38) { $ProcessorScheduling = "Optimized for programs" }
+        else { $ProcessorScheduling = "UNKNOWN"}
+
+        [pscustomobject]@{
+            ProcessorScheduling = $ProcessorScheduling
+        }
+    }
+   
+    $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'ProcessorScheduling') 
+
+    $ActionIndex = 0
+   
+    if ($RawOutput) {
+        Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
+    }
+    else {
+        Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
+    }
+
+    Write-Host -ForegroundColor Cyan "https://docs.microsoft.com/en-us/previous-versions//cc976120(v=technet.10)?redirectedfrom=MSDN`n"
 }
+
 function Set-FtProcessorScheduling {
     <#
     .SYNOPSIS
         Sets processor schedulling to Programs or Background Services.
     .DESCRIPTION
-        The Set-ProcessorScheduling function sets processor scheduling to Programs or Background Services. 
+        The Set-ProcessorScheduling function sets processor scheduling to Programs or Background Services.
+        If default is choosen the Win32PrioritySeparation value of HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl key is set to 2.
+        This means Programs for Windows Workstation and Background Services for Windows Server.
+        For more informatino visit https://docs.microsoft.com/en-us/previous-versions//cc976120(v=technet.10)?redirectedfrom=MSDN.
     .PARAMETER ComputerIP
         Specifies the computer IP.
-    .PARAMETER Credentials
+    .PARAMETER Credential
         Specifies the credentials used to login.
+    .PARAMETER DontCheck
+        A switch disabling checking the set configuration with a correstponding 'get' function.
     .EXAMPLE
-        TODO
+        Set-FtProcessorScheduling -ComputerIP $all -Credential $cred -BackgroundServices
     #>
     param(
         [Parameter(Mandatory = $true)] $ComputerIP,
-        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
+        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
         [Parameter(Mandatory = $false)] [switch]$Programs,
-        [Parameter(Mandatory = $false)] [switch]$BackgroundServices
+        [Parameter(Mandatory = $false)] [switch]$BackgroundServices,
+        [Parameter(Mandatory = $false)] [switch]$Default,
+        [Parameter(Mandatory = $false)] [switch]$DontCheck
     )
 
-    $ActionIndex = Test-FtIfExactlyOneSwitchParameterIsTrue $Programs $BackgroundService
+    $ActionIndex = Test-FtIfExactlyOneSwitchParameterIsTrue $Programs $BackgroundServices $Default
+    $ScriptBlock = @()
     
     if ($ActionIndex -eq 0) {
         #If Programs switch was selected
-        Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {
-            Set-ItemProperty HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl -Name Win32PrioritySeparation -Value 38
-        }
-        Write-Host -ForegroundColor Green "`nProcessor scheduling set to PROGRAMS."
-        Get-FtProcessorScheduling $ComputerIP $Credential
+        $ScriptBlock = {Set-ItemProperty HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl -Name Win32PrioritySeparation -Value 38}
     }
     elseif ($ActionIndex -eq 1) {
-        #If BackgroundService switch was selected
-        Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {
-            Set-ItemProperty HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl -Name Win32PrioritySeparation -Value 24
-        }
-        Write-Host -ForegroundColor Green "`nProcessor scheduling set to BACKGROUND SERVICES."
-        Get-FtProcessorScheduling $ComputerIP $Credential
+        #If BackgroundServices switch was selected
+        $ScriptBlock = {Set-ItemProperty HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl -Name Win32PrioritySeparation -Value 24}
+    }
+    elseif ($ActionIndex -eq 2) {
+        #If Default switch was selected
+        $ScriptBlock = {Set-ItemProperty HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl -Name Win32PrioritySeparation -Value 2}
+    }
+
+    Invoke-FtSetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
+
+    if (!$DontCheck -and (($ActionIndex -ne -2) -and ($ActionIndex -ne -1))) {
+        Write-Host -ForegroundColor Cyan "Let's check the configuration with Get-FtProcessorScheduling."
+        Get-FtProcessorScheduling -ComputerIP $all -Credential $cred
     }
 }
 
@@ -251,38 +347,38 @@ function Get-FtPowerPlan {
        The function uses "Get-CimInstance -Namespace root\cimv2\power -ClassName win32_PowerPlan" command.
     .PARAMETER ComputerIP
        Specifies the computer IP.
-    .PARAMETER Credentials
+    .PARAMETER Credential
        Specifies the credentials used to login.
+    .PARAMETER RawOutput
+        Specifies if the output should be formatted (human friendly output) or not (Powershell pipeline friendly output)
     .EXAMPLE
        Get-FtPowerPlan -ComputerIP $all -Credential $cred
     #>
     param(
         [Parameter(Mandatory = $true)] $ComputerIP,
-        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
+        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
         [Parameter(Mandatory = $false)] [switch]$RawOutput
     )
 
-    $HeaderMessage = "----- Active power plans -----"
+    $HeaderMessage = "Active power plans"
 
     $ScriptBlock = {
         $PowerPlans = Get-CimInstance -Namespace root\cimv2\power -ClassName win32_PowerPlan
 
         [pscustomobject]@{
-            PowerPlan = ($PowerPlans | Where-Object { $_.IsActive -eq $true}).ElementName
+            PowerPlan = ($PowerPlans | Where-Object { $_.IsActive -eq $true }).ElementName
         }
     }
-
-    $NullMessage = "Something went wrong retrieving active Power Plans from selected remote hosts"
    
     $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'PowerPlan') 
 
     $ActionIndex = 0
     
     if ($RawOutput) {
-        Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
+        Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
     }
     else {
-        Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
+        Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
     }
 }
 function Set-FtPowerPlan {
@@ -294,42 +390,41 @@ function Set-FtPowerPlan {
     - High performance,
     - Balanced,
     - Power saver,
-    - Avid optimized - NOT YET IMPLEMENTED
     The function uses Get-CimInstance and Invoke-CimMethod cmdlets.
 .PARAMETER ComputerIP
     Specifies the computer IP.
-.PARAMETER Credentials
+.PARAMETER Credential
     Specifies the credentials used to login.
+.PARAMETER DontCheck
+    A switch disabling checking the set configuration with a correstponding 'get' function.
 .EXAMPLE
     Set-PowerPlan -ComputerIP $all -credential $cred -HighPerformance
 #>
     param(
         [Parameter(Mandatory = $true)] $ComputerIP,
-        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
+        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
         [Parameter(Mandatory = $false)] [switch] $HighPerformance,
         [Parameter(Mandatory = $false)] [switch] $Balanced,
         [Parameter(Mandatory = $false)] [switch] $PowerSaver,
-        [Parameter(Mandatory = $false)] [switch] $AvidOptimized
+        [Parameter(Mandatory = $false)] [switch] $AvidOptimized,
+        [Parameter(Mandatory = $false)] [switch] $DontCheck
     )
-    $ActionIndex = Test-FtIfExactlyOneSwitchParameterIsTrue $HighPerformance $Balanced $PowerSaver $AvidOptimized 
+    $ActionIndex = Test-FtIfExactlyOneSwitchParameterIsTrue $HighPerformance $Balanced $PowerSaver
+    $ScriptBlock = @()
     
     if ($ActionIndex -eq 0) {
         #If HighPerformance switch was selected
-        Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {
+        $ScriptBlock = {
             $HighPerformancePowerPlan = Get-CimInstance -Name root\cimv2\power -Class win32_PowerPlan -Filter "ElementName = 'High performance'"
             Invoke-CimMethod -InputObject $HighPerformancePowerPlan -MethodName Activate | Out-Null
         }
-        Write-Host -ForegroundColor Green "`nPower Plan SET to HIGH PERFORMANCE."
-        Get-FtPowerPlan $ComputerIP $Credential
     }
     elseif ($ActionIndex -eq 1) {
         #If Balanced switch was selected
-        Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {
+        $ScriptBlock = {
             $BalancedPowerPlan = Get-CimInstance -Name root\cimv2\power -Class win32_PowerPlan -Filter "ElementName = 'Balanced'"
             Invoke-CimMethod -InputObject $BalancedPowerPlan -MethodName Activate | Out-Null
         }
-        Write-Host -ForegroundColor Green "`nPower Plan SET to BALANCED."
-        Get-FtPowerPlan $ComputerIP $Credential
     }
     elseif ($ActionIndex -eq 2) {
         #If PowerSaver switch was selected
@@ -337,16 +432,14 @@ function Set-FtPowerPlan {
             $PowerSaverPowerPlan = Get-CimInstance -Name root\cimv2\power -Class win32_PowerPlan -Filter "ElementName = 'Power saver'"
             Invoke-CimMethod -InputObject $PowerSaverPowerPlan -MethodName Activate | Out-Null
         }
-        Write-Host -ForegroundColor Green "`nPower Plan SET to POWER SAVER."
-        Get-FtPowerPlan $ComputerIP $Credential
-    }
-    elseif ($ActionIndex -eq 3) {
-        #If AvidOptimized switch was selected
-        Write-Host -ForegroundColor Red "`nAvidOptimized power plan is not yet implemented."
-        Return
     }
 
-    
+    Invoke-FtSetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
+
+    if (!$DontCheck -and (($ActionIndex -ne -2) -and ($ActionIndex -ne -1))) {
+        Write-Host -ForegroundColor Cyan "Let's check the configuration with Get-FtPowerPlan."
+        Get-FtPowerPlan -ComputerIP $all -Credential $cred
+    }
 }
 
 

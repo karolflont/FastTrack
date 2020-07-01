@@ -6,70 +6,68 @@ function Test-FtPowershellRemoting {
     .SYNOPSIS
        Test if Powershell Remoting to a list of hosts is possible.
     .DESCRIPTION
-       The Test-FtPowershellRemoting function uses:
-       - Test-WSMan
-       - New-PSSession
+       The Test-FtPowershellRemoting function tests:
+       - If the conenction over WSMan is possible, using Test-WSMan
+       - If the given credentials are valid on the remote host, using New-PSSession
     .PARAMETER ComputerIP
        Specifies the computer IP.
-    .PARAMETER Credentials
+    .PARAMETER Credential
        Specifies the credentials used to login.
     .EXAMPLE
-       Test-FtPowershellRemoting -ComputerIP $all
+       Test-FtPowershellRemoting -ComputerIP $all -Credential $cred
     #>
    param (
       [Parameter(Mandatory = $true)] $ComputerIP,
-      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential
+      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential
    )
  
    $PowershellRemotingStatusTable = @()
    $AnythingFailed = $false
+   $ComputerIP = [string[]]$ComputerIP
 
-   Write-Host ""
    for ($i = 0; $i -lt $ComputerIP.Count; $i++) {
       Write-Host -ForegroundColor Cyan "Testing host $($ComputerIP[$i]) - $($i+1)/$($ComputerIP.Count)."
       $PowershellRemotingStatus = New-Object -TypeName PSObject
       $PowershellRemotingStatus | Add-Member -MemberType NoteProperty -Name ComputerIP -Value $ComputerIP[$i]
-      $PowershellRemotingStatus | Add-Member -MemberType NoteProperty -Name PSRemotingTest -Value "RESULT UNKNOWN"
-      $PowershellRemotingStatus | Add-Member -MemberType NoteProperty -Name CredentialTest -Value "RESULT UNKNOWN"
+      $PowershellRemotingStatus | Add-Member -MemberType NoteProperty -Name PSRemoting -Value "RESULT UNKNOWN"
+      $PowershellRemotingStatus | Add-Member -MemberType NoteProperty -Name Credential -Value "RESULT UNKNOWN"
        
       #testing WSMan
       try {
-         $m = Test-WSMan $ComputerIP[$i]
+         Test-WSMan $ComputerIP[$i] -ErrorAction Stop | Out-Null
+         $PowershellRemotingStatus.PSRemoting = "OK"
       }
       catch {
-         $PowershellRemotingStatus.PSRemotingTest = "FAILED"
+         $PowershellRemotingStatus.PSRemoting = "FAILED"
          $AnythingFailed = $true
       }
-      if ($m) {
-         $PowershellRemotingStatus.PSRemotingTest = "PASSED"
-      }
+ 
       #testing PSSession
       try {
          $s = New-PSSession -ComputerName $ComputerIP[$i] -Credential $Credential -ErrorAction Stop
+         $PowershellRemotingStatus.Credential = "OK"
       }
       catch {
-         $PowershellRemotingStatus.CredentialTest = "FAILED"
+         $PowershellRemotingStatus.Credential = "FAILED"
          $AnythingFailed = $true
+
       }
-      if ($s) {
-         $PowershellRemotingStatus.CredentialTest = "PASSED"
-         Remove-PSSession $s
-      }
+      Remove-PSSession $s
+      Remove-Variable $s
+
       $PowershellRemotingStatusTable += $PowershellRemotingStatus
    }
- 
-   Write-Host -ForegroundColor Cyan "`n`nPowershell Remoting Tests Summary"
+
+   Write-Output "`n----- Powershell Remoting -----"
    $PowershellRemotingStatusTable | Format-Table -Wrap -AutoSize
  
    if ($AnythingFailed) {
-      Write-Host -ForegroundColor Red "Some of the tests FAILED."
-      Write-Host -ForegroundColor Red "You can start troubleshooting the issue using:"
-      Write-Host -ForegroundColor Red "1) Test-WSMan -ComputerName <IP>"
-      Write-Host -ForegroundColor Red "2) Enter-PSSession -ComputerName <IP> -Credential <credential object>"
-      Write-Host -ForegroundColor Red "`n"
+      Write-Host -ForegroundColor Red "Some of the tests FAILED. You can start troubleshooting the issue using:"
+      Write-Host -ForegroundColor Red " - Test-WSMan -ComputerName <IP>"
+      Write-Host -ForegroundColor Red " - Enter-PSSession -ComputerName <IP> -Credential <credential object>"
    }
    else {
-      Write-Host -ForegroundColor Green "All tests PASSED. Powershell remoting is working on all tested hosts."
+      Write-Host -ForegroundColor Green "All tests PASSED. Powershell remoting is working on all selected hosts."
    }
 }
 
@@ -78,33 +76,37 @@ function Test-FtPowershellRemoting {
 ##### RDP #####
 ###############
 #IN PROGRESS
-function Get-FtRemoteDesktopStatus {
+function Get-FtRemoteDesktop {
 <#
    .SYNOPSIS
       Checks if Remote Desktop connection to a specific computer is possible.
    .DESCRIPTION
-      The Get-FtRemoteDesktopStatus function checks four parameters determining if Remote Desktop to a computer is possible. These are:
-      1) "Remote Desktop Services" service status
-      2) "fDenyTSConnections" value of "HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server" registry key.
-      3) "Remote Desktop" DisplayGroup firewall rule existance
-      4) "Network Level Authentication" setting status
+      The Get-FtRemoteDesktop function checks four parameters determining if Remote Desktop to a computer is possible. These are:
+      - "Remote Desktop Services" service status (and start type)
+      - "fDenyTSConnections" value of "HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server" registry key
+      - "Remote Desktop" DisplayGroup firewall rule existance
+      - "UserAuthentication" value of 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' registry key ("Network Level Authentication" setting)
    .PARAMETER ComputerIP
       Specifies the computer IP.
-   .PARAMETER Credentials
+   .PARAMETER Credential
       Specifies the credentials used to login.
+   .PARAMETER RawOutput
+      Specifies if the output should be formatted (human friendly output) or not (Powershell pipeline friendly output)
    .EXAMPLE
-      Get-FtRemoteDesktopStatus -ComputerIP $all -Credential $cred
+      Get-FtRemoteDesktop -ComputerIP $all -Credential $cred
    #>
    param(
       [Parameter(Mandatory = $true)] $ComputerIP,
-      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
+      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
       [Parameter(Mandatory = $false)] [switch]$RawOutput
    )
 
-   $HeaderMessage = "----- Remote Desktop status -----"
+   $HeaderMessage = "Remote Desktop status"
 
    $ScriptBlock = {
-      $RDPServiceStatus = (Get-Service -Name TermService).Status
+      $RDPService = Get-Service -Name TermService
+      $RDPServiceStatus = $RDPService.Status
+      $RDPServiceStartType = $RDPService.StartType
 
       $RDPStatusNum = (Get-ItemProperty -Path 'HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections").fDenyTSConnections
       if ($RDPStatusNum -eq 0) {
@@ -141,83 +143,93 @@ function Get-FtRemoteDesktopStatus {
 
       [pscustomobject]@{
          RDPServiceStatus = $RDPServiceStatus
+         RDPServiceStartType = $RDPServiceStartType
          RDPStatus = $RDPStatus
          RDPFirewallRuleStatus = $RDPFirewallRuleStatus
          NLAStatus = $NLAStatus
       }
    }
-
-   $NullMessage = "Something went wrong retrieving Remote Desktop status from selected remote hosts"
   
-   $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'RDPServiceStatus','RDPStatus','RDPFirewallRuleStatus','NLAStatus') 
+   $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'RDPServiceStatus','RDPServiceStartType','RDPStatus','RDPFirewallRuleStatus','NLAStatus') 
 
    $ActionIndex = 0
   
    if ($RawOutput) {
-       Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
+       Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
    }
    else {
-       Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
+       Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
    }
 }   
 function Set-FtRemoteDesktop {
    <#
     .SYNOPSIS
-    TODO
+    Enables or Disables Remote Desktop Access to selected remote computers.
     .DESCRIPTION
-    TODO
+    The Set-FtRemoteDesktop function enables or disables Remote Desktop Access to selected remote computers by setting the appropriate values of the following:
+      - "Remote Desktop Services" service status (and start type)
+      - "fDenyTSConnections" value of "HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server" registry key
+      - "Remote Desktop" DisplayGroup firewall rule
+      - "UserAuthentication" value of 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' registry key ("Network Level Authentication" setting)
     .PARAMETER ComputerIP
     Specifies the computer IP.
-    .PARAMETER Credentials
+    .PARAMETER Credential
     Specifies the credentials used to login.
+    .PARAMETER DontCheck
+    A switch disabling checking the set configuration with a correstponding 'get' function.
     .EXAMPLE
-    TODO
+    Set-FtRemoteDesktop -ComputerIP $all -Credential $cred -EnableWithEnabledNLA
     #>
    param (
       [Parameter(Mandatory = $true)] $ComputerIP,
-      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
+      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
       [Parameter(Mandatory = $false)] [switch] $EnableWithDisabledNLA,
       [Parameter(Mandatory = $false)] [switch] $EnableWithEnabledNLA,
       [Parameter(Mandatory = $false)] [switch] $Disable,
-      [Parameter(Mandatory = $false)] [switch] $DisableRDPService
+      [Parameter(Mandatory = $false)] [switch] $DontCheck
    ) 
  
-   $ActionIndex = Test-FtIfExactlyOneSwitchParameterIsTrue $EnableWithDisabledNLA $EnableWithEnabledNLA $Disable $DisableRDPService
- 
+   $ActionIndex = Test-FtIfExactlyOneSwitchParameterIsTrue $EnableWithDisabledNLA $EnableWithEnabledNLA $Disable
+   $ScriptBlock = @()
+
+
    if ($ActionIndex -eq 0) {
       #If EnableWithDisabledNLA switch was selected
-      Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock { Set-Service -Name TermServiceset-service -Name TermService -Status Running -StartupType Manual }
-      Write-Host -ForegroundColor Green "`nRemote Desktop Services (TermService) service ENABLED for all hosts."
-      Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock { Set-ItemProperty -Path 'HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0 }
-      Write-Host -ForegroundColor Green "`nRDP ENABLED for all hosts."
-      Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock { Enable-NetFirewallRule -DisplayGroup "Remote Desktop" }
-      Write-Host -ForegroundColor Green "`nRDP firewall rule ADDED for selected remote hosts."
-      Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock { Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 0 }
-      Write-Host -ForegroundColor Green "`nNetwork Level Authentication for RDP DISABLED for selected remote hosts."
+      $ScriptBlock = {
+         Set-Service -Name TermService -Status Running -StartupType Manual
+         Set-ItemProperty -Path 'HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
+         Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 0
+      }
    }
    elseif ($ActionIndex -eq 1) {
       #If EnableWithEnabledNLA switch was selected
-      Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock { Set-Service -Name TermServiceset-service -Name TermService -Status Running -StartupType Manual }
-      Write-Host -ForegroundColor Green "`nRemote Desktop Services (TermService) service ENABLED for all hosts."
-      Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock { Set-ItemProperty -Path 'HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0 }
-      Write-Host -ForegroundColor Green "`nRDP ENABLED for all hosts."
-      Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock { Disable-NetFirewallRule -DisplayGroup "Remote Desktop" }
-      Write-Host -ForegroundColor Green "`nRDP firewall rule ADDED for selected remote hosts."
-      Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock { Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1 }
-      Write-Host -ForegroundColor Green "`nNetwork Level Authentication for RDP ENABLED for selected remote hosts."
+      $ScriptBlock = {
+         Set-Service -Name TermService -Status Running -StartupType Manual
+         Set-ItemProperty -Path 'HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
+         Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
+      }
+
    }
    elseif ($ActionIndex -eq 2) {
       #If Disable switch was selected
-      Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock { Set-ItemProperty -Path 'HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 1 }
-      Write-Host -ForegroundColor Green "`nRDP DISABLED for all hosts."
-      Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock { Disable-NetFirewallRule -DisplayGroup "Remote Desktop" }
-      Write-Host -ForegroundColor Green "`nRDP firewall rule REMOVED for selected remote hosts."
-      Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock { Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1 }
-      Write-Host -ForegroundColor Green "`nNetwork Level Authentication for RDP ENABLED for selected remote hosts (default value)."
+      $ScriptBlock = {
+         Stop-Service -Name TermService -Force
+         Set-Service -Name TermService -StartupType Disabled
+         Set-ItemProperty -Path 'HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 1
+         Disable-NetFirewallRule -DisplayGroup "Remote Desktop"
+         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
+      
+      
+      }
    }
-   elseif ($ActionIndex -eq 3) {
-      #If DisableRDPService switch was selected
-      Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock { Set-Service -Name TermService -Status Stopped -StartupType Disabled }
-      Write-Host -ForegroundColor Green "`nRemote Desktop Services (TermService) service STOPPED and DISABLED for all hosts."
+
+   Invoke-FtSetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
+
+   if (!$DontCheck -and (($ActionIndex -ne -2) -and ($ActionIndex -ne -1))) {
+       Write-Host -ForegroundColor Cyan "Let's check the configuration with Get-FtRemoteDesktop."
+       Get-FtRemoteDesktop -ComputerIP $all -Credential $cred
    }
+
 }

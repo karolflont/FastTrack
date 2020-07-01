@@ -1,4 +1,18 @@
 function Import-FtSystemConfiguration {
+    <#
+    .SYNOPSIS
+        Imports the system configuration from a .json file and cretes the default groups of hosts IPs.
+    .DESCRIPTION
+        The Import-FtSystemConfiguration function:
+            - imports the system configuration from a .json file to a $SysConfig global variable
+            - creates $All global variable - an array of IPs of all hosts defined in config .json file
+            - creates a set of $All[<roleName>] global variables, to enable addressing easily all servers of the same role
+            - creates a set of $[<alias>] global variables, to enable addressing easily remote servers by their alias
+    .PARAMETER Path
+        Path to the system configuration file in .json format. Can be relative or absolute.
+    .EXAMPLE
+        Import-FtSystemConfiguration -Path 'FastTrack.SystemConfiguration.DevEnv.json'
+    #>
 
     param(
         [Parameter(Mandatory = $true)] [string] $path
@@ -11,10 +25,10 @@ function Import-FtSystemConfiguration {
     }
     catch {
         Write-Host -ForegroundColor Red "`n Import of JSON config file failed. Plese validate it's syntax, e.g. using https://jsonlint.com/ "
-        return
+        Return
     }
 
-    Write-Host -ForegroundColor Green "`nLists of hosts created based on the system configuration file: "
+    Write-Host -ForegroundColor Cyan "Variables created based on the system configuration file: "
 
     #set all variable including all the servers, no matter if a server has any roles defined
     $global:all = $SysConfigVar.hosts.IP
@@ -35,7 +49,7 @@ function Import-FtSystemConfiguration {
     #define a list of aliases
     $aliases = $SysConfigVar.hosts.alias | Sort-Object
 
-    #check is aliases are unique
+    #check if aliases are unique
     if ($aliases.length -eq ($aliases | Get-Unique).length) {
         #define alises variables
         foreach ($alias in $aliases) {
@@ -49,7 +63,7 @@ function Import-FtSystemConfiguration {
     }
     else {
         Write-Host -ForegroundColor Red "`nAliases used for hosts defined in the $path are not unique. Please modify your configuration file."
-        return
+        Return
     }
 }
 

@@ -7,7 +7,7 @@ function Invoke-FtCMDExpression {
    - Invoke-Expression cmdlet
    .PARAMETER ComputerIP
    Specifies computer IP.
-   .PARAMETER Credentials
+   .PARAMETER Credential
    Specifies credentials used to login.
    .PARAMETER CMDExpression
    Specifies the CMD expression to run on remote computers.
@@ -17,7 +17,7 @@ function Invoke-FtCMDExpression {
 
     Param(
         [Parameter(Mandatory = $true)] $ComputerIP,
-        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
+        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
         [Parameter(Mandatory = $true)] $CMDExpression
     )
 

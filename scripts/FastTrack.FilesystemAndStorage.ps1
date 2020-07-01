@@ -1,26 +1,28 @@
 #################################################
 ##### SHOW HIDDEN FILES, FOLDERS AND DRIVES #####
 #################################################
-function Get-FtHiddenFilesAndFoldersStatus {
+function Get-FtHiddenFilesAndFolders {
     <#
 .SYNOPSIS
    Displays the "Show hidden files, folders and drives" option status.
 .DESCRIPTION
-   The Get-FtHiddenFilesAndFoldersStatus function check the "Hidden" value of "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" key. This key is set in GUI by Folder Menu -> Tools -> Folder Options -> View -> Advanced settings -> Show hidden files checkbox.
+   The Get-FtHiddenFilesAndFolders function check the "Hidden" value of "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" key. This key is set in GUI by Folder Menu -> Tools -> Folder Options -> View -> Advanced settings -> Show hidden files checkbox.
 .PARAMETER ComputerIP
    Specifies the computer IP.
-.PARAMETER Credentials
+.PARAMETER Credential
    Specifies the credentials used to login.
+.PARAMETER RawOutput
+   Specifies if the output should be formatted (human friendly output) or not (Powershell pipeline friendly output)
 .EXAMPLE
-   Get-FtHiddenFilesAndFoldersStatus -ComputerIP $all -Credential $cred
+   Get-FtHiddenFilesAndFolders -ComputerIP $all -Credential $cred
 #>
     param(
         [Parameter(Mandatory = $true)] $ComputerIP,
-        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
+        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
         [Parameter(Mandatory = $false)] [switch]$RawOutput
     )
 
-    $HeaderMessage = "----- Hidden files and folders status -----"
+    $HeaderMessage = "Hidden files and folders status"
 
     $ScriptBlock = {
         $HiddenFilesAndFoldersStatus = (Get-ItemProperty "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "Hidden").Hidden
@@ -37,18 +39,16 @@ function Get-FtHiddenFilesAndFoldersStatus {
             HiddenFilesAndFoldersStatus = $HiddenFilesAndFoldersStatus
         }
     }
-
-    $NullMessage = "Something went wrong retrieving Hidden files and folders status from selected remote hosts"
    
     $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'HiddenFilesAndFoldersStatus') 
 
     $ActionIndex = 0
    
     if ($RawOutput) {
-        Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
+        Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
     }
     else {
-        Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
+        Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
     }
 }
 
@@ -58,58 +58,58 @@ function Set-FtHiddenFilesAndFolders {
     .SYNOPSIS
         Shows or hides hidden files and folders.
     .DESCRIPTION
-        The Set-HiddenFilesAndFolders function shows or hides hidden files and folders.
-
-        The function sets the value of "Hidden" value in "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" key.
-        NOTE: This function restarts Explorer process if it is running (server has a GUI and somebody is logged on). This is necessary for this registry settings change to work.
+        The Set-HiddenFilesAndFolders function sets the "Hidden" value in "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" key.
+        WARNING: This function restarts Explorer process if the process is running (i.e. server has a GUI and somebody is logged on). This is necessary for this registry settings change to work.
     .PARAMETER ComputerIP
         Specifies the computer IP.
-    .PARAMETER Credentials
+    .PARAMETER Credential
         Specifies the credentials used to login.
+    .PARAMETER DontCheck
+        A switch disabling checking the set configuration with a correstponding 'get' function.
     .EXAMPLE
-        TODO
+        Set-FtHiddenFilesAndFolders -ComputerIP $all -Credential $cred -Show
     #>
     param(
         [Parameter(Mandatory = $true)] $ComputerIP,
-        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
+        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
         [Parameter(Mandatory = $false)] [switch]$Show,
-        [Parameter(Mandatory = $false)] [switch]$Hide
+        [Parameter(Mandatory = $false)] [switch]$Hide,
+        [Parameter(Mandatory = $false)] [switch]$DontCheck
     )
 
-    Write-Warning "This will restart the explorer.exe process on all hosts after changing the parameter."
-    Write-Host -ForegroundColor Red "This means ALL your opened folders will be closed and ongoing copy processes will also be stopped. Press Enter to continue or Ctrl+C to quit."
-    [void](Read-Host)
+    Write-Warning "This will restart the explorer.exe process on all hosts after changing the parameter. This means ALL your opened folders on the selected hosts will be closed and ongoing copy processes will also be stopped. Only yes will be accepted as confirmation."
+    $Continue = Read-Host 'Do you really want to continue?'
 
-    if ($Show) {
-        if ($Hide) {
-            Write-Host -ForegroundColor Red "`nPlease specify ONLY ONE of the -Show/-Hide switch parameters."
-            Return
-        }
-        Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {
+    if ($Continue -ne 'yes'){
+        Return
+    }
+
+    $ActionIndex = Test-FtIfExactlyOneSwitchParameterIsTrue $Show $Hide
+    $ScriptBlock = @()
+
+    if ($ActionIndex -eq 0) {
+        #If Show switch was selected
+        $ScriptBlock = {
             Set-ItemProperty "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "Hidden" -Value "1"
             if (Get-Process explorer -ErrorAction SilentlyContinue) {
                 Stop-Process -ProcessName explorer -Force
             }
         }
-        Write-Host -ForegroundColor Green "`nHidden files and folders SHOWN."
     }
-    elseif ($Hide) {
-        if ($Show) {
-            Write-Host -ForegroundColor Red "`nPlease specify ONLY ONE of the -Show/-Hide switch parameters."
-            Return
-        }
-        Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {
+    elseif ($ActionIndex -eq 1) {
+        #If Hide switch was selected
+        $ScriptBlock = {
             Set-ItemProperty "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "Hidden" -Value "2"
             if (Get-Process explorer -ErrorAction SilentlyContinue) {
                 Stop-Process -ProcessName explorer -Force
             }
         }
-        Write-Host -ForegroundColor Green "`nHidden files and folders HIDDEN."
-    }
-    else {
-        Write-Host -ForegroundColor Red "`nPlease specify ONE of the -Show/-Hide switch parameters."
-        Return
     }
 
-    Get-FtHiddenFilesAndFoldersStatus $ComputerIP $Credential
+    Invoke-FtSetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
+
+    if (!$DontCheck -and (($ActionIndex -ne -2) -and ($ActionIndex -ne -1))) {
+        Write-Host -ForegroundColor Cyan "Let's check the configuration with Get-FtHiddenFilesAndFolders."
+        Get-FtHiddenFilesAndFolders -ComputerIP $all -Credential $cred
+    }
 }

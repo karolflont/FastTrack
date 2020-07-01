@@ -15,18 +15,20 @@ function Get-FtTimeAndTimeZone {
    The function uses Get-Date and Get-TimeZone cmdlet.
 .PARAMETER ComputerIP
    Specifies the computer IP.
-.PARAMETER Credentials
+.PARAMETER Credential
    Specifies the credentials used to login.
+.PARAMETER RawOutput
+   Specifies if the output should be formatted (human friendly output) or not (Powershell pipeline friendly output)
 .EXAMPLE
    Get-FtTimeAndTimeZone -ComputerIP $all -Credential $cred
 #>
    param(
       [Parameter(Mandatory = $true)] $ComputerIP,
-      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
+      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
       [Parameter(Mandatory = $false)] [switch]$RawOutput
    )
 
-   $HeaderMessage = "----- Current time and timezone -----"
+   $HeaderMessage = "Current time and timezone"
 
    $ScriptBlock = {
       $DateTime = Get-Date
@@ -38,17 +40,15 @@ function Get-FtTimeAndTimeZone {
          IsDST = $DateTime.IsDaylightSavingTime()
       }
    }
-
-   $NullMessage = "Something went wrong retrieving Current time and timezone from selected remote hosts"
   
    $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'Date','Time','TimeZone','IsDST') 
 
    $ActionIndex = 0
   
    if ($RawOutput) {
-       Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
+       Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
    }
    else {
-       Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
+       Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
    }
 }

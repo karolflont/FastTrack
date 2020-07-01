@@ -3,29 +3,25 @@
 ####################
 function Get-FtHostname {
    <#
-    .SYNOPSIS
-    Outputs a table comparing current hostnames and hostnames defined in $sysConfig variable for a list of computers.
-    .DESCRIPTION
-    The Get-FtHostname function uses:
-    - $env:computername variable on remote hosts
-    - "IP" and "hostname" fields from $sysConfig global variable
-    .PARAMETER ComputerIP
-    Specifies the computer IP.
-    .PARAMETER Credentials
-    Specifies the credentials used to login.
-    .PARAMETER RawOutput
-    Specifies if the output should be formatted or not.
-    .EXAMPLE
-    Get-FtHostname -ComputerIP $all -Credential $cred
-    #>
- 
-   <# TODO
-       1) Check domain sufix of remote hosts and compare with suffix set in $AvidPSUSystemConfiguration
-    #>
+   .SYNOPSIS
+      Outputs a table comparing current hostnames and hostnames defined in $sysConfig variable for selected remote computers.
+   .DESCRIPTION
+      The Get-FtHostname function uses:
+      - $env:computername variable on remote hosts
+      - "IP" and "hostname" fields from $sysConfig global variable
+   .PARAMETER ComputerIP
+      Specifies the computer IP.
+   .PARAMETER Credential
+      Specifies the credentials used to login.
+   .PARAMETER RawOutput
+      Specifies if the output should be formatted (human friendly output) or not (Powershell pipeline friendly output)
+   .EXAMPLE
+   Get-FtHostname -ComputerIP $all -Credential $cred
+   #>
  
    Param(
       [Parameter(Mandatory = $true)] $ComputerIP,
-      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
+      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
       [Parameter(Mandatory = $false)] [switch] $RawOutput
    )
  
@@ -45,8 +41,8 @@ function Get-FtHostname {
  
    $HostnamesRaw = $HostnamesRaw | Select-Object -Property ComputerIP, HostnameSetOnHost, HostnameInConfig,
    @{Name = "HostnamesInSync" ; Expression = {
-         if ($_.HostnameSetOnHost -eq $_.HostnameInConfig) { "YES" }
-         else { "NO" }
+         if ($_.HostnameSetOnHost -eq $_.HostnameInConfig) { "Yes" }
+         else { "No" }
       }
    }
  
@@ -68,7 +64,7 @@ function Set-FtHostname {
        - Restart-Computer
     .PARAMETER ComputerIP
        Specifies the computer IP.
-    .PARAMETER Credentials
+    .PARAMETER Credential
        Specifies the credentials used to login.
     .PARAMETER NewComputerIP
        Specifies the new computer name to be used.
@@ -79,7 +75,7 @@ function Set-FtHostname {
     #>
    Param(
       [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
-      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
+      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
       [Parameter(Mandatory = $false)] [Switch] $RebootAfterHostnameChange,
       [Parameter(Mandatory = $false)] [Switch] $Force
    )
@@ -130,33 +126,32 @@ function Get-FtDomain {
       The Get-Domain retrieves the Domain information from Win32_ComputerSystem WMI Class.
    .PARAMETER ComputerIP
       Specifies the computer IP.
-   .PARAMETER Credentials
+   .PARAMETER Credential
       Specifies the credentials used to login.
+   .PARAMETER RawOutput
+   Specifies if the output should be formatted (human friendly output) or not (Powershell pipeline friendly output)
    .EXAMPLE
       Get-FtDomain -ComputerIP $all -Credential $Cred
    #>
    Param(
       [Parameter(Mandatory = $true)] $ComputerIP,
-      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
+      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
       [Parameter(Mandatory = $false)] [switch]$RawOutput
    )
 
-   $HeaderMessage = "----- Domain Membership Status -----"
+   $HeaderMessage = "Domain Membership Status"
 
    $ScriptBlock = { Get-WmiObject -Class Win32_ComputerSystem }
-
-   #A message displayed in case empty objects are returned from all remote computers
-   $NullMessage = "Class Win32_ComputerSystem is not present on any of the remote computers."
 
    $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'PartOfDomain', 'Domain')
 
    $ActionIndex = 0
 
    if ($RawOutput) {
-        Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
+        Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
     }
     else {
-        Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
+        Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
     }
 }
 function Join-FtDomain {
@@ -167,7 +162,7 @@ function Join-FtDomain {
     The Join-Domain joins computers to an Active Directory Domain.
  .PARAMETER ComputerIP
     Specifies the computer name or IP.
- .PARAMETER Credentials
+ .PARAMETER Credential
     Specifies the credentials used to login.
  .PARAMETER DomainName
     Specifies the domain name.
@@ -180,7 +175,7 @@ function Join-FtDomain {
  #>
    Param(
       [Parameter(Mandatory = $true)] $ComputerIP,
-      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
+      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
       [Parameter(Mandatory = $true)] $DomainName,
       [Parameter(Mandatory = $true)] $DomainAdminUsername
    )

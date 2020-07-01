@@ -10,14 +10,16 @@ function Get-FtEventLogErrors {
   TODO
 .PARAMETER ComputerIP
   Specifies the computer IP.
-.PARAMETER Credentials
+.PARAMETER Credential
   Specifies the credentials used to login.
+.PARAMETER RawOutput
+   Specifies if the output should be formatted (human friendly output) or not (Powershell pipeline friendly output)
 .EXAMPLE
   TODO
 #>
    Param(
       [Parameter(Mandatory = $true)] $ComputerIP,
-      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
+      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
       [Parameter(Mandatory = $false)] $After,
       [Parameter(Mandatory = $false)] $Before,
       [Parameter(Mandatory = $false)] [switch]$RawOutput
@@ -86,39 +88,39 @@ function Get-FtOSVersion {
    Results are sorted by Alias, unless one of the 'SortBy' switches is selected.
 .PARAMETER ComputerIP
    Specifies computer IP.
-.PARAMETER Credentials
+.PARAMETER Credential
    Specifies credentials used to login.
-.PARAMETER Credentials
+.PARAMETER Credential
    Allows sorting by Release ID.
-.PARAMETER Credentials
+.PARAMETER Credential
    Allows sorting by Install Date.
+.PARAMETER RawOutput
+   Specifies if the output should be formatted (human friendly output) or not (Powershell pipeline friendly output)
 .EXAMPLE
    Get-FtOSVersion -ComputerIP $all -Credential $cred
    Get-FtOSVersion -ComputerIP $all -Credential $cred -SortByInstallDate
 #>
    param(
       [Parameter(Mandatory = $true)] $ComputerIP,
-      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
+      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
       [Parameter(Mandatory = $false)] [switch]$SortByReleaseID,
       [Parameter(Mandatory = $false)] [switch]$SortByInstallDate,
       [Parameter(Mandatory = $false)] [switch]$RawOutput
    )
 
-   $HeaderMessage = "----- Operating System Version -----"
+   $HeaderMessage = "Operating System Version"
 
    $ScriptBlock = { Get-ItemProperty -Path "HKLM:SOFTWARE\Microsoft\Windows NT\CurrentVersion" -Name ProductName, BuildBranch, CurrentMajorVersionNumber, CurrentMinorVersionNumber, ReleaseID, CurrentBuildNumber, UBR, InstallDate }
-
-   $NullMessage = "Something went wrong retrieving OS Versions from selected remote hosts"
    
    $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'ProductName', 'BuildBranch', 'CurrentMajorVersionNumber', 'CurrentMinorVersionNumber', 'ReleaseId', 'CurrentBuildNumber', 'UBR', 'InstallDate') 
 
    $ActionIndex = Test-FtIfExactlyOneSwitchParameterIsTrue $SortByAlias $SortByHostnameInConfig $SortByReleaseID $SortByInstallDate
    
    if ($RawOutput) {
-        Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
+        Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
     }
     else {
-        Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
+        Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
     }
 }
 function Get-FtHWSpecification {
@@ -133,18 +135,20 @@ function Get-FtHWSpecification {
    - Get-Partition -DriveLetter D
    .PARAMETER ComputerIP
    Specifies the computer IP.
-   .PARAMETER Credentials
+   .PARAMETER Credential
    Specifies the credentials used to login.
+   .PARAMETER RawOutput
+   Specifies if the output should be formatted (human friendly output) or not (Powershell pipeline friendly output)
    .EXAMPLE
    Get-FtHWSpecification -ComputerIP $All -Credential $cred
    #>
    Param(
       [Parameter(Mandatory = $true)] $ComputerIP,
-      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
+      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
       [Parameter(Mandatory = $false)] [switch]$RawOutput
    )
 
-   $HeaderMessage = "----- Hardware Specification -----"
+   $HeaderMessage = "Hardware Specification"
 
    $ScriptBlock = {
       #D partition might not exist, so we have to take it into consideration
@@ -160,18 +164,16 @@ function Get-FtHWSpecification {
          D_PartitionSize_GB               = $D_PartitionSize
       }
    }
-
-   $NullMessage = "Something went wrong retrieving Hardware Specification from selected remote hosts"
    
    $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'NumberOfCores', 'NumberOfLogicalProcessors', 'RAM_GB', 'C_PartitionSize_GB', 'D_PartitionSize_GB') 
 
    $ActionIndex = 0
    
    if ($RawOutput) {
-        Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
+        Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
     }
     else {
-        Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
+        Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
     }
 }
 function Install-FtBGInfo {
@@ -187,7 +189,7 @@ function Install-FtBGInfo {
       5) Run BGInfo
    .PARAMETER ComputerIP
       Specifies the computer IP.
-   .PARAMETER Credentials
+   .PARAMETER Credential
       Specifies the credentials used to login.
    .PARAMETER PathToBGInfoExecutable
       Specifies the LOCAL path to the BGInfo executable.
@@ -199,7 +201,7 @@ function Install-FtBGInfo {
    
    Param(
       [Parameter(Mandatory = $true)] $ComputerIP,
-      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
+      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
       [Parameter(Mandatory = $true)] $PathToBGInfoExecutable,
       [Parameter(Mandatory = $true)] $PathToBGInfoTemplate
    )
@@ -278,37 +280,40 @@ Timezone set on remote host is irrelevant to uptime calculation.
 LastBootUpTime is ALWAYS displayed in the timezone of the machine which is runs Get-FtUptime function.
 .PARAMETER ComputerIP
 Specifies the computer IP.
-.PARAMETER Credentials
+.PARAMETER Credential
 Specifies the credentials used to login.
+.PARAMETER RawOutput
+Specifies if the output should be formatted (human friendly output) or not (Powershell pipeline friendly output)
 .EXAMPLE
 Get-FtUptime -ComputerIP $All -Credential $cred
 #>
    Param(
       [Parameter(Mandatory = $true)] $ComputerIP,
-      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential] $Credential,
+      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
       [Parameter(Mandatory = $false)] [switch]$RawOutput
    )
 
-   $HeaderMessage = "----- Uptime -----"
+   $HeaderMessage = "Uptime"
 
    $ScriptBlock = {
       $LastBootUpTime = (Get-CimInstance Win32_OperatingSystem).LastBootUpTime
+      $UpTime = ((get-date) - $LastBootUpTime)
       [pscustomobject]@{
-         UpTime_ = ((get-date) - $LastBootUpTime)
+         UpTimeTotalDays = [math]::Round($Uptime.TotalDays,2)
+         UpTimeTotalHours = [math]::Round($UpTime.TotalHours,2)
+         UpTimeTotalMin = [math]::Round($UpTime.TotalMinutes,2)
          LastBootUpTime = $LastBootUpTime
       }
    }
-
-   $NullMessage = "Something went wrong retrieving Uptime from selected remote hosts"
    
-   $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'Uptime', 'LastBootUpTime') 
+   $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'UpTimeTotalDays', 'UpTimeTotalHours', 'UpTimeTotalMin', 'LastBootUpTime') 
 
    $ActionIndex = 0
    
    if ($RawOutput) {
-        Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
+        Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
     }
     else {
-        Invoke-FtScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -NullMessage $NullMessage -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
+        Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
     }
 }
