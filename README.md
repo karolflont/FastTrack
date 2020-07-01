@@ -2,15 +2,15 @@
 
 Welcome!
 
-FastTrack is a PowerShell module for speeding up the installation and diagnostics process of Avid Windows based systems, i.e. MediaCentral | Production Management and MediaCentral | Asset Management. It heavily leverages parallel commands execution on Windows Servers using WinRM.
+FastTrack is a PowerShell module for automated installation, upgrade and troubleshooting of Avid systems based on Windows Server, i.e. MediaCentral | Production Management and MediaCentral | Asset Management. It heavily leverages parallel commands execution on Windows Servers using WinRM.
 
 ---
 
 ## Prerequisites
 
 This module is tested with PowerShell 5.1 and Windows Server 2016 OS only. However:
-- most functions should work properly on higher versions of PowerShell and Windows Server,
-- some functions should work properly on lower versions of PowerShell and Windows Server.
+- most functions should work properly on later versions of PowerShell and Windows Server,
+- some functions should work properly on earlier versions of PowerShell and Windows Server.
 
 There are no other prerequisites for using this module.
 
