@@ -26,16 +26,14 @@ function Get-FtFailoverClusteringFeature {
 
    $ScriptBlock = { Get-WindowsFeature -Name Failover-Clustering }
    
-   $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'Name', 'Installed') 
-
    $ActionIndex = 0
    
-   if ($RawOutput) {
-        Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
-    }
-    else {
-        Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
-    }
+   $Result = Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
+
+   $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'Name', 'Installed') 
+
+   if ($RawOutput) { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput }
+   else { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex }
 }
 
 function Install-FtFailoverClusteringFeature {

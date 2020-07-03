@@ -26,10 +26,10 @@ function Get-FtHiddenFilesAndFolders {
 
     $ScriptBlock = {
         $HiddenFilesAndFoldersStatus = (Get-ItemProperty "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "Hidden").Hidden
-        if ($HiddenFilesAndFoldersStatus -eq 1){
+        if ($HiddenFilesAndFoldersStatus -eq 1) {
             $HiddenFilesAndFoldersStatus = "SHOWN"
         }
-        elseif ($HiddenFilesAndFoldersStatus -eq 2){
+        elseif ($HiddenFilesAndFoldersStatus -eq 2) {
             $HiddenFilesAndFoldersStatus = "HIDDEN"
         }
         else {
@@ -40,16 +40,14 @@ function Get-FtHiddenFilesAndFolders {
         }
     }
    
-    $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'HiddenFilesAndFoldersStatus') 
-
     $ActionIndex = 0
    
-    if ($RawOutput) {
-        Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
-    }
-    else {
-        Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
-    }
+    $Result = Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
+
+    $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'HiddenFilesAndFoldersStatus') 
+
+    if ($RawOutput) { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput }
+    else { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex }
 }
 
 
@@ -80,11 +78,11 @@ function Set-FtHiddenFilesAndFolders {
     Write-Warning "This will restart the explorer.exe process on all hosts after changing the parameter. This means ALL your opened folders on the selected hosts will be closed and ongoing copy processes will also be stopped. Only yes will be accepted as confirmation."
     $Continue = Read-Host 'Do you really want to continue?'
 
-    if ($Continue -ne 'yes'){
+    if ($Continue -ne 'yes') {
         Return
     }
 
-    $ActionIndex = Test-FtIfExactlyOneSwitchParameterIsTrue $Show $Hide
+    $ActionIndex = Confirm-FtSwitchParameters $Show $Hide
     $ScriptBlock = @()
 
     if ($ActionIndex -eq 0) {
@@ -108,8 +106,8 @@ function Set-FtHiddenFilesAndFolders {
 
     Invoke-FtSetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
 
-    if (!$DontCheck -and (($ActionIndex -ne -2) -and ($ActionIndex -ne -1))) {
+    if (!$DontCheck -and ($ActionIndex -ne -1)) {
         Write-Host -ForegroundColor Cyan "Let's check the configuration with Get-FtHiddenFilesAndFolders."
-        Get-FtHiddenFilesAndFolders -ComputerIP $all -Credential $cred
+        Get-FtHiddenFilesAndFolders -ComputerIP $ComputerIP -Credential $cred
     }
 }

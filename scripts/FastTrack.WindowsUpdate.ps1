@@ -29,21 +29,19 @@ function Get-FtWindowsUpdateService {
 
         [pscustomobject]@{
             DisplayName = $WinUpdSrv.DisplayName
-            Status = $WinUpdSrv.Status
-            StartType = $WinUpdSrv.StartType
+            Status      = $WinUpdSrv.Status
+            StartType   = $WinUpdSrv.StartType
         }
     }
   
-   $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'DisplayName','Status','StartType') 
+    $ActionIndex = 0
 
-   $ActionIndex = 0
-  
-   if ($RawOutput) {
-       Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
-   }
-   else {
-       Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
-   }
+    $Result = Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
+
+    $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'DisplayName', 'Status', 'StartType') 
+
+    if ($RawOutput) { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput }
+    else { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex }
 }
 
 function Set-FtWindowsUpdateService {
@@ -71,8 +69,8 @@ function Set-FtWindowsUpdateService {
         [Parameter(Mandatory = $false)] [switch]$DontCheck
     )
 
-    $ActionIndex = Test-FtIfExactlyOneSwitchParameterIsTrue $EnableAndStart $DisableAndStop
-    $ScriptBlock = @()
+    $ActionIndex = Confirm-FtSwitchParameters $EnableAndStart $DisableAndStop
+    #$ScriptBlock = @()
 
     if ($ActionIndex -eq 0) {
         #If EnableAndStart switch was selected
@@ -88,8 +86,8 @@ function Set-FtWindowsUpdateService {
 
     Invoke-FtSetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
 
-    if (!$DontCheck -and (($ActionIndex -ne -2) -and ($ActionIndex -ne -1))) {
+    if (!$DontCheck -and ($ActionIndex -ne -1)) {
         Write-Host -ForegroundColor Cyan "Let's check the configuration with Get-FtWindowsUpdateService."
-        Get-FtWindowsUpdateService -ComputerIP $all -Credential $cred
+        Get-FtWindowsUpdateService -ComputerIP $ComputerIP -Credential $cred
     }
 }

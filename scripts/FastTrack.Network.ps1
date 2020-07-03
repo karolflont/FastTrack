@@ -44,16 +44,14 @@ function Get-FtNetworkConfiguration {
    
    }
   
-   $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'InterfaceAlias', 'ProfileName', 'NetworkCategory', 'LinkSpeed', 'IsIPv6EnabledOnAdapter', 'IPv4Address', 'Netmask', 'IPv4DefaultGateway', 'DNSServer' ) 
-
    $ActionIndex = 0
   
-   if ($RawOutput) {
-      Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
-   }
-   else {
-      Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
-   }
+   $Result = Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
+
+   $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'InterfaceAlias', 'ProfileName', 'NetworkCategory', 'LinkSpeed', 'IsIPv6EnabledOnAdapter', 'IPv4Address', 'Netmask', 'IPv4DefaultGateway', 'DNSServer' ) 
+
+   if ($RawOutput) { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput }
+   else { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex }
 }
 
 ########################
@@ -85,16 +83,14 @@ function Get-FtFirewallService {
 
    $ScriptBlock = { Get-Service -Name "MpsSvc" }
   
-   $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'DisplayName', 'Status', 'StartType') 
-
    $ActionIndex = 0
   
-   if ($RawOutput) {
-      Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
-   }
-   else {
-      Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
-   }
+   $Result = Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
+
+   $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'DisplayName', 'Status', 'StartType') 
+
+   if ($RawOutput) { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput }
+   else { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex }
 }
 
 function Start-FtFirewallService {
@@ -128,7 +124,7 @@ function Start-FtFirewallService {
 
    if (!$DontCheck) {
       Write-Host -ForegroundColor Cyan "Let's check the configuration with Get-FtFirewallService."
-      Get-FtFirewallService -ComputerIP $all -Credential $cred
+      Get-FtFirewallService -ComputerIP $ComputerIP -Credential $cred
    }
 }
 
@@ -169,18 +165,14 @@ function Get-FtFirewallState {
       }
    }
  
-   $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'DomainProfile', 'PrivateProfile', 'PublicProfile') 
-
    $ActionIndex = 0
  
-   if ($RawOutput) {
-      Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
-   }
-   else {
-      Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
-   }
+   $Result = Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
 
- 
+   $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'DomainProfile', 'PrivateProfile', 'PublicProfile') 
+
+   if ($RawOutput) { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput }
+   else { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex }
 }
 
 
@@ -229,7 +221,7 @@ function Set-FtFirewallState {
       [Parameter(Mandatory = $false)] [switch]$DontCheck
    )
 
-   $ActionIndex = Test-FtIfExactlyOneSwitchParameterIsTrue $AllOn $AllOff $DomainOn $DomainOff $PrivateOn $PrivateOff $PublicOn $PublicOff
+   $ActionIndex = Confirm-FtSwitchParameters $AllOn $AllOff $DomainOn $DomainOff $PrivateOn $PrivateOff $PublicOn $PublicOff
     
    $ScriptBlock = @()
 
@@ -268,8 +260,8 @@ function Set-FtFirewallState {
 
    Invoke-FtSetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
 
-   if (!$DontCheck -and (($ActionIndex -ne -2) -and ($ActionIndex -ne -1))) {
+   if (!$DontCheck -and ($ActionIndex -ne -1)) {
       Write-Host -ForegroundColor Cyan "Let's check the configuration with Get-FtFirewallState."
-      Get-FtFirewallState -ComputerIP $all -Credential $cred
+      Get-FtFirewallState -ComputerIP $ComputerIP -Credential $cred
    }
 }

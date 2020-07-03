@@ -141,18 +141,19 @@ function Get-FtAvidSoftware {
 
     $HeaderMessage = "Installed Avid Software Versions"
 
+    $ScriptBlock = @()
     $ScriptBlock = { Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* | Select-Object DisplayName, DisplayVersion, Publisher, InstallDate | Where-Object { ($_.Publisher -like "*Avid*") -or ($_.DisplayName -like "*Avid*") -or ($_.DisplayName -like "*Isis*") -or ($_.DisplayName -like "*Nexis*") } }
 
-    $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'DisplayName', 'DisplayVersion', 'InstallDate') 
-
-    $ActionIndex = Test-FtIfExactlyOneSwitchParameterIsTrue $SortByAlias $SortByHostnameInConfig $SortByDisplayName $SortByDisplayVersion $SortByInstallDate
+    $ActionIndex = Confirm-FtSwitchParameters $SortByAlias $SortByHostnameInConfig $SortByDisplayName $SortByDisplayVersion $SortByInstallDate -DefaultSwitch 0
     
-    if ($RawOutput) {
-        Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
-    }
-    else {
-        Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
-    }
+    if ($ActionIndex -ne -1) {
+        $Result = Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
+
+        $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'DisplayName', 'DisplayVersion', 'InstallDate') 
+
+        if ($RawOutput) { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput }
+        else { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex }
+    }  
 }
 
 function Get-FtAvidServices {
@@ -197,15 +198,16 @@ function Get-FtAvidServices {
 
     $ScriptBlock = { Get-Service -Displayname "Avid*" }
 
-    $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'DisplayName', 'Status', 'StartType') 
-
-    $ActionIndex = Test-FtIfExactlyOneSwitchParameterIsTrue $SortByAlias $SortByHostnameInConfig $SortByDisplayName $SortByStatus $SortByStartType
+    $ActionIndex = Confirm-FtSwitchParameters $SortByAlias $SortByHostnameInConfig $SortByDisplayName $SortByStatus $SortByStartType -DefaultSwitch 0
     
-    if ($RawOutput) {
-        Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
-    }
-    else {
-        Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
+    if ($ActionIndex -ne -1) {
+        $Result = Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
+
+        $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'DisplayName', 'Status', 'StartType') 
+
+        if ($RawOutput) { 
+            Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput }
+        else { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex }
     }
 }
 

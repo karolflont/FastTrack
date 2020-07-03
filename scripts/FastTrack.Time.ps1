@@ -34,21 +34,19 @@ function Get-FtTimeAndTimeZone {
       $DateTime = Get-Date
 
       [pscustomobject]@{
-         Date = $DateTime.ToLongDateString() 
-         Time = $DateTime.ToLongTimeString() 
+         Date     = $DateTime.ToLongDateString() 
+         Time     = $DateTime.ToLongTimeString() 
          TimeZone = Get-TimeZone
-         IsDST = $DateTime.IsDaylightSavingTime()
+         IsDST    = $DateTime.IsDaylightSavingTime()
       }
    }
   
-   $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'Date','Time','TimeZone','IsDST') 
-
    $ActionIndex = 0
   
-   if ($RawOutput) {
-       Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
-   }
-   else {
-       Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
-   }
+   $Result = Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
+
+   $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'Date', 'Time', 'TimeZone', 'IsDST') 
+
+   if ($RawOutput) { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput }
+   else { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex }
 }

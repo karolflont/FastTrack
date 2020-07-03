@@ -77,7 +77,7 @@ function Test-FtPowershellRemoting {
 ###############
 #IN PROGRESS
 function Get-FtRemoteDesktop {
-<#
+   <#
    .SYNOPSIS
       Checks if Remote Desktop connection to a specific computer is possible.
    .DESCRIPTION
@@ -100,6 +100,10 @@ function Get-FtRemoteDesktop {
       [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
       [Parameter(Mandatory = $false)] [switch]$RawOutput
    )
+
+   ### BEGIN
+
+   #########
 
    $HeaderMessage = "Remote Desktop status"
 
@@ -142,24 +146,22 @@ function Get-FtRemoteDesktop {
       }
 
       [pscustomobject]@{
-         RDPServiceStatus = $RDPServiceStatus
-         RDPServiceStartType = $RDPServiceStartType
-         RDPStatus = $RDPStatus
+         RDPServiceStatus      = $RDPServiceStatus
+         RDPServiceStartType   = $RDPServiceStartType
+         RDPStatus             = $RDPStatus
          RDPFirewallRuleStatus = $RDPFirewallRuleStatus
-         NLAStatus = $NLAStatus
+         NLAStatus             = $NLAStatus
       }
    }
   
-   $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'RDPServiceStatus','RDPServiceStartType','RDPStatus','RDPFirewallRuleStatus','NLAStatus') 
-
    $ActionIndex = 0
   
-   if ($RawOutput) {
-       Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
-   }
-   else {
-       Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
-   }
+   $Result = Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
+
+   $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'RDPServiceStatus', 'RDPServiceStartType', 'RDPStatus', 'RDPFirewallRuleStatus', 'NLAStatus') 
+
+   if ($RawOutput) { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput }
+   else { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex }
 }   
 function Set-FtRemoteDesktop {
    <#
@@ -189,7 +191,7 @@ function Set-FtRemoteDesktop {
       [Parameter(Mandatory = $false)] [switch] $DontCheck
    ) 
  
-   $ActionIndex = Test-FtIfExactlyOneSwitchParameterIsTrue $EnableWithDisabledNLA $EnableWithEnabledNLA $Disable
+   $ActionIndex = Confirm-FtSwitchParameters $EnableWithDisabledNLA $EnableWithEnabledNLA $Disable
    $ScriptBlock = @()
 
 
@@ -227,9 +229,9 @@ function Set-FtRemoteDesktop {
 
    Invoke-FtSetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
 
-   if (!$DontCheck -and (($ActionIndex -ne -2) -and ($ActionIndex -ne -1))) {
-       Write-Host -ForegroundColor Cyan "Let's check the configuration with Get-FtRemoteDesktop."
-       Get-FtRemoteDesktop -ComputerIP $all -Credential $cred
+   if (!$DontCheck -and ($ActionIndex -ne -1)) {
+      Write-Host -ForegroundColor Cyan "Let's check the configuration with Get-FtRemoteDesktop."
+      Get-FtRemoteDesktop -ComputerIP $ComputerIP -Credential $cred
    }
 
 }

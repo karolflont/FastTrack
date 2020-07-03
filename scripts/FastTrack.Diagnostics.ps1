@@ -112,16 +112,16 @@ function Get-FtOSVersion {
 
    $ScriptBlock = { Get-ItemProperty -Path "HKLM:SOFTWARE\Microsoft\Windows NT\CurrentVersion" -Name ProductName, BuildBranch, CurrentMajorVersionNumber, CurrentMinorVersionNumber, ReleaseID, CurrentBuildNumber, UBR, InstallDate }
    
-   $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'ProductName', 'BuildBranch', 'CurrentMajorVersionNumber', 'CurrentMinorVersionNumber', 'ReleaseId', 'CurrentBuildNumber', 'UBR', 'InstallDate') 
+   $ActionIndex = Confirm-FtSwitchParameters $SortByAlias $SortByHostnameInConfig $SortByReleaseID $SortByInstallDate -DefaultSwitch 0
 
-   $ActionIndex = Test-FtIfExactlyOneSwitchParameterIsTrue $SortByAlias $SortByHostnameInConfig $SortByReleaseID $SortByInstallDate
-   
-   if ($RawOutput) {
-        Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
-    }
-    else {
-        Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
-    }
+   if ($ActionIndex -ne -1) {
+      $Result = Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
+
+      $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'ProductName', 'BuildBranch', 'CurrentMajorVersionNumber', 'CurrentMinorVersionNumber', 'ReleaseId', 'CurrentBuildNumber', 'UBR', 'InstallDate') 
+
+      if ($RawOutput) { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput }
+      else { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex }
+   }
 }
 function Get-FtHWSpecification {
    <#
@@ -157,24 +157,22 @@ function Get-FtHWSpecification {
       else { $D_PartitionSize = [Math]::Round(($D_PartitionSize) / 1GB, 2) }
 
       [pscustomobject]@{
-         NumberOfCores                    = (Get-WmiObject -Class Win32_Processor | Select-Object -Property NumberOfCores).NumberOfCores
-         NumberOfLogicalProcessors        = (Get-WmiObject -Class Win32_Processor | Select-Object -Property NumberOfLogicalProcessors).NumberOfLogicalProcessors
-         RAM_GB                           = (Get-WmiObject -Class Win32_physicalmemory | Measure-Object -Property Capacity -Sum).Sum/1GB
-         C_PartitionSize_GB               = [Math]::Round(((Get-Partition -DriveLetter C | Select-Object -Property Size).Size / 1GB), 2)
-         D_PartitionSize_GB               = $D_PartitionSize
+         NumberOfCores             = (Get-WmiObject -Class Win32_Processor | Select-Object -Property NumberOfCores).NumberOfCores
+         NumberOfLogicalProcessors = (Get-WmiObject -Class Win32_Processor | Select-Object -Property NumberOfLogicalProcessors).NumberOfLogicalProcessors
+         RAM_GB                    = (Get-WmiObject -Class Win32_physicalmemory | Measure-Object -Property Capacity -Sum).Sum / 1GB
+         C_PartitionSize_GB        = [Math]::Round(((Get-Partition -DriveLetter C | Select-Object -Property Size).Size / 1GB), 2)
+         D_PartitionSize_GB        = $D_PartitionSize
       }
    }
-   
-   $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'NumberOfCores', 'NumberOfLogicalProcessors', 'RAM_GB', 'C_PartitionSize_GB', 'D_PartitionSize_GB') 
 
    $ActionIndex = 0
    
-   if ($RawOutput) {
-        Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
-    }
-    else {
-        Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
-    }
+   $Result = Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
+
+   $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'NumberOfCores', 'NumberOfLogicalProcessors', 'RAM_GB', 'C_PartitionSize_GB', 'D_PartitionSize_GB') 
+   
+   if ($RawOutput) { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput }
+   else { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex }
 }
 function Install-FtBGInfo {
    <#
@@ -270,6 +268,7 @@ function Install-FtBGInfo {
    Write-Host -ForegroundColor Red "`nPlease use the desktop shortcut on remote hosts to run BGInfo for the first time."
    Write-Host -ForegroundColor Red "Also, remember to add the right BGInfo fields on appropriate hosts."
 }
+
 function Get-FtUptime {
    <#
 .SYNOPSIS
@@ -292,28 +291,26 @@ Get-FtUptime -ComputerIP $All -Credential $cred
       [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
       [Parameter(Mandatory = $false)] [switch]$RawOutput
    )
-
+   
    $HeaderMessage = "Uptime"
 
    $ScriptBlock = {
       $LastBootUpTime = (Get-CimInstance Win32_OperatingSystem).LastBootUpTime
       $UpTime = ((get-date) - $LastBootUpTime)
       [pscustomobject]@{
-         UpTimeTotalDays = [math]::Round($Uptime.TotalDays,2)
-         UpTimeTotalHours = [math]::Round($UpTime.TotalHours,2)
-         UpTimeTotalMin = [math]::Round($UpTime.TotalMinutes,2)
-         LastBootUpTime = $LastBootUpTime
+         UpTimeTotalDays  = [math]::Round($Uptime.TotalDays, 2)
+         UpTimeTotalHours = [math]::Round($UpTime.TotalHours, 2)
+         UpTimeTotalMin   = [math]::Round($UpTime.TotalMinutes, 2)
+         LastBootUpTime   = $LastBootUpTime
       }
    }
    
-   $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'UpTimeTotalDays', 'UpTimeTotalHours', 'UpTimeTotalMin', 'LastBootUpTime') 
-
    $ActionIndex = 0
    
-   if ($RawOutput) {
-        Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput
-    }
-    else {
-        Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex
-    }
+   $Result = Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
+
+   $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'UpTimeTotalDays', 'UpTimeTotalHours', 'UpTimeTotalMin', 'LastBootUpTime') 
+
+   if ($RawOutput) { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput }
+   else { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex }
 }
