@@ -12,12 +12,12 @@ function Get-FtServerManagerBehaviorAtLogon {
 .PARAMETER Credential
    Specifies the credentials used to login.
 .PARAMETER RawOutput
-   Specifies if the output should be formatted (human friendly output) or not (Powershell pipeline friendly output)
+   Specifies that the output will NOT be sorted and formatted as a table (human friendly output). Instead, a raw Powershell object will be returned (Powershell pipeline friendly output).
 .EXAMPLE
    Get-FtServerManagerBehaviorAtLogon -ComputerIP $all -Credential $cred
 #>
     param(
-        [Parameter(Mandatory = $true)] $ComputerIP,
+        [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
         [Parameter(Mandatory = $false)] [switch]$RawOutput
     )
@@ -55,7 +55,7 @@ function Set-FtServerManagerBehaviorAtLogon {
     Set-FtServerManagerBehaviorAtLogon -ComputerIP $all -Credential $cred -Disable
 #>
     param(
-        [Parameter(Mandatory = $true)] $ComputerIP,
+        [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
         [Parameter(Mandatory = $false)] [switch] $Enable,
         [Parameter(Mandatory = $false)] [switch] $Disable,
@@ -104,12 +104,12 @@ function Get-FtUACLevelForAdmins {
 .PARAMETER Credential
    Specifies the credentials used to login.
 .PARAMETER RawOutput
-   Specifies if the output should be formatted (human friendly output) or not (Powershell pipeline friendly output)
+   Specifies that the output will NOT be sorted and formatted as a table (human friendly output). Instead, a raw Powershell object will be returned (Powershell pipeline friendly output).
 .EXAMPLE
    Get-FtUACLevelForAdmins -ComputerIP $all -Credential $cred
 #>
     param(
-        [Parameter(Mandatory = $true)] $ComputerIP,
+        [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
         [Parameter(Mandatory = $false)] [switch]$RawOutput
     )
@@ -170,7 +170,7 @@ function Set-FtUACLevelForAdmins {
    Set-FtUACLevelForAdmins -ComputerIP $all -Credential $cred -NeverNotify
 #>
     param(
-        [Parameter(Mandatory = $true)] $ComputerIP,
+        [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
         [Parameter(Mandatory = $false)] [switch] $NeverNotify,
         [Parameter(Mandatory = $false)] [switch] $AlwaysPromptForCredInSecureDesktopMode,
@@ -234,12 +234,12 @@ function Get-FtProcessorScheduling {
     .PARAMETER Credential
         Specifies the credentials used to login.
     .PARAMETER RawOutput
-        Specifies if the output should be formatted (human friendly output) or not (Powershell pipeline friendly output)
+        Specifies that the output will NOT be sorted and formatted as a table (human friendly output). Instead, a raw Powershell object will be returned (Powershell pipeline friendly output).
     .EXAMPLE
         Get-FtProcessorScheduling -ComputerIP $all -Credential $cred
     #>
     param(
-        [Parameter(Mandatory = $true)] $ComputerIP,
+        [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
         [Parameter(Mandatory = $false)] [switch]$RawOutput
     )
@@ -292,7 +292,7 @@ function Set-FtProcessorScheduling {
         Set-FtProcessorScheduling -ComputerIP $all -Credential $cred -BackgroundServices
     #>
     param(
-        [Parameter(Mandatory = $true)] $ComputerIP,
+        [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
         [Parameter(Mandatory = $false)] [switch]$Programs,
         [Parameter(Mandatory = $false)] [switch]$BackgroundServices,
@@ -339,12 +339,12 @@ function Get-FtPowerPlan {
     .PARAMETER Credential
        Specifies the credentials used to login.
     .PARAMETER RawOutput
-        Specifies if the output should be formatted (human friendly output) or not (Powershell pipeline friendly output)
+        Specifies that the output will NOT be sorted and formatted as a table (human friendly output). Instead, a raw Powershell object will be returned (Powershell pipeline friendly output).
     .EXAMPLE
        Get-FtPowerPlan -ComputerIP $all -Credential $cred
     #>
     param(
-        [Parameter(Mandatory = $true)] $ComputerIP,
+        [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
         [Parameter(Mandatory = $false)] [switch]$RawOutput
     )
@@ -388,7 +388,7 @@ function Set-FtPowerPlan {
     Set-PowerPlan -ComputerIP $all -credential $cred -HighPerformance
 #>
     param(
-        [Parameter(Mandatory = $true)] $ComputerIP,
+        [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
         [Parameter(Mandatory = $false)] [switch] $HighPerformance,
         [Parameter(Mandatory = $false)] [switch] $Balanced,

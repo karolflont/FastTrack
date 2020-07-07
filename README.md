@@ -69,7 +69,7 @@ Hostname and Domain related
     Get-FtHostname
     Set-FtHostname
     Get-FtDomain
-    Join-FtDomain
+    Set-FtDomain
 
 Module Input/Output related
 
@@ -96,7 +96,7 @@ OS Tweaks related
 
 Remote Access related
 
-    Test-FtPowershellRemoting
+    Test-FtPSRemoting
     Get-FtRemoteDesktop
     Set-FtRemoteDesktop
 

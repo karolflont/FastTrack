@@ -32,7 +32,7 @@ NOTE: All functions from FastTrack module have a noun prefix Av, to avoid name c
 from other modules. Av prefix makes it also easy to find a particular function using Intellisense in PowerShell window
 or PowerShell ISE.
 #>
-Test-FtPowershellRemoting -ComputerIP $All -Credential $cred
+Test-FtPSRemoting -ComputerIP $All -Credential $cred
 
 <# 4.
 #>

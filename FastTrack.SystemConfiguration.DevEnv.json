@@ -15,7 +15,7 @@
         },
         {
             "IP":"192.168.137.33",
-            "hostname":"lop-tm-02",
+            "hostname":"lop-tc-02",
             "alias":"tc2",
             "role":["PAM","TC"]
         }

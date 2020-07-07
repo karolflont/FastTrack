@@ -28,7 +28,7 @@ function Import-FtSystemConfiguration {
         Return
     }
 
-    Write-Host -ForegroundColor Cyan "Variables created based on the system configuration file: "
+    Write-Output "Variables created based on the system configuration file: "
 
     #set all variable including all the servers, no matter if a server has any roles defined
     $global:all = $SysConfigVar.hosts.IP
@@ -59,7 +59,7 @@ function Import-FtSystemConfiguration {
             $varValue = Get-Variable "$alias" -ValueOnly
             Write-Host "`$$varName = $varValue"
         }
-        Write-Host -ForegroundColor Green "`nThe whole System Configuration is kept in json format in `$SysConfig variable."
+        Write-Host -ForegroundColor Cyan "`nThe whole System Configuration is kept in json format in `$SysConfig variable."
     }
     else {
         Write-Host -ForegroundColor Red "`nAliases used for hosts defined in the $path are not unique. Please modify your configuration file."

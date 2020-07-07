@@ -12,12 +12,12 @@ function Get-FtHiddenFilesAndFolders {
 .PARAMETER Credential
    Specifies the credentials used to login.
 .PARAMETER RawOutput
-   Specifies if the output should be formatted (human friendly output) or not (Powershell pipeline friendly output)
+   Specifies that the output will NOT be sorted and formatted as a table (human friendly output). Instead, a raw Powershell object will be returned (Powershell pipeline friendly output).
 .EXAMPLE
    Get-FtHiddenFilesAndFolders -ComputerIP $all -Credential $cred
 #>
     param(
-        [Parameter(Mandatory = $true)] $ComputerIP,
+        [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
         [Parameter(Mandatory = $false)] [switch]$RawOutput
     )
@@ -68,7 +68,7 @@ function Set-FtHiddenFilesAndFolders {
         Set-FtHiddenFilesAndFolders -ComputerIP $all -Credential $cred -Show
     #>
     param(
-        [Parameter(Mandatory = $true)] $ComputerIP,
+        [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
         [Parameter(Mandatory = $false)] [switch]$Show,
         [Parameter(Mandatory = $false)] [switch]$Hide,
@@ -76,7 +76,7 @@ function Set-FtHiddenFilesAndFolders {
     )
 
     Write-Warning "This will restart the explorer.exe process on all hosts after changing the parameter. This means ALL your opened folders on the selected hosts will be closed and ongoing copy processes will also be stopped. Only yes will be accepted as confirmation."
-    $Continue = Read-Host 'Do you really want to continue?'
+    $Continue = Read-Host 'Do you want to continue?'
 
     if ($Continue -ne 'yes') {
         Return

@@ -12,12 +12,12 @@ function Get-FtWindowsUpdateService {
 .PARAMETER Credential
    Specifies the credentials used to login.
 .PARAMETER RawOutput
-   Specifies if the output should be formatted (human friendly output) or not (Powershell pipeline friendly output)
+   Specifies that the output will NOT be sorted and formatted as a table (human friendly output). Instead, a raw Powershell object will be returned (Powershell pipeline friendly output).
 .EXAMPLE
    Get-FtWindowsUpdateService -ComputerIP $all -Credential $cred
 #>
     param(
-        [Parameter(Mandatory = $true)] $ComputerIP,
+        [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
         [Parameter(Mandatory = $false)] [switch]$RawOutput
     )
@@ -62,7 +62,7 @@ function Set-FtWindowsUpdateService {
         Set-FtWindowsUpdateService -ComputerIP $all -Credential $cred -DisableAndStop
     #>
     param(
-        [Parameter(Mandatory = $true)] $ComputerIP,
+        [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
         [Parameter(Mandatory = $false)] [switch]$EnableAndStart,
         [Parameter(Mandatory = $false)] [switch]$DisableAndStop,

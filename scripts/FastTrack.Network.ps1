@@ -12,12 +12,12 @@ function Get-FtNetworkConfiguration {
    .PARAMETER Credential
    Specifies the credentials used to login.
    .PARAMETER RawOutput
-   Specifies if the output should be formatted (human friendly output) or not (Powershell pipeline friendly output)
+   Specifies that the output will NOT be sorted and formatted as a table (human friendly output). Instead, a raw Powershell object will be returned (Powershell pipeline friendly output).
    .EXAMPLE
       Get-FtNetworkConfiguration -ComputerIP $all -Credential $cred
    #>
    param (
-      [Parameter(Mandatory = $true)] $ComputerIP,
+      [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
       [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
       [Parameter(Mandatory = $false)] [switch]$RawOutput
    )
@@ -26,7 +26,7 @@ function Get-FtNetworkConfiguration {
 
    $ScriptBlock = {
       $ComputerIP = $using:ComputerIP
-      $NetworkConfiguration = Get-NetIPConfiguration -Detailed | Where-Object { ($_.IPv4Address -In $ComputerIP) }
+      $NetworkConfiguration = Get-NetIPConfiguration -Detailed | Where-Object { ($_.IPv4Address.IPAddress -In $ComputerIP) }
       $IsIPv6EnabledOnAdapter = (Get-NetAdapterBinding -Name $NetworkConfiguration.InterfaceAlias  -ComponentID ms_tcpip6).Enabled
 
       [pscustomobject]@{
@@ -68,13 +68,13 @@ function Get-FtFirewallService {
    .PARAMETER Credential
        Specifies the credentials used to login.
    .PARAMETER RawOutput
-       Specifies if the output should be formatted (human friendly output) or not (Powershell pipeline friendly output)
+       Specifies that the output will NOT be sorted and formatted as a table (human friendly output). Instead, a raw Powershell object will be returned (Powershell pipeline friendly output).
    .EXAMPLE
        Get-FtFirewallService -ComputerIP $all -Credential $cred 
    #>
 
    param(
-      [Parameter(Mandatory = $true)] $ComputerIP,
+      [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
       [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
       [Parameter(Mandatory = $false)] [switch]$RawOutput
    )
@@ -110,7 +110,7 @@ function Start-FtFirewallService {
    #>
 
    param(
-      [Parameter(Mandatory = $true)] $ComputerIP,
+      [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
       [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
       [Parameter(Mandatory = $false)] [switch]$DontCheck
    )
@@ -139,13 +139,13 @@ function Get-FtFirewallState {
    .PARAMETER Credential
       Specifies the credentials used to login.
    .PARAMETER RawOutput
-      Specifies if the output should be formatted (human friendly output) or not (Powershell pipeline friendly output)
+      Specifies that the output will NOT be sorted and formatted as a table (human friendly output). Instead, a raw Powershell object will be returned (Powershell pipeline friendly output).
    .EXAMPLE
       Get-FtFirewallState -ComputerIP $all -Credential $cred
    #>
 
    param(
-      [Parameter(Mandatory = $true)] $ComputerIP,
+      [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
       [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
       [Parameter(Mandatory = $false)] [switch]$RawOutput
    )
@@ -208,7 +208,7 @@ function Set-FtFirewallState {
       Set-FtFirewallState -ComputerIP $all -Credential $cred -AllOn
     #>
    param(
-      [Parameter(Mandatory = $true)] $ComputerIP,
+      [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
       [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
       [Parameter(Mandatory = $false)] [switch]$AllOn,
       [Parameter(Mandatory = $false)] [switch]$AllOff,

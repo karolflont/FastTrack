@@ -84,12 +84,12 @@ function Confirm-FtSwitchParameters {
         Return $index
     }
     else {
-        if ($null -ne $DefaultSwitch){
+        if ($DefaultSwitch){
             Return $DefaultSwitch
         }
         else {
-            #If none switch was selected and thre's no default one defined, print error and return -2
-            Write-Host -ForegroundColor Red "ERROR: None of needed switch parameters selected.`n"
+            #If none switch was selected and thre's no default one defined, print error and return -1
+            Write-Host -ForegroundColor Red "ERROR: None of the needed switch parameters selected.`n"
             Return -1
         }
     }
@@ -159,7 +159,7 @@ function Invoke-FtGetScriptBlock {
         Invoke-FtGetScriptBlock -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex -PropertiesToDisplay $PropertiesToDisplay -ComputerIP $ComputerIP -Credential $Credential
     #>
     Param(
-        [Parameter(Mandatory = $true)] $ComputerIP,
+        [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
         [Parameter(Mandatory = $true)] $HeaderMessage,
         [Parameter(Mandatory = $true)] $ScriptBlock,
@@ -210,7 +210,7 @@ function Format-FtOutput {
     .PARAMETER ActionIndex
         Specifies which property of the objects, returned from the remote computers, should be used to sort the object on output.
     .PARAMETER RawOutput
-        Specifies if the output should be formatted (human friendly output) or not (Powershell pipeline friendly output)
+        Specifies that the output will NOT be sorted and formatted as a table (human friendly output). Instead, a raw Powershell object will be returned (Powershell pipeline friendly output).
     .EXAMPLE
 
     #>
@@ -252,7 +252,7 @@ function Invoke-FtSetScriptBlock {
     
     #>
     Param(
-        [Parameter(Mandatory = $true)] $ComputerIP,
+        [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
         [Parameter(Mandatory = $true)] $ScriptBlock,
         [Parameter(Mandatory = $true)] $ActionIndex
@@ -278,7 +278,7 @@ function Install-FtApplication {
             - Creates the C:\FastTrackTempDir on remote hosts
             - Copies the installer to the C:\FastTrackTempDir on remote hosts
             - Unblocks the copied installer file (so no "Do you want to run this file?" pop-out appears resulting in instalation hang in the next step)
-            - Run the installer on remote hosts with aapropriate parameters
+            - Run the installer on remote hosts with appropriate parameters
             - Remove folder C:\FastTrackTempDir from remote hosts
     .PARAMETER ComputerIP
         Specifies the computer IP.
@@ -293,7 +293,7 @@ function Install-FtApplication {
     #>
 
     Param(
-        [Parameter(Mandatory = $true)] $ComputerIP,
+        [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
         [Parameter(Mandatory = $true)] $PathToInstaller,
         [Parameter(Mandatory = $true)] $ArgumentList
@@ -365,7 +365,7 @@ function Uninstall-FtApplication {
     #>
 
     Param(
-        [Parameter(Mandatory = $true)] $ComputerIP,
+        [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
         [Parameter(Mandatory = $true)] $ApplicationNameToMatch
     )
@@ -409,7 +409,7 @@ function Restart-FtRemoteComputer {
         Restart-FtRemoteComputer -ComputerIP $ComputerIP -Credential $Credential -Reboot $Reboot -DontWaitForHostsAfterReboot
     #>
     Param(
-        [Parameter(Mandatory = $true)] $ComputerIP,
+        [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
         [Parameter(Mandatory = $true)] $Reboot,
         [Parameter(Mandatory = $false)] [switch]$DontWaitForHostsAfterReboot
@@ -421,13 +421,13 @@ function Restart-FtRemoteComputer {
             Write-Host -ForegroundColor Cyan "A reboot was triggered on the selected remote hosts."
         }
         else {
-            Write-Host -ForegroundColor Cyan "Waiting for selected remote hosts to reboot (no more than 5 minutes)..." -NoNewLine
+            Write-Host -ForegroundColor Cyan "Waiting for selected remote hosts to reboot (no more than 5 minutes)... " -NoNewLine
             try {
                 Restart-Computer -ComputerName $ComputerIP -Credential $Credential -Wait -For PowerShell -Timeout 300 -WsmanAuthentication Default -Force -ErrorAction Stop
             }
             catch {
                 Write-Host -ForegroundColor Yellow "DONE"
-                Write-Error "One or more computers did not finish restarting within 5 minutes. Use Test-FtPowershellRemoting for troubleshooting."
+                Write-Error "One or more computers did not finish restarting within 5 minutes. Use Test-FtPSRemoting for troubleshooting."
                 Return
             }
             Write-Host -ForegroundColor Green "DONE"
@@ -449,8 +449,8 @@ function Confirm-FtRestart {
         Confirm-FtRestart
     #>
 
-    Write-Warning "Running this command will reboot the remote hosts after the operation. Only yes will be accepted as confirmation."
-    $Continue = Read-Host 'Do you really want to reboot the hosts?'
+    Write-Warning "A reboot of the remote hosts is needed after this operation."
+    $Continue = Read-Host "Do you want to automatically reboot the hosts after the operation? Only yes will be accepted as confirmation."
     if ($Continue -eq 'yes') { $Reboot = $true }
     else { $Reboot = $false }
     Return $Reboot

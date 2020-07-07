@@ -2,76 +2,105 @@
 ##### EVENTLOG #####
 ####################
 function Get-FtEventLogErrors {
-   ### Get Error events from servers' EventLog
    <#
 .SYNOPSIS
-  TODO
+    Retrieves the Errors (including Critical Errors) from the remote computers System Event Logs and groups them by EventID.
 .DESCRIPTION
-  TODO
+   The Get-FtEventLogErrors function:
+      - retrieves System Event Logs using Get-EventLog cmdlet
+      - groups retrieved logs by EventID, adding information for:
+         - the number of occurences of a particular event
+         - time of the first occurence of a particular event
+         - time of the last occurence of a particular event
+      NOTE: Get-FtEventLogErrors function retrieves EventLog System Log ERRORS and CRITICAL ERRORS. None of other levels are retrieved.
 .PARAMETER ComputerIP
-  Specifies the computer IP.
+   Specifies the computer IP.
 .PARAMETER Credential
-  Specifies the credentials used to login.
+   Specifies the credentials used to login.
+.PARAMETER After
+   Specifies the start date of System Logs search.
+.PARAMETER Before
+   Specifies the end date of System Logs search.
+.PARAMETER SortByAlias
+   Allows sorting by Alias. This is the default sort property, if none of the sort parameters are selected.
+.PARAMETER SortByHostnameInConfig
+   Allows sorting by Hostname in $SysConfig variable.
+.PARAMETER SortByNumberOfOccurences
+   Allows sorting by number of occurences of a particular event.
+.PARAMETER SortByEventID
+   Allows sorting by Event ID.
 .PARAMETER RawOutput
-   Specifies if the output should be formatted (human friendly output) or not (Powershell pipeline friendly output)
+   Specifies that the output will NOT be sorted and formatted as a table (human friendly output). Instead, a raw Powershell object will be returned (Powershell pipeline friendly output).
 .EXAMPLE
-  TODO
+   Get-FtEventLogErrors -ComputerIP $all -Credential $cred
+.EXAMPLE
+   Get-FtEventLogErrors -ComputerIP $all -Credential $cred -After '23 December 2019 13:53:45'
+.EXAMPLE
+   Get-FtEventLogErrors -ComputerIP $all -Credential $cred -After '23 December 2019 13:53:45' -Before '4 July 2020 7:10:17' -SortByNumberOfOccurences
 #>
    Param(
-      [Parameter(Mandatory = $true)] $ComputerIP,
+      [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
       [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
       [Parameter(Mandatory = $false)] $After,
       [Parameter(Mandatory = $false)] $Before,
+      [Parameter(Mandatory = $false)] [switch]$SortByAlias,
+      [Parameter(Mandatory = $false)] [switch]$SortByHostnameInConfig,
+      [Parameter(Mandatory = $false)] [switch]$SortByNumberOfOccurences,
+      [Parameter(Mandatory = $false)] [switch]$SortByEventID,
       [Parameter(Mandatory = $false)] [switch]$RawOutput
    )
 
+   $HeaderMessage = "Summary of ERROR type EventLog entries"
 
-   if ($After) { $EventLogAfter = Get-Date $After }
-   if ($Before) { $EventLogBefore = Get-Date $Before }
-   if ($After) {
-      if ($Before) {
-         $FullEventLogList = Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock { Get-EventLog -LogName System -EntryType Error -After $using:EventLogAfter -Before $using:EventLogBefore }
-      }
-      else {
-         $FullEventLogList = Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock { Get-EventLog -LogName System -EntryType Error -After $using:EventLogAfter }
-      }
-   }
-   elseif ($Before) {
-      $FullEventLogList = Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock { Get-EventLog -LogName System -EntryType Error -Before $using:EventLogBefore }
-   }
-   else {
-      $FullEventLogList = Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock { Get-EventLog -LogName System -EntryType Error } 
-   }
-   
-   Write-Host -ForegroundColor Cyan "`nNumber of Error type EventLog entries "
+   $ScriptBlock = {
+      $After = if ($using:After) {Get-Date $using:After}
+      $Before = if ($using:Before) {Get-Date $using:Before}
+      if ($After -and $Before) {$ServerEventLogList = Get-EventLog -LogName System -EntryType Error -After $After -Before $Before}
+      if ($After -and !$Before) {$ServerEventLogList = Get-EventLog -LogName System -EntryType Error -After $After}
+      if (!$After -and $Before) {$ServerEventLogList = Get-EventLog -LogName System -EntryType Error -Before $Before}
+      if (!$After -and !$Before) {$ServerEventLogList = Get-EventLog -LogName System -EntryType Error}
 
-   for ($i = 0; $i -lt $ComputerIP.Count; $i++) {
-      $ServerEventLogList = $FullEventLogList | Where-Object PSComputerName -eq $ComputerIP[$i]
-      $message = "`nSummary of Error type EventLog entries for " + $ComputerIP[$i]
-      Write-Host -ForegroundColor Cyan $message
-      $ServerEventLogListSummary = $ServerEventLogList | Group-Object Source | Sort-Object Count -Descending | Select-Object Name, Count
       $EventLogSummaryList = @()
-  
-      for ($j = 0; $j -lt $ServerEventLogListSummary.Count; $j++) {
-         $FirstEvent = ($ServerEventLogList | Where-Object Source -eq $ServerEventLogListSummary.Name[$j] | Sort-Object TimeGenerated)[0]
-         $LastEvent = ($ServerEventLogList | Where-Object Source -eq $ServerEventLogListSummary.Name[$j] | Sort-Object TimeGenerated -Descending)[0]
-         $OccurenceCount = ($ServerEventLogListSummary | Select-object Count)[$j]
 
-         $EventLogSummary = New-Object -TypeName PSObject
-         $EventLogSummary | Add-Member -MemberType NoteProperty -Name Count -Value $OccurenceCount.Count
-         $EventLogSummary | Add-Member -MemberType NoteProperty -Name FirstOccurrenceTime -Value $FirstEvent.TimeGenerated
-         $EventLogSummary | Add-Member -MemberType NoteProperty -Name LastOccurrenceTime -Value $LastEvent.TimeGenerated
-         $EventLogSummary | Add-Member -MemberType NoteProperty -Name PSComputerName -Value $LastEvent.PSComputerName
-         $EventLogSummary | Add-Member -MemberType NoteProperty -Name EntryType -Value $LastEvent.EntryType
-         $EventLogSummary | Add-Member -MemberType NoteProperty -Name Source -Value $LastEvent.Source
-         $EventLogSummary | Add-Member -MemberType NoteProperty -Name EventID -Value $LastEvent.EventID
-         $EventLogSummary | Add-Member -MemberType NoteProperty -Name Message -Value $LastEvent.Message
+      if ($null -ne $ServerEventLogList) {
+         $ServerEventLogListSummary = @()
+         $ServerEventLogListSummary += ($ServerEventLogList | Group-Object Source | Sort-Object Count -Descending | Select-Object Name, Count)
+         $ServerEventLogListSummary | Add-Member -MemberType AliasProperty -Name OccurenceCount -Value Count
+         
+         for ($j = 0; $j -lt $ServerEventLogListSummary.Length; $j++) {
+            if ($ServerEventLogListSummary.Length -eq 1) {
+               $FirstEvent = ($ServerEventLogList | Where-Object Source -eq $ServerEventLogListSummary.Name | Sort-Object TimeGenerated)[0]
+               $LastEvent = ($ServerEventLogList | Where-Object Source -eq $ServerEventLogListSummary.Name | Sort-Object TimeGenerated -Descending)[0]
+               $OccurenceCount = ($ServerEventLogListSummary | Select-object OccurenceCount)
+            }
+            else {
+               $FirstEvent = ($ServerEventLogList | Where-Object Source -eq $ServerEventLogListSummary.Name[$j] | Sort-Object TimeGenerated)[0]
+               $LastEvent = ($ServerEventLogList | Where-Object Source -eq $ServerEventLogListSummary.Name[$j] | Sort-Object TimeGenerated -Descending)[0]
+               $OccurenceCount = ($ServerEventLogListSummary | Select-object OccurenceCount)[$j]
+            }
 
-         $EventLogSummaryList += $EventLogSummary
+            $EventLogSummary = New-Object -TypeName PSObject
+            $EventLogSummary | Add-Member -MemberType NoteProperty -Name NumberOfOccurences -Value $OccurenceCount.OccurenceCount
+            $EventLogSummary | Add-Member -MemberType NoteProperty -Name FirstOccurrenceTime -Value $FirstEvent.TimeGenerated
+            $EventLogSummary | Add-Member -MemberType NoteProperty -Name LastOccurrenceTime -Value $LastEvent.TimeGenerated
+            $EventLogSummary | Add-Member -MemberType NoteProperty -Name Source -Value $LastEvent.Source
+            $EventLogSummary | Add-Member -MemberType NoteProperty -Name EventID -Value $LastEvent.EventID
+            $EventLogSummary | Add-Member -MemberType NoteProperty -Name Message -Value $LastEvent.Message
+
+            $EventLogSummaryList += $EventLogSummary
+         }
       }
-       
-      Write-Output $EventLogSummaryList | Sort-Object -Property PScomputerName | Format-Table -Wrap -AutoSize
+      Return $EventLogSummaryList
    }
+ 
+   $ActionIndex = Confirm-FtSwitchParameters $SortByAlias $SortByHostnameInConfig $SortByNumberOfOccurences $false $false $false $SortByEventID -DefaultSwitch 0
+ 
+   $Result = Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
+
+   $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'NumberOfOccurences', 'FirstOccurrenceTime', 'LastOccurrenceTime', 'Source', 'EventID', 'Message') 
+
+   if ($RawOutput) { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput }
+   else { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex }
 }
 
 ######################
@@ -95,13 +124,13 @@ function Get-FtOSVersion {
 .PARAMETER Credential
    Allows sorting by Install Date.
 .PARAMETER RawOutput
-   Specifies if the output should be formatted (human friendly output) or not (Powershell pipeline friendly output)
+   Specifies that the output will NOT be sorted and formatted as a table (human friendly output). Instead, a raw Powershell object will be returned (Powershell pipeline friendly output).
 .EXAMPLE
    Get-FtOSVersion -ComputerIP $all -Credential $cred
    Get-FtOSVersion -ComputerIP $all -Credential $cred -SortByInstallDate
 #>
    param(
-      [Parameter(Mandatory = $true)] $ComputerIP,
+      [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
       [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
       [Parameter(Mandatory = $false)] [switch]$SortByReleaseID,
       [Parameter(Mandatory = $false)] [switch]$SortByInstallDate,
@@ -138,12 +167,12 @@ function Get-FtHWSpecification {
    .PARAMETER Credential
    Specifies the credentials used to login.
    .PARAMETER RawOutput
-   Specifies if the output should be formatted (human friendly output) or not (Powershell pipeline friendly output)
+   Specifies that the output will NOT be sorted and formatted as a table (human friendly output). Instead, a raw Powershell object will be returned (Powershell pipeline friendly output).
    .EXAMPLE
    Get-FtHWSpecification -ComputerIP $All -Credential $cred
    #>
    Param(
-      [Parameter(Mandatory = $true)] $ComputerIP,
+      [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
       [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
       [Parameter(Mandatory = $false)] [switch]$RawOutput
    )
@@ -183,8 +212,8 @@ function Install-FtBGInfo {
       1) Check if the PathToBGInfoExecutable and PathToBGInfoTemplate are valid
       2) Create the C:\BGInfo folder on remote hosts
       3) Copy the BGInfo executable and template to the C:\BGInfo folder on remote hosts
-      4) Create a BGInfo shortcut in C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp folder
-      5) Run BGInfo
+      4) Create a BGInfo shortcut in C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp folder and on the desktop
+      5) Print next steps information
    .PARAMETER ComputerIP
       Specifies the computer IP.
    .PARAMETER Credential
@@ -194,16 +223,16 @@ function Install-FtBGInfo {
    .PARAMETER PathToBGInfoTemplate
       Specifies the LOCAL path to the BGInfo template.
    .EXAMPLE
-      Install-BGInfo -ComputerIP $all_hosts -Credential $Cred -PathToBGInfoExecutable 'C:\AvidInstallers\BGInfo\BGInfo.exe' -PathToBGInfoTemplate 'C:\AvidInstallers\BGInfo\x64Client.bgi'
+      Install-FtBGInfo -ComputerIP $ie -Credential $cred -PathToBGInfoExecutable 'C:\AvidInstallers\BGInfo\BGInfo.exe' -PathToBGInfoTemplate 'C:\AvidInstallers\BGInfo\x64Client.bgi'
    #>
    
    Param(
-      [Parameter(Mandatory = $true)] $ComputerIP,
+      [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
       [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
       [Parameter(Mandatory = $true)] $PathToBGInfoExecutable,
       [Parameter(Mandatory = $true)] $PathToBGInfoTemplate
    )
-   
+
    $BGInfoExecutableFileName = Split-Path $PathToBGInfoExecutable -leaf
    $BGInfoTemplateFilename = Split-Path $PathToBGInfoTemplate -leaf
 
@@ -213,47 +242,44 @@ function Install-FtBGInfo {
    $PathToShortcut = "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp\BGInfo.lnk"
    $BGInfoArguments = $PathToBGInfoTemplateRemote + " /NOLICPROMPT /TIMER:0"
    
-   #1. Check if the PathToBGInfoExecutable and PathToBGInfoTemplate are valid - cancel installation if not.
-   Write-Host -ForegroundColor Cyan "`nChecking if the path to BGInfo executable and template are valid ones. Please wait..."
+   #1a. Check if the $PathToBGInfoExecutable is valid - cancel installation if not.
+   Write-Host -ForegroundColor Cyan "`Checking the path to BGInfo executable..." -NoNewline
    if (-not (Test-Path -Path $PathToBGInfoExecutable -PathType leaf)) {
-      if (-not (Test-Path -Path $PathToBGInfoTemplate -PathType leaf)) {
-         Write-Host -ForegroundColor Red "`nPaths to BGInfo executable and BGInfo tempate are not valid. Exiting..."
-         return
-      }
-      Write-Host -ForegroundColor Red "`nPath to BGInfo executable is not valid. Exiting..."
-      return
-   }
-   elseif (Test-Path -Path $PathToBGInfoExecutable -PathType leaf) {
-      if (-not (Test-Path -Path $PathToBGInfoTemplate -PathType leaf)) {
-         Write-Host -ForegroundColor Red "`nPath to BGInfo tempate is not valid. Exiting..."
-         return
-      }
+      Write-Host -ForegroundColor Red "NOT VALID"
+      Write-Host -ForegroundColor Red "Please check the path to BGInfo executable on your local computer."
+      Return
    }
    else {
-      Write-Host -ForegroundColor Green "`nPaths are valid. Let's continue..."
+      Write-Host -ForegroundColor Green "VALID"
+   }
+
+   #1b. Check if the $PathToBGInfoETemplate is valid - cancel installation if not.
+   Write-Host -ForegroundColor Cyan "`Checking the path to BGInfo template..." -NoNewline
+   if (-not (Test-Path -Path $PathToBGInfoTemplate -PathType leaf)) {
+      Write-Host -ForegroundColor Red "NOT VALID"
+      Write-Host -ForegroundColor Red "Please check the path to BGInfo template on your local computer."
+      Return
+   }
+   else {
+      Write-Host -ForegroundColor Green "VALID"
    }
    
-   #2. Create the C:\BGInfo folders on remote hosts
-   Write-Host -ForegroundColor Cyan "`nCreating folder C:\BGInfo on remote hosts. Please wait..."
+   #2. Create the C:\BGInfo on remote hosts
+   Write-Host -ForegroundColor Cyan "Creating folder C:\BGInfo on remote hosts... " -NoNewline
    Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock { New-Item -ItemType 'directory' -Path 'C:\BGInfo' | Out-Null }
-   Write-Host -ForegroundColor Green "`nFolder C:\BGInfo SUCCESSFULLY created on selected remote hosts."
-   
-   #3. Copy the BGInfo executable and template to the local drive of remote hosts
-   Write-Host -ForegroundColor Cyan "`nCopying the BGInfo executable and template to remote hosts. Please wait..."
+   Write-Host -ForegroundColor Green "DONE"
+
+   #3a. Copy BGInfo executable and template to the local drive of the remote hosts
+   Write-Host -ForegroundColor Cyan "Copying BGInfo executable and template to remote hosts... " -NoNewline
    $ComputerIP | ForEach-Object -Process {
       $Session = New-PSSession -ComputerName $_ -Credential $Credential
-      Copy-Item -LiteralPath $PathToBGInfoExecutable -Destination "C:\BGInfo\" -ToSession $Session
-      Copy-Item -LiteralPath $PathToBGInfoTemplate -Destination "C:\BGInfo\" -ToSession $Session
+      Copy-Item -LiteralPath $PathToBGInfoExecutable -Destination "C:\BGInfo" -ToSession $Session
+      Copy-Item -LiteralPath $PathToBGInfoTemplate -Destination "C:\BGInfo" -ToSession $Session
    }
-   Write-Host -ForegroundColor Green "`nBGInfo Executable and template SUCCESSFULLY copied to selected remote hosts."
+   Write-Host -ForegroundColor Green "DONE"
    
-   #4. Unblock the copied installer (so no "Do you want to run this file?" pop-out hangs the installation in the next step)
-   #Write-Host -ForegroundColor Cyan "`nUnblocking copied files. Please wait..."
-   #Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {Unblock-File -Path $using:PathToInstallerRemote}
-   #Write-Host -ForegroundColor Green "`nall files SUCCESSFULLY unblocked."
-   
-   #5. Create the GBInfo shortcut in common startup folder
-   Write-Host -ForegroundColor Cyan "`nCreating BGInfo autostart and desktop shortcuts on remote hosts. Please wait..."
+   #4. Create BGInfo shortcut in common startup folder
+   Write-Host -ForegroundColor Cyan "Creating BGInfo autostart and desktop shortcuts on remote hosts..." -NoNewline
    Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock {
       $WshShell = New-Object -comObject WScript.Shell
       $Shortcut = $WshShell.CreateShortcut($using:PathToShortcut)
@@ -262,11 +288,10 @@ function Install-FtBGInfo {
       $Shortcut.Save()
       Copy-Item $using:PathToShortcut -Destination "C:\Users\Public\Desktop"
    }
-   Write-Host -ForegroundColor Green "`nBGInfo autostart and desktop shortcuts SUCCESFULY created on selected remote hosts."
+   Write-Host -ForegroundColor Green "DONE"
 
    #5. Run BGInfo on remote hosts
-   Write-Host -ForegroundColor Red "`nPlease use the desktop shortcut on remote hosts to run BGInfo for the first time."
-   Write-Host -ForegroundColor Red "Also, remember to add the right BGInfo fields on appropriate hosts."
+   Write-Warning "Please use the desktop shortcut on remote hosts to run BGInfo for the first time. Also, modify the used template appropriately."
 }
 
 function Get-FtUptime {
@@ -282,12 +307,12 @@ Specifies the computer IP.
 .PARAMETER Credential
 Specifies the credentials used to login.
 .PARAMETER RawOutput
-Specifies if the output should be formatted (human friendly output) or not (Powershell pipeline friendly output)
+Specifies that the output will NOT be sorted and formatted as a table (human friendly output). Instead, a raw Powershell object will be returned (Powershell pipeline friendly output).
 .EXAMPLE
 Get-FtUptime -ComputerIP $All -Credential $cred
 #>
    Param(
-      [Parameter(Mandatory = $true)] $ComputerIP,
+      [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
       [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
       [Parameter(Mandatory = $false)] [switch]$RawOutput
    )

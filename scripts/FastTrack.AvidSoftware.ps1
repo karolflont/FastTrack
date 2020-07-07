@@ -21,7 +21,7 @@ function Install-FtAvidNexisClient {
     .PARAMETER PathToInstaller
         Specifies the LOCAL to your computer path to the installer. (The installer will be copied to all remote hosts.)
     .PARAMETER DontRebootAfterInstallation
-        Specifies if remote hosts shuld be rebooted after the installation.
+        Specifies if remote hosts should be rebooted after the installation.
     .PARAMETER DontWaitForHostsAfterReboot
         Specifies if the command should wait for the remote hosts to come back online after triggering the reboot.
     .PARAMETER Force
@@ -31,7 +31,7 @@ function Install-FtAvidNexisClient {
     #>
 
     Param(
-        [Parameter(Mandatory = $true)] $ComputerIP,
+        [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
         [Parameter(Mandatory = $true)] $PathToInstaller,
         [Parameter(Mandatory = $false)] [switch]$DontRebootAfterInstallation,
@@ -71,7 +71,7 @@ function Uninstall-FtAvidNexisClient {
 #>
 
     Param(
-        [Parameter(Mandatory = $true)] $ComputerIP,
+        [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
         [Parameter(Mandatory = $false)] [switch]$DontRebootAfterUnInstallation,
         [Parameter(Mandatory = $false)] [switch]$DontWaitForHostsAfterReboot,
@@ -121,7 +121,7 @@ function Get-FtAvidSoftware {
     .PARAMETER SortByInstallDate
         Allows sortign by Application Install Date.
     .PARAMETER RawOutput
-        Specifies if the output should be formatted (human friendly output) or not (Powershell pipeline friendly output)
+        Specifies that the output will NOT be sorted and formatted as a table (human friendly output). Instead, a raw Powershell object will be returned (Powershell pipeline friendly output).
     .EXAMPLE
         Get-FtAvidSoftware -ComputerIP $all -Credential $cred
         Get-FtAvidSoftware -ComputerIP $all -Credential $cred -SortByDisplayVersion
@@ -129,7 +129,7 @@ function Get-FtAvidSoftware {
     #>
     
     Param(
-        [Parameter(Mandatory = $true)] $ComputerIP,
+        [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
         [Parameter(Mandatory = $false)] [switch]$SortByAlias,
         [Parameter(Mandatory = $false)] [switch]$SortByHostnameInConfig,
@@ -178,13 +178,13 @@ function Get-FtAvidServices {
     .PARAMETER SortByStartType
         Allows sorting by Service Start Type.
     .PARAMETER RawOutput
-        Specifies if the output should be formatted (human friendly output) or not (Powershell pipeline friendly output)
+        Specifies that the output will NOT be sorted and formatted as a table (human friendly output). Instead, a raw Powershell object will be returned (Powershell pipeline friendly output).
     .EXAMPLE
         Get-FtAvidServices -ComputerIP $all -Credential $cred
         Get-FtAvidServices -ComputerIP $all -Credential $cred -SortByStatus
     #>
     Param(
-        [Parameter(Mandatory = $true)] $ComputerIP,
+        [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
         [Parameter(Mandatory = $false)] [switch]$SortByAlias,
         [Parameter(Mandatory = $false)] [switch]$SortByHostnameInConfig,

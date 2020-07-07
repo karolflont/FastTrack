@@ -1,12 +1,12 @@
 ###########################
 ### POWERSHELL REMOTING ###
 ###########################
-function Test-FtPowershellRemoting {
+function Test-FtPSRemoting {
    <#
     .SYNOPSIS
        Test if Powershell Remoting to a list of hosts is possible.
     .DESCRIPTION
-       The Test-FtPowershellRemoting function tests:
+       The Test-FtPSRemoting function tests:
        - If the conenction over WSMan is possible, using Test-WSMan
        - If the given credentials are valid on the remote host, using New-PSSession
     .PARAMETER ComputerIP
@@ -14,10 +14,10 @@ function Test-FtPowershellRemoting {
     .PARAMETER Credential
        Specifies the credentials used to login.
     .EXAMPLE
-       Test-FtPowershellRemoting -ComputerIP $all -Credential $cred
+       Test-FtPSRemoting -ComputerIP $all -Credential $cred
     #>
    param (
-      [Parameter(Mandatory = $true)] $ComputerIP,
+      [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
       [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential
    )
  
@@ -91,12 +91,12 @@ function Get-FtRemoteDesktop {
    .PARAMETER Credential
       Specifies the credentials used to login.
    .PARAMETER RawOutput
-      Specifies if the output should be formatted (human friendly output) or not (Powershell pipeline friendly output)
+      Specifies that the output will NOT be sorted and formatted as a table (human friendly output). Instead, a raw Powershell object will be returned (Powershell pipeline friendly output).
    .EXAMPLE
       Get-FtRemoteDesktop -ComputerIP $all -Credential $cred
    #>
    param(
-      [Parameter(Mandatory = $true)] $ComputerIP,
+      [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
       [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
       [Parameter(Mandatory = $false)] [switch]$RawOutput
    )
@@ -183,7 +183,7 @@ function Set-FtRemoteDesktop {
     Set-FtRemoteDesktop -ComputerIP $all -Credential $cred -EnableWithEnabledNLA
     #>
    param (
-      [Parameter(Mandatory = $true)] $ComputerIP,
+      [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
       [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
       [Parameter(Mandatory = $false)] [switch] $EnableWithDisabledNLA,
       [Parameter(Mandatory = $false)] [switch] $EnableWithEnabledNLA,
