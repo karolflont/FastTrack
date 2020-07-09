@@ -27,7 +27,8 @@ as the fact that FastTrack is distributed under the GNU General Public License v
 As the first step to use FastTrack module, you should prepare and import the SystemConfiguration.json file.
 If you don't know what a System Configuration file is and how to prepare it, please read README.md.
 Preparing SystemConfiguration.json file is OBLIGATORY. You cannot use FastTrack module without it.
-Here's an example of how to import the SystemConfiguration.json file.
+You can modify the attached 'FastTrack.SystemConfiguration.DevEnv.json' to mach your infrastructure configuration.
+Here's an example of how to import the SystemConfiguration.json file. You can use a relative or absolute path.
 #>
 Import-FtSystemConfiguration -Path 'FastTrack.SystemConfiguration.DevEnv.json'
 <#

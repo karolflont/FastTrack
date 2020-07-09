@@ -24,7 +24,10 @@ You can istall FastTrack on either:
 
 First option is the PREFERRED one, as some of the functions of this module trigger a mass restart of managed hosts. Using these functions with FastTrack module installed on one of the managed hosts will result in this host being omitted from the restart.
 
-To install the FastTrack module on your computer run FastTrack.INSTALL.ps1 script from an elevated PowerShell prompt (Run as administrator).
+To install the FastTrack module on your computer:
+- open an elevated PowerShell prompt (Run as administrator) (Can be PowerShell ISE as well)
+- change your working directory to the directory contatining FastTrack.INSTALL.ps1 file (Do NOT copy this file out of it's directory - other files in this directory are important as well and have to be in the same directory as FastTrack.INSTALL.ps1 for proper installation)
+- run FastTrack.INSTALL.ps1 script
 
 WARNING: Installing FastTrack will add all hosts ("*") to the WSMan:\localhost\Client\TrustedHosts. If you already have some hosts defined as WSMan trusted hosts, these will be backed up and restored automatically when you run FastTrack uninstall script. 
 
@@ -34,7 +37,9 @@ To uninstall the FastTrack module on your computer run FastTrack.UNINSTALL.ps1 s
 
 ## Usage
 
-Check FastTrack.SAMPLE.ps1 for sample usage of this module.
+Check FastTrack.SAMPLE.ps1 for sample usage of this module. A convinient way to follow this SAMPLE (and to use FastTrack in general) is to open it in PowerShell ISE. This way you can:
+- run single lines of FastTrack.SAMPLE.ps1 file by placing a cursor on a selected line and hitting F8
+- browse the FastTrack module functions in the PowerShell ISE Commands menu
 
 ---
 
