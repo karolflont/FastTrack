@@ -30,7 +30,7 @@ function Import-FtSystemConfiguration {
         $global:FtConfig = $FtConfigVar | ConvertTo-Json
     }
     catch {
-        Write-Host -ForegroundColor Red "`n Import of JSON config file failed. Plese validate it's syntax, e.g. using https://jsonlint.com/ "
+        Write-Host -ForegroundColor Red "`n Import of JSON config file failed. Plese validate path to the file or it's syntax, e.g. using https://jsonlint.com/ "
         Return
     }
 
