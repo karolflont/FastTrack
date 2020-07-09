@@ -270,6 +270,8 @@ function Install-FtBGInfo {
    if (-not (Test-Path -Path $PathToBGInfoTemplate -PathType leaf)) {
       Write-Host -ForegroundColor Red "NOT VALID"
       Write-Host -ForegroundColor Red "Please check the path to BGInfo template on your local computer."
+      Write-Host -ForegroundColor Cyan "Installation of BGInfo " -NoNewline
+      Write-Host -ForegroundColor Red "ABORTED"
       Return
    }
    else {

@@ -59,6 +59,10 @@ function Install-FtAvidNexisClient {
         if ($DontWaitForHostsAfterTriggeringRestart) { Restart-FtRemoteComputer -ComputerIP $ComputerIP -Credential $Credential -Restart $Restart -DontWaitForHostsAfterTriggeringRestart }
         else { Restart-FtRemoteComputer -ComputerIP $ComputerIP -Credential $Credential -Restart $Restart }
     }
+    else {
+        Write-Host -ForegroundColor Cyan "Installation of AvidNEXIS Client " -NoNewline
+        Write-Host -ForegroundColor Red "ABORTED"
+    }
 }
 
 function Uninstall-FtAvidNexisClient {
