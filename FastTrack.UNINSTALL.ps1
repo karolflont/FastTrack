@@ -26,6 +26,3 @@ $BackupPath = $destination + "\FastTrackTrustedHostsBackup.bkp"
 $FastTrackTrustedHostsBackup = [string](Get-Content -Path $BackupPath)
 Set-Item WSMan:\localhost\Client\TrustedHosts -Value $FastTrackTrustedHostsBackup -Force -PassThru
 Write-Host -ForegroundColor Green "`nWSMan:\localhost\Client\TrustedHosts restored."
-
-# Footer message
-Write-Host -ForegroundColor Yellow "`nPlease restore manually WSMan:\localhost\Client\TrustedHosts if you had some entries there."
