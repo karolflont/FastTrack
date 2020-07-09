@@ -1,3 +1,6 @@
+# Copyright (C) 2018  Karol Flont
+# Full license notice can be found in FastTrack.psd1 file.
+
 function Confirm-FtSwitchParameters {
     <#
     .SYNOPSIS
@@ -12,7 +15,7 @@ function Confirm-FtSwitchParameters {
         Specifies which switch parameter index should be returned as default, in case none of the switch parameters is $true.
     .EXAMPLE
         Confirm-FtSwitchParameters $Enable $Disable
-        Confirm-FtSwitchParameters $SortByAlias $SortByHostnameInConfig $SortByDisplayName $SortByStatus $SortByStartType -DefaultSwitch 0
+        Confirm-FtSwitchParameters $SortByAlias $SortByHostnameInConfig $SortByDisplayName $SortByStatus $SortByStartType -DefaultSwitch0
     #>
     param(
         [Parameter(Mandatory = $false)] $Param0,
@@ -25,7 +28,7 @@ function Confirm-FtSwitchParameters {
         [Parameter(Mandatory = $false)] $Param7,
         [Parameter(Mandatory = $false)] $Param8,
         [Parameter(Mandatory = $false)] $Param9,
-        [Parameter(Mandatory = $false)] [int]$DefaultSwitch
+        [Parameter(Mandatory = $false)] [switch] $DefaultSwitch0
     )
 
     $index = $null
@@ -84,8 +87,8 @@ function Confirm-FtSwitchParameters {
         Return $index
     }
     else {
-        if ($DefaultSwitch){
-            Return $DefaultSwitch
+        if ($DefaultSwitch0) {
+            Return 0
         }
         else {
             #If none switch was selected and thre's no default one defined, print error and return -1
@@ -103,7 +106,7 @@ function Add-FtAliasAndHostnameProperties {
     The Add-FtAliasAndHostnameProperties function adds two properites to a given object:
     - Alias
     - HostnameInConfig
-    These properties are derived from the $SysConfig global variable based on the IPs from PSCopmuterName property of the object
+    These properties are derived from the $FtConfig global variable based on the IPs from PSCopmuterName property of the object
     .EXAMPLE
     $AvidSoftwareVersionsLabeled = Add-FtAliasAndHostnameProperties $AvidSoftwareVersionsRaw
     #>
@@ -113,7 +116,7 @@ function Add-FtAliasAndHostnameProperties {
     )
 
     # Import configuration variable
-    $sc = $global:SysConfig | ConvertFrom-Json
+    $ftc = $global:FtConfig | ConvertFrom-Json
 
     $OutputObject = @()
     # For every element in $InputObject...
@@ -124,11 +127,11 @@ function Add-FtAliasAndHostnameProperties {
         $CurrentIP = $LabeledElement.PSComputerName
 
         # Add Alias property
-        $AliasValue = ($sc.hosts | Where-object { $_.IP -eq $CurrentIP }).alias
+        $AliasValue = ($ftc.hosts | Where-object { $_.IP -eq $CurrentIP }).alias
         $LabeledElement | Add-Member -MemberType NoteProperty -Name "Alias" -Value $AliasValue
 
         # Add HostnameInConfig property
-        $HostnameInConfigValue = ($sc.hosts | Where-object { $_.IP -eq $CurrentIP }).hostname
+        $HostnameInConfigValue = ($ftc.hosts | Where-object { $_.IP -eq $CurrentIP }).hostname
         $LabeledElement | Add-Member -MemberType NoteProperty -Name "HostnameInConfig" -Value $HostnameInConfigValue
 
         $OutputObject += $LabeledElement
@@ -244,6 +247,8 @@ function Invoke-FtSetScriptBlock {
         Specifies the computer IP.
     .PARAMETER Credential
         Specifies the credentials used to login.
+    .PARAMETER HeaderMessage 
+        Specifies a message displayed as a header in the output.
     .PARAMETER ScriptBlock
         Specifies the script block to invoke on the remote computers.
     .PARAMETER ActionIndex
@@ -254,12 +259,13 @@ function Invoke-FtSetScriptBlock {
     Param(
         [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
+        [Parameter(Mandatory = $true)] $HeaderMessage,
         [Parameter(Mandatory = $true)] $ScriptBlock,
         [Parameter(Mandatory = $true)] $ActionIndex
     )
 
     #Run Script Block on remote computers
-    Write-Host -ForegroundColor Cyan "Changing remote hosts configuration... " -NoNewline
+    Write-Host -ForegroundColor Cyan "Changing remote hosts $HeaderMessage... " -NoNewline
     $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
     Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock $ScriptBlock | Out-Null
     $StopWatch.Stop()
@@ -394,36 +400,43 @@ function Uninstall-FtApplication {
 function Restart-FtRemoteComputer {
     <#
     .SYNOPSIS
-        Controls a reboot operation on remote computers.
+        Controls a restart operation on remote computers.
     .DESCRIPTION
-        The Restart-FtRemoteComputer function invokes a reboot on remote computers or prints a reboot request message.        
+        The Restart-FtRemoteComputer function invokes a restart on remote computers or prints a restart request message.        
     .PARAMETER ComputerIP
         Specifies the computer IP.
     .PARAMETER Credential
         Specifies the credentials used to login.
-    .PARAMETER Reboot
-        Specifies if the remote computers should be rebooted or just a reboot request message should be printed.
-    .PARAMETER DontWaitForHostsAfterReboot
+    .PARAMETER Restart
+        Specifies if the remote computers should be restarted or just a restart request message should be printed.
+    .PARAMETER DontWaitForHostsAfterTriggeringRestart
         Specifies if Powershell should wait for the remote hosts to be available for PowerShell Remoting again.
     .EXAMPLE
-        Restart-FtRemoteComputer -ComputerIP $ComputerIP -Credential $Credential -Reboot $Reboot -DontWaitForHostsAfterReboot
+        Restart-FtRemoteComputer -ComputerIP $ComputerIP -Credential $Credential -Restart $Restart -DontWaitForHostsAfterTriggeringRestart
     #>
     Param(
         [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
         [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
-        [Parameter(Mandatory = $true)] $Reboot,
-        [Parameter(Mandatory = $false)] [switch]$DontWaitForHostsAfterReboot
+        [Parameter(Mandatory = $true)] $Restart,
+        [Parameter(Mandatory = $false)] [switch]$DontWaitForHostsAfterTriggeringRestart
     )
 
-    if ($Reboot) {
-        if ($DontWaitForHostsAfterReboot) {
-            Restart-Computer -ComputerName $ComputerIP -Credential $Credential -Force
-            Write-Host -ForegroundColor Cyan "A reboot was triggered on the selected remote hosts."
+    # If this function is run from a computer which IP is in $ComputerIP array, this computer will be excluded form the restart
+    $IP = (Get-NetIPConfiguration -Detailed | Where-Object { ($_.IPv4Address.IPAddress -In $ComputerIP) }).IPv4Address.IPAddress
+    $ComputerIPWithLocalComputerIPCutOff = $ComputerIP | Where-Object { $_ -notin $IP }
+    if ($null -ne (Compare-Object $ComputerIPWithLocalComputerIPCutOff $ComputerIP)) {
+        Write-Warning "You are trying to restart the computer you're running this function from. This computer will be excluded from the restart. Please restart it manually later."
+    }
+
+    if ($Restart) {
+        if ($DontWaitForHostsAfterTriggeringRestart) {
+            Restart-Computer -ComputerName $ComputerIPWithLocalComputerIPCutOff -Credential $Credential -Force
+            Write-Host -ForegroundColor Cyan "A restart was triggered on the selected remote hosts."
         }
         else {
-            Write-Host -ForegroundColor Cyan "Waiting for selected remote hosts to reboot (no more than 5 minutes)... " -NoNewLine
+            Write-Host -ForegroundColor Cyan "Waiting for selected remote hosts to restart (no more than 5 minutes)... " -NoNewLine
             try {
-                Restart-Computer -ComputerName $ComputerIP -Credential $Credential -Wait -For PowerShell -Timeout 300 -WsmanAuthentication Default -Force -ErrorAction Stop
+                Restart-Computer -ComputerName $ComputerIPWithLocalComputerIPCutOff -Credential $Credential -Wait -For PowerShell -Timeout 300 -WsmanAuthentication Default -Force -ErrorAction Stop
             }
             catch {
                 Write-Host -ForegroundColor Yellow "DONE"
@@ -431,7 +444,7 @@ function Restart-FtRemoteComputer {
                 Return
             }
             Write-Host -ForegroundColor Green "DONE"
-            Write-Host -ForegroundColor Cyan "Selected remote hosts rebooted and available for PowerShell Remoting again."
+            Write-Host -ForegroundColor Cyan "Selected remote hosts restarted and available for PowerShell Remoting again."
         }
     }
     else {
@@ -442,18 +455,18 @@ function Restart-FtRemoteComputer {
 function Confirm-FtRestart {
     <#
     .SYNOPSIS
-        Confirms a reboot operation on remote computers.
+        Confirms a restart operation on remote computers.
     .DESCRIPTION
-        The Confirm-FtRestart function asks a user for confirmation of the remote hosts reboot.        
+        The Confirm-FtRestart function asks a user for confirmation of the remote hosts restart.        
     .EXAMPLE
         Confirm-FtRestart
     #>
 
-    Write-Warning "A reboot of the remote hosts is needed after this operation."
-    $Continue = Read-Host "Do you want to automatically reboot the hosts after the operation? Only yes will be accepted as confirmation."
-    if ($Continue -eq 'yes') { $Reboot = $true }
-    else { $Reboot = $false }
-    Return $Reboot
+    Write-Warning "A restart of the remote hosts is needed after this operation."
+    $Continue = Read-Host "Do you want to automatically restart the hosts after the operation? Only yes will be accepted as confirmation."
+    if ($Continue -eq 'yes') { $Restart = $true }
+    else { $Restart = $false }
+    Return $Restart
 }
 
 

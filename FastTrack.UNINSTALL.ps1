@@ -1,4 +1,7 @@
-﻿#Requires -RunAsAdministrator
+﻿# Copyright (C) 2018  Karol Flont
+# Full license notice can be found in FastTrack.psd1 file.
+
+#Requires -RunAsAdministrator
 
 Write-Host -ForegroundColor Green "`nUninstalling FastTrack module..."
 
@@ -18,9 +21,11 @@ Write-Host -ForegroundColor Green "`nModule FastTrack uninstalled."
 Remove-Module FastTrack -Force -ErrorAction SilentlyContinue
 Write-Host -ForegroundColor Green "`nModule FastTrack unloaded from the active memory."
 
-# Clearing "all hosts" from trusted hosts
-Set-Item WSMan:\localhost\Client\TrustedHosts -Value "" -Force
-Write-Host -ForegroundColor Green "`nWSMan:\localhost\Client\TrustedHosts cleared."
+# Restoring TrustedHosts from backup
+$BackupPath = $destination + "\FastTrackTrustedHostsBackup.bkp"
+$FastTrackTrustedHostsBackup = [string](Get-Content -Path $BackupPath)
+Set-Item WSMan:\localhost\Client\TrustedHosts -Value $FastTrackTrustedHostsBackup -Force -PassThru
+Write-Host -ForegroundColor Green "`nWSMan:\localhost\Client\TrustedHosts restored."
 
 # Footer message
 Write-Host -ForegroundColor Yellow "`nPlease restore manually WSMan:\localhost\Client\TrustedHosts if you had some entries there."

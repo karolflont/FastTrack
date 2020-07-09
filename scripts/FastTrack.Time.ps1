@@ -1,3 +1,6 @@
+# Copyright (C) 2018  Karol Flont
+# Full license notice can be found in FastTrack.psd1 file.
+
 #########################
 ##### TIME SETTINGS #####
 #########################

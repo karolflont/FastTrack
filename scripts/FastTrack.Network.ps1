@@ -1,3 +1,6 @@
+# Copyright (C) 2018  Karol Flont
+# Full license notice can be found in FastTrack.psd1 file.
+
 ###############
 ### NETWORK ###
 ###############
@@ -115,12 +118,13 @@ function Start-FtFirewallService {
       [Parameter(Mandatory = $false)] [switch]$DontCheck
    )
 
-   $ScriptBlock = @()
+   $HeaderMessage = "Windows Defender Firewall service status"
+
    $ScriptBlock = { Set-Service -Name MpsSvc -StartupType Automatic -Status Running -PassThru }
 
    $ActionIndex = 0
  
-   Invoke-FtSetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
+   Invoke-FtSetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
 
    if (!$DontCheck) {
       Write-Host -ForegroundColor Cyan "Let's check the configuration with Get-FtFirewallService."
@@ -221,9 +225,9 @@ function Set-FtFirewallState {
       [Parameter(Mandatory = $false)] [switch]$DontCheck
    )
 
+   $HeaderMessage = "Windows Defender Firewall state"
+
    $ActionIndex = Confirm-FtSwitchParameters $AllOn $AllOff $DomainOn $DomainOff $PrivateOn $PrivateOff $PublicOn $PublicOff
-    
-   $ScriptBlock = @()
 
    if ($ActionIndex -eq 0) {
       #If AllOn switch was selected
@@ -258,7 +262,7 @@ function Set-FtFirewallState {
       $ScriptBlock = { Set-NetFirewallProfile -Profile Public -Enabled False }
    }
 
-   Invoke-FtSetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
+   Invoke-FtSetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
 
    if (!$DontCheck -and ($ActionIndex -ne -1)) {
       Write-Host -ForegroundColor Cyan "Let's check the configuration with Get-FtFirewallState."

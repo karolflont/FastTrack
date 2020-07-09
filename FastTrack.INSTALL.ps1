@@ -1,4 +1,7 @@
-﻿#Requires -RunAsAdministrator
+﻿# Copyright (C) 2018  Karol Flont
+# Full license notice can be found in FastTrack.psd1 file.
+
+#Requires -RunAsAdministrator
 
 # Getting the path to current directory
 $source = Get-Location
@@ -36,9 +39,15 @@ Write-Host -ForegroundColor Green "`nModule FastTrack installed."
 Import-Module FastTrack -Force
 Write-Host -ForegroundColor Green "`nModule FastTrack imported."
 
+# Backing up TrustedHosts Value
+$FastTrackTrustedHostsBackup = (Get-Item WSMan:\localhost\Client\TrustedHosts).Value
+$BackupPath = $destination + "\FastTrackTrustedHostsBackup.bkp"
+Out-File -FilePath $BackupPath -InputObject $FastTrackTrustedHostsBackup
+Write-Host -ForegroundColor Green "`nMWSMan:\localhost\Client\TrustedHosts backed up. "
+
 # Adding "all hosts" to trusted hosts
 Set-Item WSMan:\localhost\Client\TrustedHosts -Value "*" -Force
-Write-Host -ForegroundColor Green "`nMWSMan:\localhost\Client\TrustedHosts updated with '*' "
+Write-Host -ForegroundColor Green "`nMWSMan:\localhost\Client\TrustedHosts updated with '*'. "
 
 # Footer message
 Write-Host -ForegroundColor Yellow "`nCheck FastTrack.SAMPLE.ps1 for sample usage of FastTrack module."

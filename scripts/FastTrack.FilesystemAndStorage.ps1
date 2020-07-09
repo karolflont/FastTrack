@@ -1,3 +1,6 @@
+# Copyright (C) 2018  Karol Flont
+# Full license notice can be found in FastTrack.psd1 file.
+
 #################################################
 ##### SHOW HIDDEN FILES, FOLDERS AND DRIVES #####
 #################################################
@@ -75,15 +78,16 @@ function Set-FtHiddenFilesAndFolders {
         [Parameter(Mandatory = $false)] [switch]$DontCheck
     )
 
-    Write-Warning "This will restart the explorer.exe process on all hosts after changing the parameter. This means ALL your opened folders on the selected hosts will be closed and ongoing copy processes will also be stopped. Only yes will be accepted as confirmation."
-    $Continue = Read-Host 'Do you want to continue?'
+    $HeaderMessage = "Hidden files and folders status"
+
+    $ActionIndex = Confirm-FtSwitchParameters $Show $Hide
+
+    Write-Warning "A restart of explorer.exe process on all remote hosts is needed after this operation. This means ALL your opened folders on the selected hosts will be closed and ongoing copy processes will also be stopped."
+    $Continue = Read-Host 'Do you want to continue? Only yes will be accepted as confirmation.'
 
     if ($Continue -ne 'yes') {
         Return
     }
-
-    $ActionIndex = Confirm-FtSwitchParameters $Show $Hide
-    $ScriptBlock = @()
 
     if ($ActionIndex -eq 0) {
         #If Show switch was selected
@@ -104,7 +108,7 @@ function Set-FtHiddenFilesAndFolders {
         }
     }
 
-    Invoke-FtSetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
+    Invoke-FtSetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
 
     if (!$DontCheck -and ($ActionIndex -ne -1)) {
         Write-Host -ForegroundColor Cyan "Let's check the configuration with Get-FtHiddenFilesAndFolders."

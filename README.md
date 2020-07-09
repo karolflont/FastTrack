@@ -16,17 +16,17 @@ There are no other prerequisites for using this module.
 
 ---
 
-## Installing
+## Installation
 
 You can istall FastTrack on either:
 - a dedicated Windows based computer with PowerShell 5.1 installed
 - one of the servers, you're going to configure/manage using this module
 
-First option is the PREFERRED one, as some of the functions of this module trigger a mass reboot of managed hosts. Using these functions with FastTrack module installed on one of the managed hosts can give undetermined results.
+First option is the PREFERRED one, as some of the functions of this module trigger a mass restart of managed hosts. Using these functions with FastTrack module installed on one of the managed hosts will result in this host being omitted from the restart.
 
 To install the FastTrack module on your computer run FastTrack.INSTALL.ps1 script from an elevated PowerShell prompt (Run as administrator).
 
-WARNING: Installing FastTrack will add all hosts ("*") to the WSMan:\localhost\Client\TrustedHosts. If you already have some hosts defined as WSMan trusted hosts, you have to backup the WSMan:\localhost\Client\TrustedHosts configuration and restore it manually later, as uninstall srtipt will clear the WSMan:\localhost\Client\TrustedHosts. 
+WARNING: Installing FastTrack will add all hosts ("*") to the WSMan:\localhost\Client\TrustedHosts. If you already have some hosts defined as WSMan trusted hosts, these will be backed up and restored automatically when you run FastTrack uninstall script. 
 
 To uninstall the FastTrack module on your computer run FastTrack.UNINSTALL.ps1 script from an elevated PowerShell prompt (Run as administrator).
 
@@ -38,86 +38,25 @@ Check FastTrack.SAMPLE.ps1 for sample usage of this module.
 
 ---
 
-## List of functions
+## System Configuration file
 
-3rd Party Software Related
+FastTrack uses a system configuration file in a .json format which describes the infrastructure you want to manage. You must prepare this file before you start using FastTrack on a particular system.
 
-    Invoke-FtCMDExpression
+### Fields descriptions
 
-Avid Software related
+- systemName - only informational name for your infrastructure configuration
 
-    Install-FtAvidNexisClient
-    Uninstall-FtAvidNexisClient
-    Get-FtAvidSoftware
-    Get-FtAvidServices
+- hosts - list of hosts you want to manage using FastTrack
 
-Diagnostics related
+- IP - IP address of a particular host (you have to set the same address on host before you start using FastTrack)
 
-    Get-FtEventLogErrors
-    Get-FtOSVersion
-    Get-FtHWSpecification
-    Install-FtBGInfo
-    Get-FtUptime 
+- hostname - short hostname of a particular host (FastTrack can change the hostname of the remote host according to this entry and will use it frequently in functions output)
 
-Filesystem and Storage realated
+- alias - an alias you want to set for a particular host. An alias must be unique among all aliases in the whole configuration
 
-    Get-FtHiddenFilesAndFolders
-    Set-FtHiddenFilesAndFolders
+- role - a set of roles a particular server has. One server can have multiple roles and should have at least one
 
-Hostname and Domain related
-
-    Get-FtHostname
-    Set-FtHostname
-    Get-FtDomain
-    Set-FtDomain
-
-Module Input/Output related
-
-    Import-FtSystemConfiguration
-
-Network related
-
-    Get-FtNetworkConfiguration
-    Get-FtFirewallService
-    Start-FtFirewallService
-    Get-FtFirewallState
-    Set-FtFirewallState
-
-OS Tweaks related
-
-    Get-FtServerManagerBehaviorAtLogon
-    Set-FtServerManagerBehaviorAtLogon
-    Get-FtUACLevelForAdmins
-    Set-FtUACLevelForAdmins
-    Get-FtProcessorScheduling
-    Set-FtProcessorScheduling
-    Get-FtPowerPlan
-    Set-FtPowerPlan
-
-Remote Access related
-
-    Test-FtPSRemoting
-    Get-FtRemoteDesktop
-    Set-FtRemoteDesktop
-
-Windows Server Roles and Features related
-
-    Get-FtFailoverClusteringFeature
-    Install-FtFailoverClusteringFeature
-    Uninstall-FtFailoverClusteringFeature
-
-Time related
-
-    Get-FtTimeAndTimeZone
-
-Windows Update related
-
-    Get-FtWindowsUpdateService
-    Set-FtWindowsUpdateService
-
----
-
-## Sample System Configuration file
+### Sample
 
 ```json
 {
@@ -216,12 +155,3 @@ Windows Update related
     ]
 }
 ```
-
----
-
-## License
-
-[![License](http://img.shields.io/:license-mit-blue.svg?style=flat-square)](http://badges.mit-license.org)
-
-- **[MIT license](http://opensource.org/licenses/mit-license.php)**
-- Copyright 2020 © <a>Karol Flont</a>.

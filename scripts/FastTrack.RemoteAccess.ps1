@@ -1,3 +1,6 @@
+# Copyright (C) 2018  Karol Flont
+# Full license notice can be found in FastTrack.psd1 file.
+
 ###########################
 ### POWERSHELL REMOTING ###
 ###########################
@@ -20,6 +23,8 @@ function Test-FtPSRemoting {
       [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
       [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential
    )
+
+   Write-Host -ForegroundColor Cyan "Testing remote hosts Powershell Remoting status"
  
    $PowershellRemotingStatusTable = @()
    $AnythingFailed = $false
@@ -165,23 +170,29 @@ function Get-FtRemoteDesktop {
 }   
 function Set-FtRemoteDesktop {
    <#
-    .SYNOPSIS
-    Enables or Disables Remote Desktop Access to selected remote computers.
-    .DESCRIPTION
-    The Set-FtRemoteDesktop function enables or disables Remote Desktop Access to selected remote computers by setting the appropriate values of the following:
-      - "Remote Desktop Services" service status (and start type)
-      - "fDenyTSConnections" value of "HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server" registry key
-      - "Remote Desktop" DisplayGroup firewall rule
-      - "UserAuthentication" value of 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' registry key ("Network Level Authentication" setting)
-    .PARAMETER ComputerIP
-    Specifies the computer IP.
-    .PARAMETER Credential
-    Specifies the credentials used to login.
-    .PARAMETER DontCheck
-    A switch disabling checking the set configuration with a correstponding 'get' function.
-    .EXAMPLE
-    Set-FtRemoteDesktop -ComputerIP $all -Credential $cred -EnableWithEnabledNLA
-    #>
+   .SYNOPSIS
+      Enables or Disables Remote Desktop Access to selected remote computers.
+   .DESCRIPTION
+      The Set-FtRemoteDesktop function enables or disables Remote Desktop Access to selected remote computers by setting the appropriate values of the following:
+         - "Remote Desktop Services" service status (and start type)
+         - "fDenyTSConnections" value of "HKLM:SYSTEM\CurrentControlSet\Control\Terminal Server" registry key
+         - "Remote Desktop" DisplayGroup firewall rule
+         - "UserAuthentication" value of 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' registry key ("Network Level Authentication" setting)
+   .PARAMETER ComputerIP
+      Specifies the computer IP.
+   .PARAMETER Credential
+      Specifies the credentials used to login.
+   .PARAMETER EnableWithDisabledNLA
+      A switch Enabling RDP access with disabled NLA
+   .PARAMETER EnableWithEnabledNLA
+      A switch Enabling RDP access with enabled NLA
+   .PARAMETER Disable
+      A switch disabling RDP access
+   .PARAMETER DontCheck
+      A switch disabling checking the set configuration with a correstponding 'get' function.
+   .EXAMPLE
+      Set-FtRemoteDesktop -ComputerIP $all -Credential $cred -EnableWithEnabledNLA
+   #>
    param (
       [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
       [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
@@ -189,11 +200,11 @@ function Set-FtRemoteDesktop {
       [Parameter(Mandatory = $false)] [switch] $EnableWithEnabledNLA,
       [Parameter(Mandatory = $false)] [switch] $Disable,
       [Parameter(Mandatory = $false)] [switch] $DontCheck
-   ) 
+   )
+
+   $HeaderMessage = "Remote Desktop status"
  
    $ActionIndex = Confirm-FtSwitchParameters $EnableWithDisabledNLA $EnableWithEnabledNLA $Disable
-   $ScriptBlock = @()
-
 
    if ($ActionIndex -eq 0) {
       #If EnableWithDisabledNLA switch was selected
@@ -227,7 +238,7 @@ function Set-FtRemoteDesktop {
       }
    }
 
-   Invoke-FtSetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
+   Invoke-FtSetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
 
    if (!$DontCheck -and ($ActionIndex -ne -1)) {
       Write-Host -ForegroundColor Cyan "Let's check the configuration with Get-FtRemoteDesktop."

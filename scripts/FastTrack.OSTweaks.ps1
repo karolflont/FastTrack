@@ -1,3 +1,6 @@
+# Copyright (C) 2018  Karol Flont
+# Full license notice can be found in FastTrack.psd1 file.
+
 #############################################
 ### DISABLE SERVER MANAGER START AT LOGON ###
 #############################################
@@ -62,8 +65,9 @@ function Set-FtServerManagerBehaviorAtLogon {
         [Parameter(Mandatory = $false)] [switch] $DontCheck
     )
 
+    $HeaderMessage = "Server Manager behavior at logon"
+
     $ActionIndex = Confirm-FtSwitchParameters $Enable $Disable
-    $ScriptBlock = @()
 
     if ($ActionIndex -eq 0) {
         #If Enable switch was selected
@@ -74,7 +78,7 @@ function Set-FtServerManagerBehaviorAtLogon {
         $ScriptBlock = { Get-ScheduledTask -TaskName ServerManager | Disable-ScheduledTask }
     }
 
-    Invoke-FtSetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
+    Invoke-FtSetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
 
     if (!$DontCheck -and ($ActionIndex -ne -1)) {
         Write-Host -ForegroundColor Cyan "Let's check the configuration with Get-FtServerManagerBehaviorAtLogon."
@@ -116,7 +120,7 @@ function Get-FtUACLevelForAdmins {
 
     ### Windows Server 2016 only!!!
     
-    $HeaderMessage = "UAC Level"
+    $HeaderMessage = "UAC Level for admins"
 
     $ScriptBlock = {
         $ConsentPromptBehaviorAdmin = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "ConsentPromptBehaviorAdmin").ConsentPromptBehaviorAdmin
@@ -181,8 +185,9 @@ function Set-FtUACLevelForAdmins {
         [Parameter(Mandatory = $false)] [switch] $DontCheck
     )
 
+    $HeaderMessage = "UAC Level for admins"
+
     $ActionIndex = Confirm-FtSwitchParameters $NeverNotify $AlwaysPromptForCredInSecureDesktopMode $AlwaysPromptForPermitDenyInSecureDesktopMode $AlwaysPromptForCred $AlwaysPromptForPermitDeny $PromptForPermitDenyOnlyWnenAppsTryToMakeChangesToMyComputer
-    $ScriptBlock = @()
 
     if ($ActionIndex -eq 0) {
         #If AlwaysNotify switch was selected
@@ -209,7 +214,7 @@ function Set-FtUACLevelForAdmins {
         $ScriptBlock = { Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "ConsentPromptBehaviorAdmin" -Value "5" }
     }
     
-    Invoke-FtSetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
+    Invoke-FtSetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
 
     if (!$DontCheck -and ($ActionIndex -ne -1)) {
         Write-Host -ForegroundColor Cyan "Let's check the configuration with Get-FtUACLevelForAdmins."
@@ -300,8 +305,9 @@ function Set-FtProcessorScheduling {
         [Parameter(Mandatory = $false)] [switch]$DontCheck
     )
 
+    $HeaderMessage = "Processor scheduling"
+
     $ActionIndex = Confirm-FtSwitchParameters $Programs $BackgroundServices $Default
-    $ScriptBlock = @()
     
     if ($ActionIndex -eq 0) {
         #If Programs switch was selected
@@ -316,7 +322,7 @@ function Set-FtProcessorScheduling {
         $ScriptBlock = { Set-ItemProperty HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl -Name Win32PrioritySeparation -Value 2 }
     }
 
-    Invoke-FtSetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
+    Invoke-FtSetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
 
     if (!$DontCheck -and ($ActionIndex -ne -1)) {
         Write-Host -ForegroundColor Cyan "Let's check the configuration with Get-FtProcessorScheduling."
@@ -385,7 +391,7 @@ function Set-FtPowerPlan {
 .PARAMETER DontCheck
     A switch disabling checking the set configuration with a correstponding 'get' function.
 .EXAMPLE
-    Set-PowerPlan -ComputerIP $all -credential $cred -HighPerformance
+    Set-FtPowerPlan -ComputerIP $all -credential $cred -HighPerformance
 #>
     param(
         [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
@@ -396,8 +402,10 @@ function Set-FtPowerPlan {
         [Parameter(Mandatory = $false)] [switch] $AvidOptimized,
         [Parameter(Mandatory = $false)] [switch] $DontCheck
     )
+
+    $HeaderMessage = "Active power plans"
+
     $ActionIndex = Confirm-FtSwitchParameters $HighPerformance $Balanced $PowerSaver
-    $ScriptBlock = @()
     
     if ($ActionIndex -eq 0) {
         #If HighPerformance switch was selected
@@ -421,7 +429,7 @@ function Set-FtPowerPlan {
         }
     }
 
-    Invoke-FtSetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
+    Invoke-FtSetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
 
     if (!$DontCheck -and ($ActionIndex -ne -1)) {
         Write-Host -ForegroundColor Cyan "Let's check the configuration with Get-FtPowerPlan."

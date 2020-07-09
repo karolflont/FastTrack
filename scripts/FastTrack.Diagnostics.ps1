@@ -1,3 +1,6 @@
+# Copyright (C) 2018  Karol Flont
+# Full license notice can be found in FastTrack.psd1 file.
+
 ####################
 ##### EVENTLOG #####
 ####################
@@ -24,7 +27,7 @@ function Get-FtEventLogErrors {
 .PARAMETER SortByAlias
    Allows sorting by Alias. This is the default sort property, if none of the sort parameters are selected.
 .PARAMETER SortByHostnameInConfig
-   Allows sorting by Hostname in $SysConfig variable.
+   Allows sorting by Hostname in $FtConfig variable.
 .PARAMETER SortByNumberOfOccurences
    Allows sorting by number of occurences of a particular event.
 .PARAMETER SortByEventID
@@ -53,12 +56,12 @@ function Get-FtEventLogErrors {
    $HeaderMessage = "Summary of ERROR type EventLog entries"
 
    $ScriptBlock = {
-      $After = if ($using:After) {Get-Date $using:After}
-      $Before = if ($using:Before) {Get-Date $using:Before}
-      if ($After -and $Before) {$ServerEventLogList = Get-EventLog -LogName System -EntryType Error -After $After -Before $Before}
-      if ($After -and !$Before) {$ServerEventLogList = Get-EventLog -LogName System -EntryType Error -After $After}
-      if (!$After -and $Before) {$ServerEventLogList = Get-EventLog -LogName System -EntryType Error -Before $Before}
-      if (!$After -and !$Before) {$ServerEventLogList = Get-EventLog -LogName System -EntryType Error}
+      $After = if ($using:After) { Get-Date $using:After }
+      $Before = if ($using:Before) { Get-Date $using:Before }
+      if ($After -and $Before) { $ServerEventLogList = Get-EventLog -LogName System -EntryType Error -After $After -Before $Before }
+      if ($After -and !$Before) { $ServerEventLogList = Get-EventLog -LogName System -EntryType Error -After $After }
+      if (!$After -and $Before) { $ServerEventLogList = Get-EventLog -LogName System -EntryType Error -Before $Before }
+      if (!$After -and !$Before) { $ServerEventLogList = Get-EventLog -LogName System -EntryType Error }
 
       $EventLogSummaryList = @()
 
@@ -93,7 +96,7 @@ function Get-FtEventLogErrors {
       Return $EventLogSummaryList
    }
  
-   $ActionIndex = Confirm-FtSwitchParameters $SortByAlias $SortByHostnameInConfig $SortByNumberOfOccurences $false $false $false $SortByEventID -DefaultSwitch 0
+   $ActionIndex = Confirm-FtSwitchParameters $SortByAlias $SortByHostnameInConfig $SortByNumberOfOccurences $false $false $false $SortByEventID -DefaultSwitch0
  
    $Result = Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
 
@@ -119,34 +122,27 @@ function Get-FtOSVersion {
    Specifies computer IP.
 .PARAMETER Credential
    Specifies credentials used to login.
-.PARAMETER Credential
-   Allows sorting by Release ID.
-.PARAMETER Credential
-   Allows sorting by Install Date.
 .PARAMETER RawOutput
    Specifies that the output will NOT be sorted and formatted as a table (human friendly output). Instead, a raw Powershell object will be returned (Powershell pipeline friendly output).
 .EXAMPLE
    Get-FtOSVersion -ComputerIP $all -Credential $cred
-   Get-FtOSVersion -ComputerIP $all -Credential $cred -SortByInstallDate
 #>
    param(
       [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
       [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
-      [Parameter(Mandatory = $false)] [switch]$SortByReleaseID,
-      [Parameter(Mandatory = $false)] [switch]$SortByInstallDate,
       [Parameter(Mandatory = $false)] [switch]$RawOutput
    )
 
    $HeaderMessage = "Operating System Version"
 
-   $ScriptBlock = { Get-ItemProperty -Path "HKLM:SOFTWARE\Microsoft\Windows NT\CurrentVersion" -Name ProductName, BuildBranch, CurrentMajorVersionNumber, CurrentMinorVersionNumber, ReleaseID, CurrentBuildNumber, UBR, InstallDate }
+   $ScriptBlock = { Get-ItemProperty -Path "HKLM:SOFTWARE\Microsoft\Windows NT\CurrentVersion" -Name ProductName, BuildBranch, CurrentMajorVersionNumber, CurrentMinorVersionNumber, ReleaseID, CurrentBuildNumber, UBR }
    
-   $ActionIndex = Confirm-FtSwitchParameters $SortByAlias $SortByHostnameInConfig $SortByReleaseID $SortByInstallDate -DefaultSwitch 0
+   $ActionIndex = 0
 
    if ($ActionIndex -ne -1) {
       $Result = Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
 
-      $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'ProductName', 'BuildBranch', 'CurrentMajorVersionNumber', 'CurrentMinorVersionNumber', 'ReleaseId', 'CurrentBuildNumber', 'UBR', 'InstallDate') 
+      $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'ProductName', 'BuildBranch', 'CurrentMajorVersionNumber', 'CurrentMinorVersionNumber', 'ReleaseId', 'CurrentBuildNumber', 'UBR') 
 
       if ($RawOutput) { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput }
       else { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex }
@@ -214,6 +210,8 @@ function Install-FtBGInfo {
       3) Copy the BGInfo executable and template to the C:\BGInfo folder on remote hosts
       4) Create a BGInfo shortcut in C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp folder and on the desktop
       5) Print next steps information
+      WARNING: If folder C:\BGInfo exists on any of the selected remote host and it contains BGInfo executable and template
+      with the same names you defined in `$PathToBGInfoExecutable and `$PathToBGInfoTemplate, these files will be OVERWRITTEN.
    .PARAMETER ComputerIP
       Specifies the computer IP.
    .PARAMETER Credential
@@ -222,6 +220,8 @@ function Install-FtBGInfo {
       Specifies the LOCAL path to the BGInfo executable.
    .PARAMETER PathToBGInfoTemplate
       Specifies the LOCAL path to the BGInfo template.
+   .PARAMETER Force
+      No questions are asked during function execution. 
    .EXAMPLE
       Install-FtBGInfo -ComputerIP $ie -Credential $cred -PathToBGInfoExecutable 'C:\AvidInstallers\BGInfo\BGInfo.exe' -PathToBGInfoTemplate 'C:\AvidInstallers\BGInfo\x64Client.bgi'
    #>
@@ -230,8 +230,20 @@ function Install-FtBGInfo {
       [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
       [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
       [Parameter(Mandatory = $true)] $PathToBGInfoExecutable,
-      [Parameter(Mandatory = $true)] $PathToBGInfoTemplate
+      [Parameter(Mandatory = $true)] $PathToBGInfoTemplate,
+      [Parameter(Mandatory = $false)] [switch]$Force
    )
+
+   if (!$Force) {
+      Write-Warning "If folder C:\BGInfo exists on any of the selected remote host and it contains BGInfo executable and template with the same names you defined in -PathToBGInfoExecutable and -PathToBGInfoTemplate, these files will be OVERWRITTEN."
+      $Continue = Read-Host 'Do you want to continue? Only yes will be accepted as confirmation.'
+
+    if ($Continue -ne 'yes') {
+        Return
+    }
+   }
+
+   Write-Host -ForegroundColor Cyan "Installing BGInfo..."
 
    $BGInfoExecutableFileName = Split-Path $PathToBGInfoExecutable -leaf
    $BGInfoTemplateFilename = Split-Path $PathToBGInfoTemplate -leaf
@@ -266,7 +278,7 @@ function Install-FtBGInfo {
    
    #2. Create the C:\BGInfo on remote hosts
    Write-Host -ForegroundColor Cyan "Creating folder C:\BGInfo on remote hosts... " -NoNewline
-   Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock { New-Item -ItemType 'directory' -Path 'C:\BGInfo' | Out-Null }
+   Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock { New-Item -ItemType 'directory' -Path 'C:\BGInfo' -ErrorAction SilentlyContinue }
    Write-Host -ForegroundColor Green "DONE"
 
    #3a. Copy BGInfo executable and template to the local drive of the remote hosts

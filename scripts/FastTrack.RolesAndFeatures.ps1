@@ -1,3 +1,6 @@
+# Copyright (C) 2018  Karol Flont
+# Full license notice can be found in FastTrack.psd1 file.
+
 ###################################
 ### FAILOVER CLUSTERING FEATURE ###
 #####################################
@@ -36,79 +39,66 @@ function Get-FtFailoverClusteringFeature {
    else { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex }
 }
 
-function Install-FtFailoverClusteringFeature {
+function Set-FtFailoverClusteringFeature {
    <#
 .SYNOPSIS
-   Installs Failover Clustering Feature on selected hosts.
+   Installs or uninstalls Failover Clustering Feature on selected hosts.
 .DESCRIPTION
-   The Install-FtFailoverClusteringFeature function uses "Install-WindowsFeature -Name Failover-Clustering -IncludeAllSubFeature -IncludeManagementTools" cmdlet to install Failover Clustering Feature.
+   The Set-FtFailoverClusteringFeature function uses:
+      - "Install-WindowsFeature -Name Failover-Clustering -IncludeAllSubFeature -IncludeManagementTools" cmdlet to install Failover Clustering Feature on selected remote hosts,
+      - "Uninstall-WindowsFeature -Name Failover-Clustering -IncludeManagementTools" cmdlet to uninstall Failover Clustering Feature from selected remote hosts.
 .PARAMETER ComputerIP
    Specifies the computer IP.
 .PARAMETER Credential
    Specifies the credentials used to login.
+.PARAMETER Install
+   A switch installing Failover Clustering Feature.
+.PARAMETER Uninstall
+   A switch uninstalling Failover Clustering Feature.
+.PARAMETER DontRestart
+.PARAMETER DontCheck
+   A switch disabling checking the set configuration with a correstponding 'get' function.
 .EXAMPLE
-   Install-FtFailoverClusteringFeature -ComputerIP $all -Credential $cred
+   Set-FtFailoverClusteringFeature -ComputerIP $all -Credential $cred -Install
 #>
    param(
       [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
-      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential
+      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
+      [Parameter(Mandatory = $false)] [switch]$Install,
+      [Parameter(Mandatory = $false)] [switch]$Uninstall,
+      [Parameter(Mandatory = $false)] [switch]$DontRestart,
+      [Parameter(Mandatory = $false)] [switch]$DontWaitForHostsAfterTriggeringRestart,
+      [Parameter(Mandatory = $false)] [switch]$Force,
+      [Parameter(Mandatory = $false)] [switch]$DontCheck
    )
 
-   Write-Warning "All the remote hosts will be automatically rebooted after the installation. Press Enter to continue or Ctrl+C to quit."
-   [void](Read-Host)
+   $HeaderMessage = "Failover Clustering Feature status"
 
-   try {
-      Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock { Install-WindowsFeature -Name Failover-Clustering -IncludeAllSubFeature -IncludeManagementTools } | Out-Null
-      Write-Host -ForegroundColor Cyan "Waiting for selected remote hosts to reboot (We'll not wait more than 5 minutes though.)..."
-      Restart-Computer -ComputerName $ComputerIP -Credential $Credential -Wait -For PowerShell -Timeout 300 -WsmanAuthentication Default -Force
-      Write-Host -ForegroundColor Cyan "All remote hosts rebooted and available for PowerShell Remoting again."
-   }
-   catch {
-      Write-Host -ForegroundColor Red "Something went wrong installing Failover Clustering Feature on remote hosts."
-      Return
-   }
-   Write-Host -ForegroundColor Green "Failover Clustering Feature installed on selected remote hosts."
-   Write-Host -ForegroundColor Cyan "Checking the status with Get-FtFailoverClusteringFeature."
+   $ActionIndex = Confirm-FtSwitchParameters $Install $Uninstall
 
-   Get-FtFailoverClusteringFeature -ComputerIP $ComputerIP -Credential $Credential
-}
-
-function Uninstall-FtFailoverClusteringFeature {
-   <#
-   .SYNOPSIS
-      Uninstalls Failover Clustering Feature on selected hosts.
-   .DESCRIPTION
-      The Uninstall-FtFailoverClusteringFeature function uses "Uninstall-WindowsFeature -Name Failover-Clustering -IncludeManagementTools" cmdlet to install Failover Clustering Feature.
-   .PARAMETER ComputerIP
-      Specifies the computer IP.
-   .PARAMETER Credential
-      Specifies the credentials used to login.
-   .EXAMPLE
-      Uninstall-FtFailoverClusteringFeature -ComputerIP $all -Credential $cred
-   #>
-   param(
-      [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
-      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential
-   )
-
-   Write-Warning "All the remote hosts will be automatically rebooted after the installation. Press Enter to continue or Ctrl+C to quit."
-   [void](Read-Host)
-   
-   try {
-      Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock { Uninstall-WindowsFeature -Name Failover-Clustering -IncludeManagementTools } | Out-Null
-      Write-Host -ForegroundColor Cyan "`nWaiting for selected remote hosts to reboot (We'll not wait more than 5 minutes though.)..."
-      Restart-Computer -ComputerName $ComputerIP -Credential $Credential -Wait -For PowerShell -Timeout 300 -WsmanAuthentication Default -Force
-      Write-Host -ForegroundColor Cyan "`nAll remote hosts rebooted and available for PowerShell Remoting again."
-   
-   }
-   catch {
-      Write-Host -ForegroundColor Red "`nSomething went wrong uninstalling Failover Clustering Feature on remote hosts."
-      Return
+   $Restart = $true
+   if ($DontRestart) { $Restart = $false }
+   else {
+      if ($Force) { $Restart = $true }
+      else { $Restart = Confirm-FtRestart }
    }
 
+   if ($ActionIndex -eq 0) {
+      #If Install switch was selected
+      $ScriptBlock = { Install-WindowsFeature -Name Failover-Clustering -IncludeAllSubFeature -IncludeManagementTools }
+   }
+   elseif ($ActionIndex -eq 1) {
+      #If Uninstall switch was selected
+      $ScriptBlock = { Uninstall-WindowsFeature -Name Failover-Clustering -IncludeManagementTools }
+   }
 
-   Write-Host -ForegroundColor Green "`nFailover Clustering Feature installed on selected remote hosts."
-   Write-Host -ForegroundColor Cyan "`Checking the status with Get-FtFailoverClusteringFeature."
-   
-   Get-FtFailoverClusteringFeature -ComputerIP $ComputerIP -Credential $Credential
+   Invoke-FtSetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
+
+   if ($DontWaitForHostsAfterTriggeringRestart) { Restart-FtRemoteComputer -ComputerIP $ComputerIP -Credential $Credential -Restart $Restart -DontWaitForHostsAfterTriggeringRestart }
+   else { Restart-FtRemoteComputer -ComputerIP $ComputerIP -Credential $Credential -Restart $Restart }
+
+   if (!$DontCheck -and ($ActionIndex -ne -1)) {
+      Write-Host -ForegroundColor Cyan "Let's check the configuration with Get-FtFailoverClusteringFeature."
+      Get-FtFailoverClusteringFeature -ComputerIP $ComputerIP -Credential $cred
+   }
 }

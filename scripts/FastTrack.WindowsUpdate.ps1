@@ -1,3 +1,6 @@
+# Copyright (C) 2018  Karol Flont
+# Full license notice can be found in FastTrack.psd1 file.
+
 ##########################
 ##### WINDOWS UPDATE #####
 ##########################
@@ -56,6 +59,10 @@ function Set-FtWindowsUpdateService {
         Specifies the computer IP.
     .PARAMETER Credential
         Specifies the credentials used to login.
+    .PARAMETER EnableAndStart
+        A switch enabling and starting Windows Update Service.
+    .PARAMETER DisableAndStop
+        A switch stopping and disabling Windows Update Service.
     .PARAMETER DontCheck
         A switch disabling checking the set configuration with a correstponding 'get' function.
     .EXAMPLE
@@ -69,8 +76,9 @@ function Set-FtWindowsUpdateService {
         [Parameter(Mandatory = $false)] [switch]$DontCheck
     )
 
+    $HeaderMessage = "Windows Update service status"
+
     $ActionIndex = Confirm-FtSwitchParameters $EnableAndStart $DisableAndStop
-    #$ScriptBlock = @()
 
     if ($ActionIndex -eq 0) {
         #If EnableAndStart switch was selected
@@ -84,7 +92,7 @@ function Set-FtWindowsUpdateService {
         }
     }
 
-    Invoke-FtSetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
+    Invoke-FtSetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
 
     if (!$DontCheck -and ($ActionIndex -ne -1)) {
         Write-Host -ForegroundColor Cyan "Let's check the configuration with Get-FtWindowsUpdateService."

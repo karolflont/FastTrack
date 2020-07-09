@@ -1,5 +1,7 @@
+# Copyright (C) 2018  Karol Flont
+# Full license notice can be found in FastTrack.psd1 file.
 function Invoke-FtCMDExpression {
-    <#
+     <#
    .SYNOPSIS
         Outputs the results of any given Windows Commandline (CMD) expression for a list of computers.
    .DESCRIPTION
@@ -18,38 +20,38 @@ function Invoke-FtCMDExpression {
     Invoke-FtCMDExpression -ComputerIP $all -Credential $cred -CMDExpression 'w32tm /query /status'
    #>
 
-    Param(
-        [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
-        [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
-        [Parameter(Mandatory = $true)] $CMDExpression,
-        [Parameter(Mandatory = $false)] [switch]$SortByLineNumber,
-        [Parameter(Mandatory = $false)] [switch]$RawOutput
-    )
+     Param(
+          [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
+          [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
+          [Parameter(Mandatory = $true)] $CMDExpression,
+          [Parameter(Mandatory = $false)] [switch]$SortByLineNumber,
+          [Parameter(Mandatory = $false)] [switch]$RawOutput
+     )
 
-    $HeaderMessage = "CMD Expression `'$CMDExpression`' results"
+     $HeaderMessage = "CMD Expression `'$CMDExpression`' results"
 
-    $ScriptBlock = {
-        $result = Invoke-Expression $using:CMDExpression
-        for ($i = 0; $i -lt $result.Count; $i++) {
-            $line = $result[$i]
-            [pscustomobject]@{
-                LineNumber          = $i + 1
-                CMDExpressionOutput = $line
-            }
-        }
-    }
+     $ScriptBlock = {
+          $result = Invoke-Expression $using:CMDExpression
+          for ($i = 0; $i -lt $result.Count; $i++) {
+               $line = $result[$i]
+               [pscustomobject]@{
+                    LineNumber          = $i + 1
+                    CMDExpressionOutput = $line
+               }
+          }
+     }
 
-    $ActionIndex = Confirm-FtSwitchParameters $false $false $SortByLineNumber -DefaultSwitch 0
+     $ActionIndex = Confirm-FtSwitchParameters $false $false $SortByLineNumber -DefaultSwitch0
     
-    $Result = Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
+     $Result = Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
 
-    $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'LineNumber', 'CMDExpressionOutput')
+     $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'LineNumber', 'CMDExpressionOutput')
 
-    # Always sort by LineNumber as second property
-    $ActionIndex = ($ActionIndex, 2)
+     # Always sort by LineNumber as second property
+     $ActionIndex = ($ActionIndex, 2)
 
-    if ($RawOutput) { 
-        Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput 
-    }
-    else { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex }
+     if ($RawOutput) { 
+          Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput 
+     }
+     else { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex }
 }
