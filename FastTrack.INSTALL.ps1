@@ -12,9 +12,7 @@ while ((-not (Test-Path ([string]$source + "\" + "FastTrack.psd1")))) {
     $source = Get-Location
   }
   if (-not (Test-Path ([string]$source + "\" + "FastTrack.psd1"))) {
-    Write-Host -ForegroundColor Red "`nYou are running this script from $source folder. This script requires two conditions to run properly: "
-    Write-Host -ForegroundColor Red " - This script must be placed in FastTrack folder, "
-    Write-Host -ForegroundColor Red " - There has to be a valid FastTrack.psd1 file in the FastTrack folder."
+    Write-Host -ForegroundColor Red "`nYou must change your working directory to the folder contining FastTrack.psd1 file."
     Write-Host -ForegroundColor Red "`nHit Enter to quit."
   }
   [void](Read-Host)
@@ -27,12 +25,15 @@ Write-Host -ForegroundColor Green "`nInstalling FastTrack module..."
 $PSMPaths = $env:PSModulePath -split ';'
 foreach ($PSMPAth in $PSMPaths) {
   if ($PSMPath -like "*Documents*") {
-    $destination = $PSMPath
+    $destination = $PSMPath + "\FastTrack"
+    $BackupDestination = $PSMPath
   }
 }
 
 # Copying the module to the user's PSModulePath
-Copy-Item -LiteralPath $source -Destination $destination -Recurse -Force
+$sourceFiles = [string]$source + '\'
+#New-Item -ItemType 'directory' -Path $destination -ErrorAction SilentlyContinue
+Copy-Item -LiteralPath $sourceFiles -Destination $destination -Recurse -Force
 Write-Host -ForegroundColor Green "`nModule FastTrack installed."
 
 # Loading the module to the active memory
@@ -41,7 +42,7 @@ Write-Host -ForegroundColor Green "`nModule FastTrack imported."
 
 # Backing up TrustedHosts Value
 $FastTrackTrustedHostsBackup = (Get-Item WSMan:\localhost\Client\TrustedHosts).Value
-$BackupPath = $destination + "\FastTrackTrustedHostsBackup.bkp"
+$BackupPath = $BackupDestination + "\FastTrackTrustedHostsBackup.bkp"
 Out-File -FilePath $BackupPath -InputObject $FastTrackTrustedHostsBackup
 Write-Host -ForegroundColor Green "`nMWSMan:\localhost\Client\TrustedHosts backed up. "
 
