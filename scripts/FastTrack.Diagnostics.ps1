@@ -37,9 +37,9 @@ function Get-FtEventLogErrors {
 .EXAMPLE
    Get-FtEventLogErrors -ComputerIP $all -Credential $cred
 .EXAMPLE
-   Get-FtEventLogErrors -ComputerIP $all -Credential $cred -After '23 December 2019 13:53:45'
+   Get-FtEventLogErrors -ComputerIP $all -Credential $cred -After '23 Dec 2019 13:53:45'
 .EXAMPLE
-   Get-FtEventLogErrors -ComputerIP $all -Credential $cred -After '23 December 2019 13:53:45' -Before '4 July 2020 7:10:17' -SortByNumberOfOccurences
+   Get-FtEventLogErrors -ComputerIP $all -Credential $cred -After '23 Dec 2019 13:53:45' -Before '4 Jul 2020 7:10:17' -SortByNumberOfOccurences
 #>
    Param(
       [Parameter(Mandatory = $true)] [string[]]$ComputerIP,

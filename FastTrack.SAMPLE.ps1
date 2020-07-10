@@ -189,8 +189,8 @@ Get-FtAvidServices -ComputerIP $all -Credential $cred -SortByStatus
 And after some dry run tests, you can check the System Event Logs of the selected hosts for Errors.
 #>
 Get-FtEventLogErrors -ComputerIP $all -Credential $cred
-Get-FtEventLogErrors -ComputerIP $all -Credential $cred -After '23 December 2019 13:53:45'
-Get-FtEventLogErrors -ComputerIP $all -Credential $cred -After '23 December 2019 13:53:45' -Before '4 July 2020 7:10:17' -SortByNumberOfOccurences
+Get-FtEventLogErrors -ComputerIP $all -Credential $cred -After '23 Dec 2019 13:53:45'
+Get-FtEventLogErrors -ComputerIP $all -Credential $cred -After '23 Dec 2019 13:53:45' -Before '4 Jul 2020 7:10:17' -SortByNumberOfOccurences
 
 <#
 Last, but not least a quick check of uptime is sometimes a handy feature
