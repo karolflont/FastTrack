@@ -3,6 +3,11 @@ FastTrack is a PowerShell module for automated installation, upgrade and trouble
 i.e. MediaCentral | Production Management and MediaCentral | Asset Management. It heavily leverages parallel commands execution
 on Windows Servers using WinRM.
 
+!!! WARNING !!!
+If you're running this sample for the first time, it is STRONGLY RECOMMENDED to do this in a TEST and not any PRODUCTION environment.
+Some of the FasTrack functions can introduce important configuration changes to your servers configured in the System Configuration .json file.
+!!!!!!!!!!!!!!!
+
 In the below example of usage, we assume you have a set of newly created VMs (or installed HW servers) with only:
     - Windows Server 2016 OS installed
     - Network configured
@@ -15,7 +20,7 @@ excluded from restarts - you will have to restart it manually.
 
 I't best to open this FastTrack.SAMPLE.ps1 file in PowerShell ISE. This way:
     - you can run all the example one by one by placing a cursor on an appriopriate line and hitting F8
-    - you can browse all the FastTrack module functions (and it's parameters!) in the 'Commands'panel on the right side of PowerShell ISE
+    - you can browse all the FastTrack module functions (and it's parameters!) in the 'Commands' panel on the right side of PowerShell ISE window.
 #>
 
 <# 
