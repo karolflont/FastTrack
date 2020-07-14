@@ -21,14 +21,10 @@ while ((-not (Test-Path ([string]$source + "\" + "FastTrack.psd1")))) {
 
 Write-Host -ForegroundColor Green "`nInstalling FastTrack module..."
 
-# Setting the module's destination - using user's PSModulePath
-$PSMPaths = $env:PSModulePath -split ';'
-foreach ($PSMPAth in $PSMPaths) {
-  if ($PSMPath -like "*Documents*") {
-    $destination = $PSMPath + "\FastTrack"
-    $BackupDestination = $PSMPath
-  }
-}
+# Setting the module's and TrustedHosts backup destination
+$PSMPath = 'C:\Program Files\WindowsPowerShell\Modules'
+$destination = $PSMPath + "\FastTrack"
+$BackupDestination = $PSMPath
 
 # Copying the module to the user's PSModulePath
 $sourceFiles = [string]$source + '\'
