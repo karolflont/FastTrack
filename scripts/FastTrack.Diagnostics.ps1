@@ -180,10 +180,12 @@ function Get-FtHWSpecification {
       $D_PartitionSize = (Get-Partition -DriveLetter D -ErrorAction SilentlyContinue | Select-Object -Property Size).Size
       if ($null -eq $D_PartitionSize) { $D_PartitionSize = "N/A" }
       else { $D_PartitionSize = [Math]::Round(($D_PartitionSize) / 1GB, 2) }
+      $Sockets = Get-WmiObject -Class Win32_ComputerSystemProcessor
 
       [pscustomobject]@{
-         NumberOfCores             = (Get-WmiObject -Class Win32_Processor | Select-Object -Property NumberOfCores).NumberOfCores
-         NumberOfLogicalProcessors = (Get-WmiObject -Class Win32_Processor | Select-Object -Property NumberOfLogicalProcessors).NumberOfLogicalProcessors
+         Sockets           = if ($Sockets.count) {$Sockets.count} else {1}
+         Cores             = ((Get-WmiObject -Class Win32_Processor | Select-Object -Property NumberOfCores).NumberOfCores | Measure-Object -Sum).Sum
+         LogicalProcessors = ((Get-WmiObject -Class Win32_Processor | Select-Object -Property NumberOfLogicalProcessors).NumberOfLogicalProcessors | Measure-Object -Sum).Sum
          RAM_GB                    = (Get-WmiObject -Class Win32_physicalmemory | Measure-Object -Property Capacity -Sum).Sum / 1GB
          C_PartitionSize_GB        = [Math]::Round(((Get-Partition -DriveLetter C | Select-Object -Property Size).Size / 1GB), 2)
          D_PartitionSize_GB        = $D_PartitionSize
@@ -194,7 +196,7 @@ function Get-FtHWSpecification {
    
    $Result = Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
 
-   $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'NumberOfCores', 'NumberOfLogicalProcessors', 'RAM_GB', 'C_PartitionSize_GB', 'D_PartitionSize_GB') 
+   $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'Sockets', 'Cores', 'LogicalProcessors', 'RAM_GB', 'C_PartitionSize_GB', 'D_PartitionSize_GB') 
    
    if ($RawOutput) { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput }
    else { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex }
@@ -238,9 +240,9 @@ function Install-FtBGInfo {
       Write-Warning "If folder C:\BGInfo exists on any of the selected remote host and it contains BGInfo executable and template with the same names you defined in -PathToBGInfoExecutable and -PathToBGInfoTemplate, these files will be OVERWRITTEN."
       $Continue = Read-Host 'Do you want to continue? Only yes will be accepted as confirmation.'
 
-    if ($Continue -ne 'yes') {
-        Return
-    }
+      if ($Continue -ne 'yes') {
+         Return
+      }
    }
 
    Write-Host -ForegroundColor Cyan "Installing BGInfo..."
