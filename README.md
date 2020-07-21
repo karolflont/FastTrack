@@ -19,7 +19,7 @@ There are no other prerequisites for using this module.
 ## Installation
 
 You can istall FastTrack on either:
-- a dedicated Windows based computer with PowerShell 5.1 installed
+- a dedicated Windows based computer with PowerShell 5.1 installed (default version for Windows Server 2016 and Windows 10)
 - one of the servers, you're going to configure/manage using this module
 
 First option is the PREFERRED one, as some of the functions of this module trigger a mass restart of managed hosts. Using these functions with FastTrack module installed on one of the managed hosts will result in this host being omitted from the automatic restart and you'll have to restart this host manually.
