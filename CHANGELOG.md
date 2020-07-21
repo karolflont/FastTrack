@@ -6,10 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2020-07-21
+### Fixed
+- Fixed issue with Get-FtProcessorScheduling function. Get-FtProcessorScheduling now treats Win32PrioritySeparation = 0, as a valid option for "Optimized for background services" configuration on Windows Server 2016
+- Fixed issue with non-readeable output display of Get-FtServerManagerBehaviorAtLogon function. Get-FtServerManagerBehaviorAtLogon function now uses OpenAtLogon column with Tru/False values.
+- Fixed issue with FastTrack.UNINSTALL.ps1 script looking into the wrong directory for installed FastTrack module.
+- Fixed issue with non-readeable display of CPU realted information if more then one socket exist. FastTrack now displays the number of socets and the aggregated number of Cores and Logical Processors respectively.
+
 ## [0.1.1] - 2020-07-14
 ### Fixed
 - Fixed issue with instalation for administrator user on Windows Server 2016. FastTrack is now installed in 'C:\Program Files\WindowsPowerShell\Modules'
-
 
 ## [0.1.0] - 2020-07-08
 ### Added
@@ -66,5 +72,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
         - Get-FtWindowsUpdateService
         - Set-FtWindowsUpdateService
 
+[0.1.2]: https://github.com/karolflont/FastTrack/releases/tag/v0.1.2
 [0.1.1]: https://github.com/karolflont/FastTrack/releases/tag/v0.1.1
 [0.1.0]: https://github.com/karolflont/FastTrack/releases/tag/v0.1.0
