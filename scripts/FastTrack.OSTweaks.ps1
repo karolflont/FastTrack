@@ -261,7 +261,8 @@ function Get-FtProcessorScheduling {
     $ScriptBlock = {
         $ProcessorSchedulingRaw = (Get-ItemProperty HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl -Name Win32PrioritySeparation).Win32PrioritySeparation
         $WindowsEdition = Get-WindowsEdition -Online
-        if ($ProcessorSchedulingRaw -eq 2) {
+        # Zero also seems to be a valid value for "Optimized for background services" on Windows Server 2016
+        if ($ProcessorSchedulingRaw -in (0,2)) {
             if ($WindowsEdition.Edition -like "*Server*") { $ProcessorScheduling = "Optimized for background services" }
             else { $ProcessorScheduling = "Optimized for programs" }
             
