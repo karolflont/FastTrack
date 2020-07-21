@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.2] - 2020-07-21
 ### Fixed
+- Updated Installation procedure in README with a step to bypass the, possibly blocking, Execution Policy.
 - Fixed issue with Get-FtProcessorScheduling function. Get-FtProcessorScheduling now treats Win32PrioritySeparation = 0, as a valid option for "Optimized for background services" configuration on Windows Server 2016
 - Fixed issue with non-readeable output display of Get-FtServerManagerBehaviorAtLogon function. Get-FtServerManagerBehaviorAtLogon function now uses OpenAtLogon column with Tru/False values.
 - Fixed issue with FastTrack.UNINSTALL.ps1 script looking into the wrong directory for installed FastTrack module.
