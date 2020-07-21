@@ -27,13 +27,20 @@ function Get-FtServerManagerBehaviorAtLogon {
 
     $HeaderMessage = "Server Manager behavior at logon"
 
-    $ScriptBlock = { Get-ScheduledTask -TaskName ServerManager }
+    $ScriptBlock = {
+        $SMBehavior = Get-ScheduledTask -TaskName ServerManager
+
+        [pscustomobject]@{
+            Name    = $SMBehavior.TaskName
+            OpenAtLogon = if ($SMBehavior.State -ne "Disabled") { "True" } else { "False" }
+        }
+    }
    
     $ActionIndex = 0
    
     $Result = Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
 
-    $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'TaskName', 'State') 
+    $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'Name', 'OpenAtLogon') 
 
     if ($RawOutput) { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput }
     else { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex }
