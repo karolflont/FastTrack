@@ -5,16 +5,13 @@
 
 Write-Host -ForegroundColor Green "`nUninstalling FastTrack module..."
 
-# Getting the module's destination - using user's PSModulePath
-$PSMPaths = $env:PSModulePath -split ';'
-foreach ($PSMPAth in $PSMPaths) {
-  if ($PSMPath -like "*Documents*") {
-    $destination = $PSMPath
-  }
-}
+# Setting the module's and TrustedHosts backup destination
+$PSModulesDirectory = 'C:\Program Files\WindowsPowerShell\Modules'
+$FastTrackModulePath = $PSModulesDirectory + "\FastTrack"
+$TrustedHostsBackupPath = $PSModulesDirectory + "\FastTrackTrustedHostsBackup.bkp"
 
 # Removing the module form user's PSModulePath
-Remove-Item -LiteralPath ($destination + "\" + "FastTrack") -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item -LiteralPath $FastTrackModulePath -Recurse -Force -ErrorAction SilentlyContinue
 Write-Host -ForegroundColor Green "`nModule FastTrack uninstalled."
 
 # Unloading the module from the active memory
@@ -22,7 +19,6 @@ Remove-Module FastTrack -Force -ErrorAction SilentlyContinue
 Write-Host -ForegroundColor Green "`nModule FastTrack unloaded from the active memory."
 
 # Restoring TrustedHosts from backup
-$BackupPath = $destination + "\FastTrackTrustedHostsBackup.bkp"
-$FastTrackTrustedHostsBackup = [string](Get-Content -Path $BackupPath)
-Set-Item WSMan:\localhost\Client\TrustedHosts -Value $FastTrackTrustedHostsBackup -Force -PassThru
+$TrustedHostsValue = [string](Get-Content -Path $TrustedHostsBackupPath)
+Set-Item WSMan:\localhost\Client\TrustedHosts -Value $TrustedHostsValue -Force -PassThru
 Write-Host -ForegroundColor Green "`nWSMan:\localhost\Client\TrustedHosts restored."

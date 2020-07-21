@@ -21,15 +21,14 @@ while ((-not (Test-Path ([string]$source + "\" + "FastTrack.psd1")))) {
 
 Write-Host -ForegroundColor Green "`nInstalling FastTrack module..."
 
-# Setting the module's and TrustedHosts backup destination
-$PSMPath = 'C:\Program Files\WindowsPowerShell\Modules'
-$destination = $PSMPath + "\FastTrack"
-$BackupDestination = $PSMPath
+# Setting the module's and TrustedHosts backup destinations
+$PSModulesDirectory = 'C:\Program Files\WindowsPowerShell\Modules'
+$FastTrackModulePath = $PSModulesDirectory + "\FastTrack"
+$TrustedHostsBackupPath = $PSModulesDirectory + "\FastTrackTrustedHostsBackup.bkp"
 
 # Copying the module to the user's PSModulePath
 $sourceFiles = [string]$source + '\'
-#New-Item -ItemType 'directory' -Path $destination -ErrorAction SilentlyContinue
-Copy-Item -LiteralPath $sourceFiles -Destination $destination -Recurse -Force
+Copy-Item -LiteralPath $sourceFiles -Destination $FastTrackModulePath -Recurse -Force
 Write-Host -ForegroundColor Green "`nModule FastTrack installed."
 
 # Loading the module to the active memory
@@ -37,9 +36,8 @@ Import-Module FastTrack -Force
 Write-Host -ForegroundColor Green "`nModule FastTrack imported."
 
 # Backing up TrustedHosts Value
-$FastTrackTrustedHostsBackup = (Get-Item WSMan:\localhost\Client\TrustedHosts).Value
-$BackupPath = $BackupDestination + "\FastTrackTrustedHostsBackup.bkp"
-Out-File -FilePath $BackupPath -InputObject $FastTrackTrustedHostsBackup
+$TrustedHostsValue = (Get-Item WSMan:\localhost\Client\TrustedHosts).Value
+Out-File -FilePath $TrustedHostsBackupPath -InputObject $TrustedHostsValue
 Write-Host -ForegroundColor Green "`nMWSMan:\localhost\Client\TrustedHosts backed up. "
 
 # Adding "all hosts" to trusted hosts
