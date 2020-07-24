@@ -92,7 +92,7 @@ function Set-FtHostname {
    $ComputerIPWithLocalComputerIPCutOff = $ComputerIP | Where-Object { $_ -notin $IP }
    #No i trzeba zrobic czekanie, az hosty sie pojawia z powrotem - nie dluzej niz 5 minut
 
-   if ($null -ne (Compare-Object $ComputerIPWithLocalComputerIPCutOff $ComputerIP)) {
+   if (($null -eq $ComputerIPWithLocalComputerIPCutOff) -or ($null -ne (Compare-Object $ComputerIPWithLocalComputerIPCutOff $ComputerIP))) {
       Write-Warning "As you are running this function from a computer included in the -ComputerIP parameter, this computer will be excluded from the hostname change operation. Please change the hostname of this computer manually."
    }
    if (!$Force) {
@@ -172,7 +172,7 @@ function Set-FtDomain {
       $IP = (Get-NetIPConfiguration -Detailed | Where-Object { ($_.IPv4Address.IPAddress -In $ComputerIP) }).IPv4Address.IPAddress
       $ComputerIPWithLocalComputerIPCutOff = $ComputerIP | Where-Object { $_ -notin $IP }
 
-      if ($null -ne (Compare-Object $ComputerIPWithLocalComputerIPCutOff $ComputerIP)) {
+      if (($null -eq $ComputerIPWithLocalComputerIPCutOff) -or ($null -ne (Compare-Object $ComputerIPWithLocalComputerIPCutOff $ComputerIP))) {
          Write-Warning "As you are running this function from a computer included in the -ComputerIP parameter, this computer will be excluded from the domain membership change operation. Please change the domain membership of this computer manually."
       }
       if (!$Force) {
