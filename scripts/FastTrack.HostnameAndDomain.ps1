@@ -88,7 +88,7 @@ function Set-FtHostname {
       [Parameter(Mandatory = $false)] [switch]$Force
    )
 
-   $IP = (Get-NetIPConfiguration -Detailed | Where-Object { ($_.IPv4Address.IPAddress -In $CP) }).IPv4Address.IPAddress
+   $IP = (Get-NetIPConfiguration -Detailed | Where-Object { ($_.IPv4Address.IPAddress -In $ComputerIP) }).IPv4Address.IPAddress
    $ComputerIPWithLocalComputerIPCutOff = $ComputerIP | Where-Object { $_ -notin $IP }
    #No i trzeba zrobic czekanie, az hosty sie pojawia z powrotem - nie dluzej niz 5 minut
 
@@ -169,7 +169,7 @@ function Set-FtDomain {
 
    if ($ActionIndex -ne -1) {
 
-      $IP = (Get-NetIPConfiguration -Detailed | Where-Object { ($_.IPv4Address.IPAddress -In $CP) }).IPv4Address.IPAddress
+      $IP = (Get-NetIPConfiguration -Detailed | Where-Object { ($_.IPv4Address.IPAddress -In $ComputerIP) }).IPv4Address.IPAddress
       $ComputerIPWithLocalComputerIPCutOff = $ComputerIP | Where-Object { $_ -notin $IP }
 
       if ($null -ne (Compare-Object $ComputerIPWithLocalComputerIPCutOff $ComputerIP)) {
