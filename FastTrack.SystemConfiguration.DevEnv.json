@@ -5,17 +5,29 @@
             "IP":"192.168.137.31",
             "hostname":"lop-ie",
             "alias":"ie",
-            "role":["PAM","IE"]
+            "role":["PAM"]
         },
         {
             "IP":"192.168.137.32",
-            "hostname":"lop-tc-01",
+            "hostname":"lop-mi",
+            "alias":"mi",
+            "role":["PAM"]
+        },
+        {
+            "IP":"192.168.137.33",
+            "hostname":"lop-pse",
+            "alias":"pse",
+            "role":["PAM"]
+        },
+        {
+            "IP":"192.168.137.34",
+            "hostname":"lop-tc-1",
             "alias":"tc1",
             "role":["PAM","TC"]
         },
         {
-            "IP":"192.168.137.33",
-            "hostname":"lop-tc-02",
+            "IP":"192.168.137.35",
+            "hostname":"lop-tc-2",
             "alias":"tc2",
             "role":["PAM","TC"]
         }
