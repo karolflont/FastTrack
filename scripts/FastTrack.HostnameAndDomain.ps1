@@ -4,13 +4,14 @@
 ####################
 ##### HOSTNAME #####
 ####################
-function Get-FtHostname {
+function Get-FtHostnameAndDomain {
    <#
    .SYNOPSIS
-      Compares current hostnames set on selected remote computers with their hostnames defined in $FtConfig variable.
+      Compares current hostnames set on selected remote computers with their hostnames defined in $FtConfig variable, and checks the Active Directory Domain or Workgroup name for a Computer.
    .DESCRIPTION
-      The Get-FtHostname function outputs a table comparing $env:computername variable set on remote hosts with corresponding "hostname" field from $FtConfig global variable.
-      The comparison is done using IP address as the key.
+      The Get-FtHostnameAndDomain function outputs a table containing:
+      - a comparison of $env:computername variable set on selected remote computers with corresponding "hostname" field from $FtConfig global variable (The comparison is done using IP address as the key.)
+      - the domain membership information for selected remote computers (retrieved from Win32_ComputerSystem WMI Class).
    .PARAMETER ComputerIP
       Specifies the computer IP.
    .PARAMETER Credential
@@ -20,7 +21,7 @@ function Get-FtHostname {
    .PARAMETER RawOutput
       Specifies that the output will NOT be sorted and formatted as a table (human friendly output). Instead, a raw Powershell object will be returned (Powershell pipeline friendly output).
    .EXAMPLE
-      Get-FtHostname -ComputerIP $all -Credential $cred
+      Get-FtHostnameAndDomain -ComputerIP $all -Credential $cred
    #>
  
    Param(
@@ -30,14 +31,18 @@ function Get-FtHostname {
       [Parameter(Mandatory = $false)] [switch]$RawOutput
    )
 
-   $HeaderMessage = "Hostnames Summary"
+   $HeaderMessage = "Hostname and Domain Membership Summary"
 
    $ScriptBlock = {
       $ComputerIP = $using:ComputerIP
       $IP = (Get-NetIPConfiguration -Detailed | Where-Object { ($_.IPv4Address.IPAddress -In $ComputerIP) }).IPv4Address.IPAddress
+      $CSObject = Get-WmiObject -Class Win32_ComputerSystem
+
       [pscustomobject]@{
          HostnameSetOnHost = $env:computername
          IPAddress         = $IP
+         PartOfDomain      = $CSObject.PartOfDomain
+         Domain            = $CSObject.Domain
       }
    }
  
@@ -46,10 +51,10 @@ function Get-FtHostname {
    $Result = Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
 
    ### END BLOCK
-   $Result = $Result | Select-Object -Property IPAddress, Alias, HostnameInConfig, HostnameSetOnHost, @{Name = "HostnamesInSync" ; Expression = { if ($_.HostnameSetOnHost -eq $_.HostnameInConfig) { "Yes" } else { "No" } } }
+   $Result = $Result | Select-Object -Property IPAddress, Alias, HostnameInConfig, HostnameSetOnHost, @{Name = "HostnamesInSync" ; Expression = { if ($_.HostnameSetOnHost -eq $_.HostnameInConfig) { "Yes" } else { "No" } } }, PartOfDomain, Domain
    #############
 
-   $PropertiesToDisplay = ('IPAddress', 'Alias', 'HostnameInConfig', 'HostnameSetOnHost', 'HostnamesInSync') 
+   $PropertiesToDisplay = ('IPAddress', 'Alias', 'HostnameInConfig', 'HostnameSetOnHost', 'HostnamesInSync', 'PartOfDomain', 'Domain')
 
    if ($RawOutput) { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput }
    else { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex }
@@ -60,15 +65,16 @@ function Set-FtHostname {
       Changes the hostnames of remote computers with values defined in $FtConfig variable.
    .DESCRIPTION
       The Set-FtHostname function uses Rename-Computer cmdlet to change the hostnames of the selected remote computers.
-      Various switch parameters can be used for more or less verbose operation. See parameters descriptions for details.
+      Please note that:
+       - to change a hostname of a computer in a workgroup, you need to specify a local account with administrative privileges (use just the username, without ".\" prefix),
+       - to change a hostname of a computer in a domain, yo uneed to specify a domain account with alocal administrative privileges (use domainname\username syntax),
+       - you cannot use Set-FtHostname function to change the hostnames of workgroup and domain joined computers at the same run.
    .PARAMETER ComputerIP
       Specifies the computer IP.
    .PARAMETER Credential
-      Specifies the credentials used to login.
-   .PARAMETER DontWaitForHostsAfterTriggeringRestart
-      Specifies if the command should wait for the remote hosts to come back online after triggering the restart.
-   .PARAMETER DontCheck
-      A switch disabling checking the set configuration with a correstponding 'get' function.
+      Specifies the credential used to login:
+      - local one, if the selected remote computers are in a workgroup
+      - domain one, if the selected computers are joined to a domain
    .PARAMETER Force
       No questions are asked during function execution.
    .EXAMPLE
@@ -82,69 +88,48 @@ function Set-FtHostname {
       [Parameter(Mandatory = $false)] [switch]$Force
    )
 
-   $Restart = $true
-   if ($Force) { $Restart = $true }
-   else { $Restart = Confirm-FtRestart }
+   $IP = (Get-NetIPConfiguration -Detailed | Where-Object { ($_.IPv4Address.IPAddress -In $CP) }).IPv4Address.IPAddress
+   $ComputerIPWithLocalComputerIPCutOff = $ComputerIP | Where-Object { $_ -notin $IP }
+   #No i trzeba zrobic czekanie, az hosty sie pojawia z powrotem - nie dluzej niz 5 minut
+
+   if ($null -ne (Compare-Object $ComputerIPWithLocalComputerIPCutOff $ComputerIP)) {
+      Write-Warning "As you are running this function from a computer included in the -ComputerIP parameter, this computer will be excluded from the hostname change operation. Please change the hostname of this computer manually."
+   }
+   if (!$Force) {
+      Write-Warning "An automatic immediate restart of all remote hosts is needed after this operation."
+      $Continue = Read-Host 'Do you want to continue? Only yes will be accepted as confirmation. Anything else will abort the hostname change operation.'
+      if ($Continue -ne 'yes') {
+         Return
+      }
+   }
 
    $ftc = $global:FtConfig | ConvertFrom-Json
 
    Write-Host -ForegroundColor Cyan "Changing remote hosts Hostnames... " -NoNewline
-   $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
-   foreach ($item in $ComputerIP) {
-      $NCN = ($ftc.hosts | Where-object { $_.IP -eq $item }).hostname
-      Invoke-Command -ComputerName $item -Credential $Credential -ScriptBlock { Rename-Computer -ComputerName $using:item -NewName $using:NCN -WarningAction SilentlyContinue }
+   if ($Credential.UserName -like "*\*") {
+      $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
+      foreach ($item in $ComputerIPWithLocalComputerIPCutOff) {
+         $NCN = ($ftc.hosts | Where-object { $_.IP -eq $item }).hostname
+         Rename-Computer -ComputerName $item -NewName $NCN -DomainCredential $Credential -Restart -Force -WarningAction SilentlyContinue
+      }
+   }
+   else {
+      $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
+      foreach ($item in $ComputerIPWithLocalComputerIPCutOff) {
+         $NCN = ($ftc.hosts | Where-object { $_.IP -eq $item }).hostname
+         Rename-Computer -ComputerName $item -NewName $NCN -LocalCredential $Credential -Restart -Force -WarningAction SilentlyContinue
+      }
+
    }
    $StopWatch.Stop()
    $ElapsedSeconds = $StopWatch.Elapsed.TotalSeconds 
    Write-Host -ForegroundColor Green "DONE " -NoNewline
    Write-Host -ForegroundColor Cyan "in $ElapsedSeconds sec."
-
-   if ($DontWaitForHostsAfterTriggeringRestart) { Restart-FtRemoteComputer -ComputerIP $ComputerIP -Credential $Credential -Restart $Restart -DontWaitForHostsAfterTriggeringRestart }
-   else { Restart-FtRemoteComputer -ComputerIP $ComputerIP -Credential $Credential -Restart $Restart }
-
-   if (!$DontCheck -and $Restart) {
-      Write-Host -ForegroundColor Cyan "Let's check the configuration with Get-FtHostname."
-      Get-FtHostname -ComputerIP $ComputerIP -Credential $cred
-   }
 }
 
 ##############
 ### DOMAIN ###
 ##############
-function Get-FtDomain {
-   <#
-   .SYNOPSIS
-      Checks the Active Directory Domain or Workgroup name for a Computer.
-   .DESCRIPTION
-      The Get-Domain retrieves the Domain information from Win32_ComputerSystem WMI Class.
-   .PARAMETER ComputerIP
-      Specifies the computer IP.
-   .PARAMETER Credential
-      Specifies the credentials used to login.
-   .PARAMETER RawOutput
-   Specifies that the output will NOT be sorted and formatted as a table (human friendly output). Instead, a raw Powershell object will be returned (Powershell pipeline friendly output).
-   .EXAMPLE
-      Get-FtDomain -ComputerIP $all -Credential $Cred
-   #>
-   Param(
-      [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
-      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
-      [Parameter(Mandatory = $false)] [switch]$RawOutput
-   )
-
-   $HeaderMessage = "Domain Membership Status"
-
-   $ScriptBlock = { Get-WmiObject -Class Win32_ComputerSystem }
-
-   $ActionIndex = 0
-
-   $Result = Invoke-FtGetScriptBlock -ComputerIP $ComputerIP -Credential $Credential -HeaderMessage $HeaderMessage -ScriptBlock $ScriptBlock -ActionIndex $ActionIndex
-
-   $PropertiesToDisplay = ('Alias', 'HostnameInConfig', 'PartOfDomain', 'Domain')
-
-   if ($RawOutput) { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex -RawOutput }
-   else { Format-FtOutput -InputObject $Result -PropertiesToDisplay $PropertiesToDisplay -ActionIndex $ActionIndex }
-}
 function Set-FtDomain {
    <#
    .SYNOPSIS
@@ -158,15 +143,11 @@ function Set-FtDomain {
    .PARAMETER DomainName
       Specifies the domain name (shortname or FQDN) to join or leave.
    .PARAMETER DomainAdminUsername
-      Specifies the Domain Administrator credentials used to join (leave) the domain. DO NOT include the domain prefix!
+      Specifies the Domain Administrator credentials used to join (leave) the domain. Please use domainname\username syntax.
    .PARAMETER Join
       Specifies that the selected computers should join the domain specified in $DomainName parameter.
    .PARAMETER Leave
       Specifies that the selected computers should leave the domain specified in $DomainName parameter.
-   .PARAMETER DontWaitForHostsAfterTriggeringRestart
-      Specifies if the command should wait for the remote hosts to come back online after triggering the restart.
-   .PARAMETER DontCheck
-      A switch disabling checking the set configuration with a correstponding 'get' function.
    .PARAMETER Force
       No questions are asked during function execution.
    .EXAMPLE
@@ -177,63 +158,46 @@ function Set-FtDomain {
    Param(
       [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
       [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
-      [Parameter(Mandatory = $true)] $DomainName,
-      [Parameter(Mandatory = $true)] $DomainAdminUsername,
+      [Parameter(Mandatory = $false)] $DomainName,
+      [Parameter(Mandatory = $false)] $DomainAdminUsername,
       [Parameter(Mandatory = $false)] [switch]$Join,
       [Parameter(Mandatory = $false)] [switch]$Leave,
-      [Parameter(Mandatory = $false)] [switch]$DontWaitForHostsAfterTriggeringRestart,
-      [Parameter(Mandatory = $false)] [switch]$DontCheck,
       [Parameter(Mandatory = $false)] [switch]$Force
    )
 
-   $DomainAdminUserNameFull = $DomainName + "\" + $DomainAdminUsername
-
    $ActionIndex = Confirm-FtSwitchParameters $Join $Leave
 
-   if ($ActionIndex -eq 0) {
-      $Restart = $true
-      if ($Force) { $Restart = $true }
-      else { $Restart = Confirm-FtRestart }
+   if ($ActionIndex -ne -1) {
 
-      $ScriptBlock = [ScriptBlock]::create("Add-Computer -DomainName $DomainName -Credential $DomainAdminUsernameFull -Force -WarningAction SilentlyContinue")
+      $IP = (Get-NetIPConfiguration -Detailed | Where-Object { ($_.IPv4Address.IPAddress -In $CP) }).IPv4Address.IPAddress
+      $ComputerIPWithLocalComputerIPCutOff = $ComputerIP | Where-Object { $_ -notin $IP }
 
-      #Run Script Block on remote computers
-      Write-Host -ForegroundColor Cyan "Changing remote hosts Domain Membership... "
-      $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
-      Invoke-Command -ComputerName $ComputerIP -Credential $Credential -ScriptBlock $ScriptBlock | Out-Null
-      $StopWatch.Stop()
-      $ElapsedSeconds = $StopWatch.Elapsed.TotalSeconds 
-      Write-Host -ForegroundColor Green "DONE " -NoNewline
-      Write-Host -ForegroundColor Cyan "in $ElapsedSeconds sec."
-
-      if ($DontWaitForHostsAfterTriggeringRestart) { Restart-FtRemoteComputer -ComputerIP $ComputerIP -Credential $Credential -Restart $Restart -DontWaitForHostsAfterTriggeringRestart }
-      else { Restart-FtRemoteComputer -ComputerIP $ComputerIP -Credential $Credential -Restart $Restart }
-
-      if (!$DontCheck -and $Restart) {
-         Write-Host -ForegroundColor Cyan "Let's check the configuration with Get-FtDomain."
-         Get-FtDomain -ComputerIP $ComputerIP -Credential $cred
+      if ($null -ne (Compare-Object $ComputerIPWithLocalComputerIPCutOff $ComputerIP)) {
+         Write-Warning "As you are running this function from a computer included in the -ComputerIP parameter, this computer will be excluded from the domain membership change operation. Please change the domain membership of this computer manually."
       }
-   }
-   elseif ($ActionIndex -eq 1) {
-      Write-Warning "An INSTANT AUTOMATIC restart of the remote hosts is needed after this operation."
-      $Continue = Read-Host "Do you want to proceed with leaving the domain for selected remote hosts? Only yes will be accepted as confirmation."
-      if ($Continue -eq 'yes') {
-         # If this function is run from a computer which IP is in $ComputerIP array, this computer will be excluded form the restart
-         $IP = (Get-NetIPConfiguration -Detailed | Where-Object { ($_.IPv4Address.IPAddress -In $CP) }).IPv4Address.IPAddress
-         $ComputerIPWithLocalComputerIPCutOff = $ComputerIP | Where-Object { $_ -notin $IP }
-         if ($ComputerIPWithLocalComputerIPCutOff -ne $ComputerIP) {
-            Write-Warning "You are trying to restart the computer you're running this function from. This computer will be excluded from the restart. Please restart it manually later."
+      if (!$Force) {
+         Write-Warning "An automatic immediate restart of all remote hosts is needed after this operation."
+         $Continue = Read-Host 'Do you want to continue? Only yes will be accepted as confirmation. Anything else will abort the domain membership change operation.'
+         if ($Continue -ne 'yes') {
+            Return
          }
-         $ScriptBlock = [ScriptBlock]::create("Remove-Computer -UnjoinDomaincredential $DomainAdminUsernameFull -Restart -Force")
-         #Run Script Block on remote computers
-         Write-Host -ForegroundColor Cyan "Changing remote hosts configuration... "
+      }
+      
+      Write-Host -ForegroundColor Cyan "Changing remote hosts Domain Membership... " -NoNewline
+      if ($ActionIndex -eq 0) {
+         $ScriptBlock = [ScriptBlock]::create("Add-Computer -DomainName $DomainName -Credential $DomainAdminUsername -Restart -Force -WarningAction SilentlyContinue")
          $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
          Invoke-Command -ComputerName $ComputerIPWithLocalComputerIPCutOff -Credential $Credential -ScriptBlock $ScriptBlock | Out-Null
          $StopWatch.Stop()
-         $ElapsedSeconds = $StopWatch.Elapsed.TotalSeconds 
-         Write-Host -ForegroundColor Green "DONE " -NoNewline
-         Write-Host -ForegroundColor Cyan "in $ElapsedSeconds sec."
       }
-      else { Return }
-   }
+      elseif ($ActionIndex -eq 1) {
+         $ScriptBlock = [ScriptBlock]::create("Remove-Computer -UnjoinDomaincredential $DomainAdminUsername -Restart -Force -WarningAction SilentlyContinue")
+         $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
+         Invoke-Command -ComputerName $ComputerIPWithLocalComputerIPCutOff -Credential $Credential -ScriptBlock $ScriptBlock | Out-Null
+         $StopWatch.Stop()
+      }
+      $ElapsedSeconds = $StopWatch.Elapsed.TotalSeconds 
+      Write-Host -ForegroundColor Green "DONE " -NoNewline
+      Write-Host -ForegroundColor Cyan "in $ElapsedSeconds sec."
+   } 
 }

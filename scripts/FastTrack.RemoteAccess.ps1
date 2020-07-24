@@ -6,32 +6,35 @@
 ###########################
 function Test-FtPSRemoting {
    <#
-    .SYNOPSIS
-       Test if Powershell Remoting to a list of hosts is possible.
-    .DESCRIPTION
-       The Test-FtPSRemoting function tests:
-       - If the conenction over WSMan is possible, using Test-WSMan
-       - If the given credentials are valid on the remote host, using New-PSSession
-    .PARAMETER ComputerIP
-       Specifies the computer IP.
-    .PARAMETER Credential
-       Specifies the credentials used to login.
-    .EXAMPLE
-       Test-FtPSRemoting -ComputerIP $all -Credential $cred
-    #>
+   .SYNOPSIS
+      Test if Powershell Remoting to a list of hosts is possible.
+   .DESCRIPTION
+      The Test-FtPSRemoting function tests:
+      - If the conenction over WSMan is possible, using Test-WSMan
+      - If the given credentials are valid on the remote host, using New-PSSession
+   .PARAMETER ComputerIP
+      Specifies the computer IP.
+   .PARAMETER Credential
+      Specifies the credentials used to login.
+   .PARAMETER Silent
+      Turns off all output printing. IF selected, Test-FtPSRemoting function returns just 1 if all tests are passed for all selected remote computers, or 0 if any of the tests fails.
+   .EXAMPLE
+      Test-FtPSRemoting -ComputerIP $all -Credential $cred
+   #>
    param (
       [Parameter(Mandatory = $true)] [string[]]$ComputerIP,
-      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential
+      [Parameter(Mandatory = $true)] [System.Management.Automation.PSCredential]$Credential,
+      [Parameter(Mandatory = $false)] [switch]$Silent
    )
 
-   Write-Host -ForegroundColor Cyan "Testing remote hosts Powershell Remoting status"
+   if (!$Silent) { Write-Host -ForegroundColor Cyan "Testing remote hosts Powershell Remoting status" }
  
    $PowershellRemotingStatusTable = @()
    $AnythingFailed = $false
    $ComputerIP = [string[]]$ComputerIP
 
    for ($i = 0; $i -lt $ComputerIP.Count; $i++) {
-      Write-Host -ForegroundColor Cyan "Testing host $($ComputerIP[$i]) - $($i+1)/$($ComputerIP.Count)."
+      if (!$Silent) { Write-Host -ForegroundColor Cyan "Testing host $($ComputerIP[$i]) - $($i+1)/$($ComputerIP.Count)." }
       $PowershellRemotingStatus = New-Object -TypeName PSObject
       $PowershellRemotingStatus | Add-Member -MemberType NoteProperty -Name ComputerIP -Value $ComputerIP[$i]
       $PowershellRemotingStatus | Add-Member -MemberType NoteProperty -Name PSRemoting -Value "RESULT UNKNOWN"
@@ -57,22 +60,28 @@ function Test-FtPSRemoting {
          $AnythingFailed = $true
 
       }
-      Remove-PSSession $s
-      Remove-Variable $s
+      Remove-PSSession $s -ErrorAction SilentlyContinue
+      Remove-Variable $s -ErrorAction SilentlyContinue
 
       $PowershellRemotingStatusTable += $PowershellRemotingStatus
    }
 
-   Write-Output "`n----- Powershell Remoting -----"
-   $PowershellRemotingStatusTable | Format-Table -Wrap -AutoSize
+   if (!$Silent){
+      Write-Output "`n----- Powershell Remoting -----"
+      $PowershellRemotingStatusTable | Format-Table -Wrap -AutoSize
+   }
  
    if ($AnythingFailed) {
-      Write-Host -ForegroundColor Red "Some of the tests FAILED. You can start troubleshooting the issue using:"
-      Write-Host -ForegroundColor Red " - Test-WSMan -ComputerName <IP>"
-      Write-Host -ForegroundColor Red " - Enter-PSSession -ComputerName <IP> -Credential <credential object>"
+      if (!$Silent){
+         Write-Host -ForegroundColor Red "Some of the tests FAILED. You can start troubleshooting the issue using:"
+         Write-Host -ForegroundColor Red " - Test-WSMan -ComputerName <IP>"
+         Write-Host -ForegroundColor Red " - Enter-PSSession -ComputerName <IP> -Credential <credential object>"
+      }
+      else {Return 0}
    }
    else {
-      Write-Host -ForegroundColor Green "All tests PASSED. Powershell remoting is working on all selected hosts."
+      if (!$Silent){ Write-Host -ForegroundColor Green "All tests PASSED. Powershell remoting is working on all selected hosts." }
+      else {Return 1}
    }
 }
 
