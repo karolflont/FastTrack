@@ -92,7 +92,7 @@ FastTrack module cannot modify the above parameters but can do quite a lot of ot
 Let's now check the hostnames of the servers from your config (imported from .json file to $FtConfig global variable).
 If the hostnames on the remote servers are not in sync with the hostnames in your config, you can change them.
 #>
-Get-FtHostname -ComputerIP $all -Credential $cred
+Get-FtHostnameAndDomain -ComputerIP $all -Credential $cred
 Set-FtHostname -ComputerIP $all -Credential $cred
 <#
 NOTE1: As for all FastTrack module functions, there are some additional parameters you can pass to the above functions
@@ -104,8 +104,8 @@ Set- function introduces needed config changes on the remote hosts.
 <# 7.
 Now, when you're hostnames are set, it's time to join the computers to the domain.
 #>
-Get-FtDomain -ComputerIP $all -Credential $Cred
-Set-FtDomain -ComputerIP $all -Credential $cred -DomainName lop.pri -DomainAdminUsername administrator -Join
+Get-FtHostnameAndDomain -ComputerIP $all -Credential $Cred
+Set-FtDomain -ComputerIP $all -Credential $cred -DomainName lop.pri -DomainAdminUsername lop\administrator -Join
 <#
 NOTE: You can use Set-FtDomain to leave the domain too.
 #>
