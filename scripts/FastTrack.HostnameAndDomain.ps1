@@ -90,11 +90,15 @@ function Set-FtHostname {
 
    $IP = (Get-NetIPConfiguration -Detailed | Where-Object { ($_.IPv4Address.IPAddress -In $ComputerIP) }).IPv4Address.IPAddress
    $ComputerIPWithLocalComputerIPCutOff = $ComputerIP | Where-Object { $_ -notin $IP }
-   #No i trzeba zrobic czekanie, az hosty sie pojawia z powrotem - nie dluzej niz 5 minut
+
 
    if (($null -eq $ComputerIPWithLocalComputerIPCutOff) -or ($null -ne (Compare-Object $ComputerIPWithLocalComputerIPCutOff $ComputerIP))) {
       Write-Warning "As you are running this function from a computer included in the -ComputerIP parameter, this computer will be excluded from the hostname change operation. Please change the hostname of this computer manually."
    }
+   if ($null -eq $ComputerIPWithLocalComputerIPCutOff){
+      Return
+   }
+   
    if (!$Force) {
       Write-Warning "An automatic immediate restart of all remote hosts is needed after this operation."
       $Continue = Read-Host 'Do you want to continue? Only yes will be accepted as confirmation. Anything else will abort the hostname change operation.'
@@ -175,6 +179,10 @@ function Set-FtDomain {
       if (($null -eq $ComputerIPWithLocalComputerIPCutOff) -or ($null -ne (Compare-Object $ComputerIPWithLocalComputerIPCutOff $ComputerIP))) {
          Write-Warning "As you are running this function from a computer included in the -ComputerIP parameter, this computer will be excluded from the domain membership change operation. Please change the domain membership of this computer manually."
       }
+      if ($null -eq $ComputerIPWithLocalComputerIPCutOff){
+         Return
+      }
+
       if (!$Force) {
          Write-Warning "An automatic immediate restart of all remote hosts is needed after this operation."
          $Continue = Read-Host 'Do you want to continue? Only yes will be accepted as confirmation. Anything else will abort the domain membership change operation.'
