@@ -6,6 +6,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2020-07-25
+### Added
+- Test-FtPSRemoting now supports 'silent' mode
+- Exported functions:
+    - Hostname and Domain related
+        - Get-FtHostnameAndDomain
+
+### Removed
+- Exported functions:
+    - Hostname and Domain related
+        - Get-FtHostname
+        - Get-FtDomain
+
+### Fixed
+- Fixed issue with access to remote hosts after changing the hostname without an immediate reboot. Now, Set-FtHostname and Set-FtDomain functions require immediate restart after the operations.
+- Fixed issue with 'Access Denied' message when changing the hostname of a domain joined computer. Now, Set-FtHostname requires the $credential parameter to be defined as:
+    - a local account with administrative privileges (username syntax - without ".\" prefix) to change a hostname of a computer in a workgroup,
+    - a domain account with alocal administrative privileges (domainname\username syntax), to change a hostname of a computer in a domain.
+- Fixed issue with running Set-FtHostname and Set-FtDomain for single host
+
 ## [0.1.2] - 2020-07-21
 ### Fixed
 - Updated Installation procedure in README with a step to bypass the, possibly blocking, Execution Policy.
@@ -73,6 +93,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
         - Get-FtWindowsUpdateService
         - Set-FtWindowsUpdateService
 
+[0.2.0]: https://github.com/karolflont/FastTrack/releases/tag/v0.2.0
 [0.1.2]: https://github.com/karolflont/FastTrack/releases/tag/v0.1.2
 [0.1.1]: https://github.com/karolflont/FastTrack/releases/tag/v0.1.1
 [0.1.0]: https://github.com/karolflont/FastTrack/releases/tag/v0.1.0
