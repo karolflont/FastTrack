@@ -98,7 +98,7 @@ function Set-FtHostname {
    if ($null -eq $ComputerIPWithLocalComputerIPCutOff){
       Return
    }
-   
+
    if (!$Force) {
       Write-Warning "An automatic immediate restart of all remote hosts is needed after this operation."
       $Continue = Read-Host 'Do you want to continue? Only yes will be accepted as confirmation. Anything else will abort the hostname change operation.'
@@ -129,6 +129,7 @@ function Set-FtHostname {
    $ElapsedSeconds = $StopWatch.Elapsed.TotalSeconds 
    Write-Host -ForegroundColor Green "DONE " -NoNewline
    Write-Host -ForegroundColor Cyan "in $ElapsedSeconds sec."
+   Write-Host -ForegroundColor Cyan "Restart of the selected remote hosts triggered."
 }
 
 ##############
@@ -207,5 +208,6 @@ function Set-FtDomain {
       $ElapsedSeconds = $StopWatch.Elapsed.TotalSeconds 
       Write-Host -ForegroundColor Green "DONE " -NoNewline
       Write-Host -ForegroundColor Cyan "in $ElapsedSeconds sec."
+      Write-Host -ForegroundColor Cyan "Restart of the selected remote hosts triggered."
    } 
 }
